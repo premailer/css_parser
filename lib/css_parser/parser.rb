@@ -87,12 +87,15 @@ module CssParser # :nodoc:
     #
     #   parser = CssParser::Parser.new
     #   parser.load_css!(css)
+    #--
+    # TODO: add media_type
+    #++
     def add_block!(block, options = {})
-      options = {:source_uri => nil, :charset => nil}.merge(options)
+      options = {:base_uri => nil, :charset => nil}.merge(options)
       
       block = cleanup_block(block)
       
-      block = convert_uris(block, options[:source_uri]) if options[:source_uri]
+      block = convert_uris(block, options[:base_uri]) if options[:base_uri]
       
       parse_block_into_rule_sets!(block, options)
       
@@ -376,7 +379,6 @@ module CssParser # :nodoc:
     end
 
   protected
-
     # Strip comments and clean up blank lines from a block of CSS.
     #
     # Returns a string.

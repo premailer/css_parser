@@ -19,7 +19,7 @@ end
 desc 'Generate documentation.'
 Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'doc'
-  rdoc.title    = 'CSS Parser'
+  rdoc.title    = 'Ruby CSS Parser'
   rdoc.options << '--all' << '--inline-source' << '--line-numbers'
   rdoc.rdoc_files.include('README')
   rdoc.rdoc_files.include('CHANGELOG')
@@ -29,12 +29,12 @@ Rake::RDocTask.new(:rdoc) do |rdoc|
 end
 
 spec = Gem::Specification.new do |s| 
-  s.name = "css_parser"
-  s.version = "0.9.0"
-  s.author = "Alex Dunae"
-  s.homepage = "http://code.dunae.ca/css_parser"
+  s.name = 'css_parser'
+  s.version = '1.0.0'
+  s.author = 'Alex Dunae'
+  s.homepage = 'http://code.dunae.ca/css_parser'
   s.platform = Gem::Platform::RUBY
-  s.summary = "A set of classes for parsing CSS."
+  s.summary = 'A set of classes for parsing CSS.'
   s.files = FileList["{lib}/**/*"].to_a
   s.test_files = Dir.glob('test/test_*.rb') 
   s.has_rdoc = true
@@ -42,7 +42,7 @@ spec = Gem::Specification.new do |s|
   s.rdoc_options << '--all' << '--inline-source' << '--line-numbers'
 end
 
-desc 'Build the W3C Validators gem.'
+desc 'Build the Ruby CSS Parser gem.'
 Rake::GemPackageTask.new(spec) do |pkg| 
   pkg.need_zip = true
   pkg.need_tar = true 

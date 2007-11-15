@@ -35,5 +35,12 @@ class CssParserBasicTests < Test::Unit::TestCase
     assert_equal 'color: blue;', @cp.find('div').join(' ')
   end
 
+  def test_converting_uris
+    flunk
+  end
+  
+  def test_not_converting_uris
+    flunk
+  end
 
 end

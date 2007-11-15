@@ -39,7 +39,7 @@ Done.
   # output all CSS rules in a single stylesheet
   parser.to_s
   => #content { font-size: 13px; line-height: 1.2; }
-  => body { margin: 0 1em; }
+     body { margin: 0 1em; }
 
 === Testing
 
@@ -55,4 +55,6 @@ directory.
 * Source: http://code.dunae.ca/svn/css_parser/
 * Docs: http://code.dunae.ca/css_parser/doc/
 
-By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007
+By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007.
+
+Made with love on Vancouver Island.
