@@ -55,4 +55,10 @@ class CssParserDownloadingTests < Test::Unit::TestCase
     assert_equal '', @cp.find('p', :tty).join(' ')
   end
 
+  def test_throwing_circular_reference_exception
+    assert_raise RuntimeError do
+      @cp.load_file!("#{@uri_base}/import-circular-reference.css")
+    end
+  end
+
 end

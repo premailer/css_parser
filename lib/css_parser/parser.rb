@@ -346,8 +346,6 @@ module CssParser # :nodoc:
 
     # Load a remote CSS file.
     def load_file!(uri, base_uri = nil, media_types = :all)
-      raise IOError, "can't load #{uri.to_s} more than once" if @loaded_uris.include?(uri)
-
       base_uri = uri if base_uri.nil?
       src, charset = read_remote_file(uri)
 
@@ -403,6 +401,7 @@ module CssParser # :nodoc:
     # TODO: add option to fail silently or throw and exception on a 404
     #++
     def read_remote_file(uri) # :nodoc:
+      raise RuntimeError, "can't load #{uri.to_s} more than once" if @loaded_uris.include?(uri)
 
       #fh = open(uri, 'rb')
       fh = open(uri, 'rb', 'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip')
@@ -419,6 +418,9 @@ module CssParser # :nodoc:
       src = ic.iconv(remote_src)
 
       fh.close
+
+      @loaded_uris << uri
+
       return src, fh.charset
     end
 
