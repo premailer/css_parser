@@ -1,0 +1,8 @@
+require 'uri'
+require 'md5'
+require 'zlib'
+require 'iconv'
+require 'lib/css_parser/rule_set'
+require 'lib/css_parser/regexps'
+require 'lib/css_parser/shorthand'
+require 'lib/css_parser/parser'
