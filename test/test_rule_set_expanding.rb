@@ -1,7 +1,6 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-# Test cases for reading and generating CSS shorthand properties
-class CssParserShorthandTests < Test::Unit::TestCase
+class RuleSetExpandingTests < Test::Unit::TestCase
   include CssParser
 
   def setup

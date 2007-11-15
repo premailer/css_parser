@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/test_helper'
 
 # Test cases for parsing CSS blocks
-class CssParserRuleSetTests < Test::Unit::TestCase
+class RuleSetTests < Test::Unit::TestCase
   include CssParser
 
   def setup

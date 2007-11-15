@@ -6,6 +6,8 @@ module CssParser # :nodoc:
 
     # Array of selector strings.
     attr_reader   :selectors
+    
+    attr_reader   :specificity
 
     def initialize(selectors, block, specificity = nil)
       @selectors = []
@@ -105,16 +107,20 @@ module CssParser # :nodoc:
     # Return the CSS rule set as a string.
     def to_s
       decs = declarations_to_s
-      "#{@selectors} { @{decs} }"
+      "#{@selectors} { #{decs} }"
     end
 
     # Split shorthand declarations (e.g. +margin+ or +font+) into their constituent parts.
     def expand_shorthand!
-      parse_declarations! if @declarations.empty?
-
-      expand_shorthand_dimensions!
+      expand_dimensions_shorthand!
       expand_font_shorthand!
       expand_background_shorthand!
+    end
+
+    def create_shorthand!
+      create_background_shorthand!
+      create_dimensions_shorthand!
+      create_font_shorthand!
     end
 
     # Escape declarations for use in inline <tt>style</tt> attributes.
@@ -126,7 +132,7 @@ module CssParser # :nodoc:
     end
 
 private
-    def parse_declarations!(block)
+    def parse_declarations!(block) # :nodoc:
       @declarations = {}
 
       return unless block
@@ -143,13 +149,13 @@ private
     #--
     # TODO: way too simplistic
     #++
-    def parse_selectors!(selectors)
+    def parse_selectors!(selectors) # :nodoc:
       @selectors = selectors.split(',') 
     end
 
     # Split shorthand dimensional declarations (e.g. <tt>margin: 0px auto;</tt>)
     # into their constituent parts.
-    def expand_shorthand_dimensions!
+    def expand_dimensions_shorthand! # :nodoc:
       ['margin', 'padding'].each do |property|
 
         next unless @declarations.has_key?(property)
@@ -187,7 +193,7 @@ private
 
     # Convert shorthand font declarations (e.g. <tt>font: 300 italic 11px/14px verdana, helvetica, sans-serif;</tt>)
     # into their constituent parts.
-    def expand_font_shorthand!
+    def expand_font_shorthand! # :nodoc:
       return unless @declarations.has_key?('font')
 
       font_props = {}
@@ -244,7 +250,7 @@ private
     # into their constituent parts.
     #
     # See http://www.w3.org/TR/CSS21/colors.html#propdef-background
-    def expand_background_shorthand!
+    def expand_background_shorthand! # :nodoc:
       return unless @declarations.has_key?('background')
 
       value = @declarations['background'][:value]
@@ -286,6 +292,101 @@ private
 
       @declarations.delete('background')
     end
+
+
+    # Looks for long format CSS background properties (e.g. <tt>background-color</tt>) and 
+    # converts them into a shorthand CSS <tt>background</tt> property.
+    def create_background_shorthand! # :nodoc:
+      new_value = ''
+      ['background-color', 'background-image', 'background-repeat', 
+       'background-position', 'background-attachment'].each do |property|
+        if @declarations.has_key?(property)
+          new_value += @declarations[property][:value] + ' '
+          @declarations.delete(property)
+        end
+      end
+
+      unless new_value.strip.empty?
+        @declarations['background'] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
+      end
+    end
+
+    # Looks for long format CSS dimensional properties (i.e. <tt>margin</tt> and <tt>padding</tt>) and 
+    # converts them into shorthand CSS properties.
+    def create_dimensions_shorthand! # :nodoc:
+      # geometric
+      directions = ['top', 'right', 'bottom', 'left']
+      ['margin', 'padding'].each do |property|
+        values = {}      
+
+        foldable = @declarations.select { |dim, val| dim == "#{property}-top" or dim == "#{property}-right" or dim == "#{property}-bottom" or dim == "#{property}-left" }
+        # All four dimensions must be present
+        if foldable.length == 4
+          values = {}
+
+          directions.each { |d| values[d.to_sym] = @declarations["#{property}-#{d}"][:value].downcase.strip }
+
+          if values[:left] == values[:right]
+            if values[:top] == values[:bottom] 
+              if values[:top] == values[:left] # All four sides are equal
+                new_value = values[:top]
+              else # Top and bottom are equal, left and right are equal
+                new_value = values[:top] + ' ' + values[:left]
+              end
+            else # Only left and right are equal
+              new_value = values[:top] + ' ' + values[:left] + ' ' + values[:bottom]
+            end
+          else # No sides are equal
+            new_value = values[:top] + ' ' + values[:right] + ' ' + values[:bottom] + ' ' + values[:left]
+          end # done creating 'new_value'
+
+          # Save the new value
+          unless new_value.strip.empty?
+            @declarations[property] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
+          end
+
+          # Delete the shorthand values
+          directions.each { |d| @declarations.delete("#{property}-#{d}") }
+        end
+      end # done iterating through margin and padding
+    end
+
+
+    # Looks for long format CSS font properties (e.g. <tt>font-weight</tt>) and 
+    # tries to convert them into a shorthand CSS <tt>font</tt> property.  All 
+    # font properties must be present in order to create a shorthand declaration.
+    def create_font_shorthand! # :nodoc:
+      ['font-style', 'font-variant', 'font-weight', 'font-size',
+       'line-height', 'font-family'].each do |prop|
+        return unless @declarations.has_key?(prop)
+      end
+
+      new_value = ''
+      ['font-style', 'font-variant', 'font-weight'].each do |property|
+        unless @declarations[property][:value] == 'normal'
+          new_value += @declarations[property][:value] + ' '
+        end
+      end
+
+      new_value += @declarations['font-size'][:value]
+
+      unless @declarations['line-height'][:value] == 'normal'
+        new_value += '/' + @declarations['line-height'][:value]
+      end
+
+      new_value += ' ' + @declarations['font-family'][:value]
+
+      @declarations['font'] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
+
+      ['font-style', 'font-variant', 'font-weight', 'font-size',
+       'line-height', 'font-family'].each do |prop|
+       @declarations.delete(prop)
+      end
+
+    end
+
+
+
 
   end
 end

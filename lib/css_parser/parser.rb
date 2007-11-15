@@ -1,4 +1,11 @@
 module CssParser # :nodoc:
+  # Exception class used for any errors encountered while downloading remote files.
+  class RemoteFileError < StandardError; end
+
+  # Exception class used if a request is made to load a CSS file more than once.
+  class CircularReferenceError < StandardError; end
+
+
   # == Parser class
   #
   # All CSS is converted to UTF-8.
