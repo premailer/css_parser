@@ -4,39 +4,79 @@ module CssParser # :nodoc:
     RE_ELEMENTS_AND_PSEUDO_ELEMENTS = /((^|[\s\+\>]+)[\w]+|\:(first\-line|first\-letter|before|after))/i
     RE_NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES = /(\.[\w]+)|(\[[\w]+)|(\:(link|first\-child|lang))/i
 
-    attr_reader   :selectors, :block, :specificity
+    # Array of selector strings.
+    attr_reader   :selectors
 
     def initialize(selectors, block, specificity = nil)
-      @selectors = selectors
-      @block = block
+      @selectors = []
+#      @block = block
       @specificity = specificity
       @declarations = {}
-      parse_declarations!
+      parse_selectors!(selectors) if selectors
+      parse_declarations!(block)
       #expand_shorthand!
     end
 
-    # Append a declaration to the current RuleSet.
-    def add_declaration!(property, value)
-      @declarations[property] = value
-      parse_declarations!
+
+    # Get the value of a property
+    def get_value(property)
+      return '' unless property and not property.empty?
+
+      property = property.downcase.strip
+      properties = @declarations.inject('') do |val, (key, data)|
+        #puts "COMPARING #{key} #{key.inspect} against #{property} #{property.inspect}"
+        importance = data[:is_important] ? ' !important' : ''
+        val << "#{data[:value]}#{importance}; " if key.downcase.strip == property
+        val
+      end
+      return properties ? properties.strip : ''
     end
+    alias_method :[], :get_value
+
+    # Add a CSS declaration to the current RuleSet.
+    #
+    #  rule_set.add_declaration!('color', 'blue')
+    #
+    #  puts rule_set['color']
+    #  => 'blue;'
+    #
+    #  rule_set.add_declaration!('margin', '0px auto !important')
+    #
+    #  puts rule_set['margin']
+    #  => '0px auto !important;'
+    #
+    # If the property already exists its value will be over-written.
+    def add_declaration!(property, value)
+      value.gsub!(/;\Z/, '')
+      is_important = !value.gsub!(CssParser::IMPORTANT_IN_PROPERTY_RX, '').nil?
+      property = property.downcase.strip
+      #puts "SAVING #{property}  #{value} #{is_important.inspect}"
+      @declarations[property] = {:value => value, :is_important => is_important}
+    end
+    alias_method :[]=, :add_declaration!
+    
+
+    # Append a declaration to the current RuleSet.
+    #def add_declaration!(property, value)
+    #  @declarations[property] = value
+    #  parse_declarations!
+    #end
 
     # Iterate through selectors.
     #
     # Options
     # -  +force_important+ -- boolean
-    # -  +media+
     #
     # ==== Example
-    #   ruleset.each_selector(:media => :print) do |sel, dec, spec|
+    #   ruleset.each_selector do |sel, dec, spec|
     #     ...
     #   end
     def each_selector(options = {}) # :yields: selector, declarations, specificity
       declarations = declarations_to_s(options)
       if @specificity
-        @selectors.split(',').each { |sel| yield sel.strip, declarations, @specificity }
+        @selectors.each { |sel| yield sel.strip, declarations, @specificity }
       else
-        @selectors.split(',').each { |sel| yield sel.strip, declarations, Parser.calculate_specificity(sel) }
+        @selectors.each { |sel| yield sel.strip, declarations, Parser.calculate_specificity(sel) }
       end
     end
 
@@ -62,6 +102,12 @@ module CssParser # :nodoc:
      str.gsub(/^[\s]+|[\n\r\f\t]*|[\s]+$/mx, '').strip
     end
 
+    # Return the CSS rule set as a string.
+    def to_s
+      decs = declarations_to_s
+      "#{@selectors} { @{decs} }"
+    end
+
     # Split shorthand declarations (e.g. +margin+ or +font+) into their constituent parts.
     def expand_shorthand!
       parse_declarations! if @declarations.empty?
@@ -80,24 +126,25 @@ module CssParser # :nodoc:
     end
 
 private
-    def parse_declarations!
+    def parse_declarations!(block)
       @declarations = {}
 
-      return unless @block
+      return unless block
 
-      @block.split(/[\;$]+/m).each do |decs|
+      block.split(/[\;$]+/m).each do |decs|
         if matches = decs.match(/(.[^:]*)\:(.[^;]*)(;|\Z)/i)
           property, value, end_of_declaration = matches.captures
 
-          property.downcase!
-          property.strip!
-          value.strip!
-
-          is_important = !value.gsub!(CssParser::IMPORTANT_IN_PROPERTY_RX, '').nil?
-
-          @declarations[property] = {:value => value, :is_important => is_important}
+          add_declaration!(property, value)
         end
       end
+    end
+
+    #--
+    # TODO: way too simplistic
+    #++
+    def parse_selectors!(selectors)
+      @selectors = selectors.split(',') 
     end
 
     # Split shorthand dimensional declarations (e.g. <tt>margin: 0px auto;</tt>)

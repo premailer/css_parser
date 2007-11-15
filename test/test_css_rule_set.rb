@@ -3,8 +3,29 @@ require File.dirname(__FILE__) + '/test_helper'
 # Test cases for parsing CSS blocks
 class CssParserRuleSetTests < Test::Unit::TestCase
   include CssParser
+
   def setup
     @cp = Parser.new
+  end
+
+  def test_setting_property_values
+    rs = RuleSet.new(nil, nil)
+    
+    rs['background-color'] = 'red'
+    assert_equal('red;', rs['background-color'])
+
+    rs['background-color'] = 'blue !important;'
+    assert_equal('blue !important;', rs['background-color'])
+  end
+
+  def test_getting_property_values
+    rs = RuleSet.new('#content p, a', 'color: #fff;')
+    assert_equal('#fff;', rs['color'])
+  end
+
+  def test_getting_property_value_ignoring_case
+    rs = RuleSet.new('#content p, a', 'color: #fff;')
+    assert_equal('#fff;', rs['  ColoR '])
   end
 
   def test_each_selector
