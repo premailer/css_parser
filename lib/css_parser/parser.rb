@@ -1,6 +1,6 @@
 module CssParser # :nodoc:
   # Exception class used for any errors encountered while downloading remote files.
-  class RemoteFileError < StandardError; end
+  class RemoteFileError < IOError; end
 
   # Exception class used if a request is made to load a CSS file more than once.
   class CircularReferenceError < StandardError; end
@@ -13,10 +13,8 @@ module CssParser # :nodoc:
   # When calling Parser#new there are some configuaration options:
   # [<tt>absolute_paths</tt>] Convert relative paths to absolute paths (<tt>href</tt>, <tt>src</tt> and <tt>url('')</tt>. Boolean, default is <tt>false</tt>.
   # [<tt>import</tt>] Follow <tt>@import</tt> rules. Boolean, default is <tt>true</tt>.
-  # [<tt>not_found_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
+  # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
   class Parser
-    include CssParser::Shorthand
-
     VERSION      = '1.0.0'
     USER_AGENT   = "Ruby CSS Parser/#{VERSION} (http://code.dunae.ca/css_parser/)"
 
@@ -44,7 +42,7 @@ module CssParser # :nodoc:
     def initialize(options = {})
       @options = {:absolute_paths => false,
                   :import => true,
-                  :not_found_exceptions => true}.merge(options)
+                  :io_exceptions => true}.merge(options)
 
       # array of RuleSets
       @rules = []
@@ -101,7 +99,7 @@ module CssParser # :nodoc:
       options = {:base_uri => nil, :charset => nil}.merge(options)
       
       block = cleanup_block(block)
-      
+
       block = convert_uris(block, options[:base_uri]) if options[:base_uri]
       
       parse_block_into_rule_sets!(block, options)
@@ -147,6 +145,7 @@ module CssParser # :nodoc:
     # See RuleSet#each_selector for +options+.
     def each_selector(media_types = :all, options = {}) # :yields: selectors, declarations, specificity
       each_rule_set(media_types) do |rule_set|
+        puts rule_set
         rule_set.each_selector(options) do |selectors, declarations, specificity|
           yield selectors, declarations, specificity
         end
@@ -192,6 +191,8 @@ module CssParser # :nodoc:
         if token =~ /[^\/]"/ # found un-escaped double quote
           in_string = !in_string
         end
+        
+        puts token
 
 
         if in_declarations
@@ -199,10 +200,12 @@ module CssParser # :nodoc:
 
           if token =~ /\}/ and not in_string
             current_declarations.gsub!(/\}[\s]*$/, '')
+            
             in_declarations = false
 
             unless current_declarations.strip.empty?
               #puts "saving rule with #{media_types.inspect}"
+              puts 'will save ' + current_selectors + '::' + current_declarations
               add_rule!(current_selectors, current_declarations, media_types)
             end
 
@@ -225,7 +228,6 @@ module CssParser # :nodoc:
           # iterate until we are out of the charset declaration
           in_charset = (token =~ /;/ ? false : true)
         else
-
           if token =~ /\}/ and not in_string
             block_depth = block_depth - 1
           else
@@ -239,69 +241,6 @@ module CssParser # :nodoc:
           end
         end
       end
-    end
-
-
-    # Perform a cascade to remove redundant CSS properties according to the CSS 2.1 cascading rules 
-    # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).
-    #
-    # Takes an array of hashes or of RuleSets.  Each hash must have <tt>:specificity</tt> and <tt>:declarations</tt> defined.
-    # Each declaration is processed in the order it is encountered.
-    #
-    # Returns a string.
-    #
-    # ==== Example
-    #  declaration_hashes = [{:specificity => 10, :declarations => 'color: red; font: 300 italic 11px/14px verdana, helvetica, sans-serif;'},
-    #                        {:specificity => 1000, :declarations => 'font-weight: normal'}]
-    #
-    #  fold_declarations(declaration_hashes).inspect
-    #
-    #  => "font-weight: normal; font-size: 11px; line-height: 14px; font-family: verdana, helvetica, sans-serif; 
-    #      color: red; font-style: italic;"
-    #--
-    # TODO: declaration_hashes should be able to contain a RuleSet
-    #       this should be a Class method
-    def fold_declarations(declaration_hashes)
-      # Attempt to load folded declaration from cache
-      block_hash = Digest::MD5.hexdigest(declaration_hashes.inspect)
-      if folded_declaration = get_folded_declaration(block_hash)
-        return folded_declaration
-      end
-
-      # Internal storage of CSS properties to keep
-      properties = {}
-
-      declaration_hashes.each do |declaration_hash|
-        ruleset = RuleSet.new(nil, declaration_hash[:declarations], declaration_hash[:specificity])
-        ruleset.expand_shorthand!
-        specificity  = declaration_hash[:specificity]
-
-        ruleset.each_declaration do |property, value, is_important|
-          # Add the property to the list to be folded per http://www.w3.org/TR/CSS21/cascade.html#cascading-order
-          if not properties.has_key?(property) or
-                 is_important or # step 2
-                 properties[property][:specificity] < specificity or # step 3
-                 properties[property][:specificity] == specificity # step 4    
-            properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}            
-          end
-        end
-      end
-
-      combine_into_shorthand(properties)
-
-      folded_declaration = ''
-
-      # Rebuild the full declaration block
-      properties.each do |property, details|
-        folded_declaration += property.strip + ': ' + details[:value].strip + '; '
-      end
-
-      folded_declaration.strip!
-
-      # Save to cache
-      save_folded_declaration(block_hash, folded_declaration)
-
-      folded_declaration
     end
 
     # Make <tt>url()</tt> links absolute.
@@ -410,27 +349,30 @@ module CssParser # :nodoc:
     # TODO: add option to fail silently or throw and exception on a 404
     #++
     def read_remote_file(uri) # :nodoc:
-      raise RuntimeError, "can't load #{uri.to_s} more than once" if @loaded_uris.include?(uri)
-
-      #fh = open(uri, 'rb')
-      fh = open(uri, 'rb', 'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip')
-
-      if fh.content_encoding.include?('gzip')
-        remote_src = Zlib::GzipReader.new(fh).read
-      else
-        remote_src = fh.read
-      end
-
-      #puts "reading #{uri} (#{fh.charset})"
-
-      ic = Iconv.new('UTF-8//IGNORE', fh.charset)
-      src = ic.iconv(remote_src)
-
-      fh.close
-
+      raise CircularReferenceError, "can't load #{uri.to_s} more than once" if @loaded_uris.include?(uri)
       @loaded_uris << uri
 
-      return src, fh.charset
+      begin
+      #fh = open(uri, 'rb')
+        fh = open(uri, 'rb', 'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip')
+
+        if fh.content_encoding.include?('gzip')
+          remote_src = Zlib::GzipReader.new(fh).read
+        else
+          remote_src = fh.read
+        end
+
+        #puts "reading #{uri} (#{fh.charset})"
+
+        ic = Iconv.new('UTF-8//IGNORE', fh.charset)
+        src = ic.iconv(remote_src)
+
+        fh.close
+        return src, fh.charset
+      rescue
+        raise RemoteFileError if @options[:io_exceptions]
+        return '', nil
+      end
     end
 
     # Determine is a property should overwrite an existing propery

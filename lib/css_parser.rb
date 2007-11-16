@@ -4,7 +4,6 @@ require 'zlib'
 require 'iconv'
 require 'lib/css_parser/rule_set'
 require 'lib/css_parser/regexps'
-require 'lib/css_parser/shorthand'
 require 'lib/css_parser/parser'
 
 module CssParser
@@ -42,10 +41,7 @@ module CssParser
       raise ArgumentError, "all parameters must be CssParser::RuleSets."
     end
 
-    if rule_sets.length == 1
-      puts 'ONLY 1 RULESET'
-      return rule_sets 
-    end
+    return rule_sets[0] if rule_sets.length == 1
 
     # Internal storage of CSS properties that we will keep
     properties = {}

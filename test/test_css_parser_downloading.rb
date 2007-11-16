@@ -8,7 +8,9 @@ class CssParserDownloadingTests < Test::Unit::TestCase
   def setup
     # from http://nullref.se/blog/2006/5/17/testing-with-webrick
     @cp = Parser.new
+
     @uri_base = 'http://localhost:12000'
+
     www_root = File.dirname(__FILE__) + '/fixtures/'
 
     @server_thread = Thread.new do
@@ -20,6 +22,7 @@ class CssParserDownloadingTests < Test::Unit::TestCase
         s.shutdown
       end
     end
+
     sleep 1 # ensure the server has time to load
   end
 
@@ -56,8 +59,22 @@ class CssParserDownloadingTests < Test::Unit::TestCase
   end
 
   def test_throwing_circular_reference_exception
-    assert_raise RuntimeError do
+    assert_raise CircularReferenceError do
       @cp.load_file!("#{@uri_base}/import-circular-reference.css")
+    end
+  end
+
+  def test_toggling_not_found_exceptions
+    cp_with_exceptions = Parser.new(:io_exceptions => true)
+
+    assert_raise RemoteFileError do
+      cp_with_exceptions.load_file!("#{@uri_base}/no-exist.xyz")
+    end
+
+    cp_without_exceptions = Parser.new(:io_exceptions => false)
+
+    assert_nothing_raised RemoteFileError do
+      cp_without_exceptions.load_file!("#{@uri_base}/no-exist.xyz")
     end
   end
 

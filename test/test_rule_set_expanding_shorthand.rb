@@ -1,13 +1,13 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-class RuleSetExpandingTests < Test::Unit::TestCase
+class RuleSetExpandingShorthandTests < Test::Unit::TestCase
   include CssParser
 
   def setup
     @cp = CssParser::Parser.new
   end
 
-# dimensions shorthand
+# ==== Dimensions shorthand
   def test_getting_dimensions_from_shorthand
     # test various shorthand forms
     ['margin: 0px auto', 'margin: 0px auto 0px', 'margin: 0px auto 0px'].each do |shorthand|
@@ -23,25 +23,8 @@ class RuleSetExpandingTests < Test::Unit::TestCase
     end
   end
 
-  def test_combining_dimensions_into_shorthand
-    properties = {'margin-right' => {:value => 'auto'}, 'margin-bottom' => {:value => '0px'}, 'margin-left' => {:value => 'auto'}, 'margin-top' => {:value => '0px'}, 
-                  'padding-right' => {:value => '1.25em'}, 'padding-bottom' => {:value => '11%'}, 'padding-left' => {:value => '3pc'}, 'padding-top' => {:value => '11.25ex'}}
-    
-    combined = @cp.combine_into_shorthand(properties)
-    
-    assert_equal({'margin' => {:value => '0px auto'}, 'padding' => {:value => '11.25ex 1.25em 11% 3pc'}}, combined)
-  end
 
-  def test_combining_incomplete_dimensions_into_shorthand
-    properties = {'margin-right' => {:value => 'auto'}, 'margin-bottom' => {:value => '0px'}, 'margin-left' => {:value => 'auto'},
-                  'padding-right' => {:value => '1.25em'}, 'padding-bottom' => {:value => '11%'}, 'padding-left' => {:value => '3pc'}}
-    
-    combined = @cp.combine_into_shorthand(properties)
-    
-    assert_equal(properties, combined)
-  end
-
-# font shorthand
+# ==== Font shorthand
   def test_getting_font_size_from_shorthand
     ['em', 'ex', 'in', 'px', 'pt', 'pc', '%'].each do |unit|
       shorthand = "font: 300 italic 11.25#{unit}/14px verdana, helvetica, sans-serif;"
@@ -120,34 +103,8 @@ class RuleSetExpandingTests < Test::Unit::TestCase
     end
   end
 
-  def test_combining_font_into_shorthand
-    # should combine if all font properties are present
-    properties = {"font-weight" => {:value => "300"}, "font-size" => {:value => "12pt"}, 
-                   "font-family" => {:value => "sans-serif"}, "line-height" => {:value => "18px"},
-                   "font-style" => {:value => "oblique"}, "font-variant" => {:value => "small-caps"}}
-    
-    combined = @cp.combine_font_into_shorthand(properties)
-    
-    assert_equal({"font" => {:value => "oblique small-caps 300 12pt/18px sans-serif"}}, combined)
 
-    # should not combine if any properties are missing
-    properties.delete('font-weight')
-    combined = @cp.combine_font_into_shorthand(properties)
-    assert_equal(properties, combined)
-  end
-
-  def test_combining_incomplete_font_into_shorthand
-    # font-size is required
-    properties = {"font-weight" => {:value => "300"}, "font-family" => {:value => "sans-serif"}, 
-                  "line-height" => {:value => "18px"}, "font-variant" => {:value => "small-caps"}}
-
-    combined = @cp.combine_font_into_shorthand(properties)
-
-    assert_equal properties, combined
-  end
-
-
-# background shorthand
+# ==== Background shorthand
   def test_getting_background_properties_from_shorthand
     expected = {"background-image" => "url('chess.png')", "background-color" => "gray", "background-repeat" => "repeat", 
               "background-attachment" => "fixed", "background-position" => "50%"}
@@ -206,16 +163,6 @@ class RuleSetExpandingTests < Test::Unit::TestCase
     end
   end
 
-
-  def test_combining_background_into_shorthand
-    properties = {'background-image' => {:value => 'url(\'chess.png\')'}, 'background-color' => {:value => 'gray'}, 
-                  'background-position' => {:value => 'center -10.2%'}, 'background-attachment' => {:value => 'fixed'},
-                  'background-repeat' => {:value => 'no-repeat'}}
-    
-    combined = @cp.combine_into_shorthand(properties)
-    
-    assert_equal({'background' => {:value => 'gray url(\'chess.png\') no-repeat center -10.2% fixed'}}, combined)
-  end
 
 protected
   def expand_declarations(declarations)
