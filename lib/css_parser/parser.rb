@@ -15,7 +15,6 @@ module CssParser
   # [<tt>import</tt>] Follow <tt>@import</tt> rules. Boolean, default is <tt>true</tt>.
   # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
   class Parser
-    VERSION      = '1.0.0'
     USER_AGENT   = "Ruby CSS Parser/#{VERSION} (http://code.dunae.ca/css_parser/)"
 
     STRIP_CSS_COMMENTS_RX = /\/\*.*?\*\//m
@@ -269,7 +268,7 @@ module CssParser
       src.gsub!(RE_AT_IMPORT_RULE, '')
 
       # Relative paths need to be converted here
-      src = Parser.convert_uris(src, base_uri) if base_uri and @options[:absolute_paths]
+      src = CssParser.convert_uris(src, base_uri) if base_uri and @options[:absolute_paths]
 
       add_block!(src, {:media_types => media_types})
     end
@@ -300,7 +299,7 @@ module CssParser
     #++
     def read_remote_file(uri) # :nodoc:
       raise CircularReferenceError, "can't load #{uri.to_s} more than once" if @loaded_uris.include?(uri)
-      @loaded_uris << uri
+      @loaded_uris << uri.to_s
 
       begin
       #fh = open(uri, 'rb')

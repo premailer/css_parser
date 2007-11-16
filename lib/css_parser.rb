@@ -1,10 +1,11 @@
+$:.unshift File.dirname(__FILE__)
 require 'uri'
 require 'md5'
 require 'zlib'
 require 'iconv'
-require 'lib/css_parser/rule_set'
-require 'lib/css_parser/regexps'
-require 'lib/css_parser/parser'
+require 'css_parser/rule_set'
+require 'css_parser/regexps'
+require 'css_parser/parser'
 
 module CssParser
   # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules 
@@ -35,7 +36,7 @@ module CssParser
   #
   # ==== Example #2
   #   rs1 = RuleSet.new(nil, 'background-color: black;')
-  #   rs1 = RuleSet.new(nil, 'background-image: none;')
+  #   rs2 = RuleSet.new(nil, 'background-image: none;')
   #
   #   merged = CssParser.merge(rs1, rs2)
   #
@@ -47,6 +48,9 @@ module CssParser
   def CssParser.merge(*rule_sets)
     @folded_declaration_cache = {}
 
+    # in case called like CssParser.merge([rule_set, rule_set])
+    rule_sets.flatten! if rule_sets[0].kind_of?(Array)
+    
     unless rule_sets.all? {|rs| rs.kind_of?(CssParser::RuleSet)}
       raise ArgumentError, "all parameters must be CssParser::RuleSets."
     end
@@ -57,8 +61,6 @@ module CssParser
     properties = {}
 
     rule_sets.each do |rule_set|
-      #raise ArgumentError, "parameters must be CssParser::RuleSets." unless rule_set.kind_of?(CssParser::RuleSet)
-
       rule_set.expand_shorthand!
       
       specificity = rule_set.specificity
@@ -144,7 +146,4 @@ module CssParser
     end
     out
   end
-
-
-
 end
