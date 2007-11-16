@@ -1,4 +1,5 @@
 module CssParser
+  # :stopdoc:
   # Base types
   RE_NL = Regexp.new('(\n|\r\n|\r|\f)')
   RE_NON_ASCII = Regexp.new('([\x00-\xFF])', Regexp::IGNORECASE)  #[^\0-\177]
@@ -17,9 +18,11 @@ module CssParser
   # Initial parsing
   RE_AT_IMPORT_RULE = /\@import[\s]+(url\()?["']+(.[^'"]*)["']\)?([\w\s\,]*);?/i
   
+  #--
   #RE_AT_MEDIA_RULE = Regexp.new('(\"(.[^\n\r\f\\"]*|\\\\' + RE_NL.to_s + '|' + RE_ESCAPE.to_s + ')*\")')
   
   #RE_AT_IMPORT_RULE = Regexp.new('@import[\s]*(' + RE_STRING.to_s + ')([\w\s\,]*)[;]?', Regexp::IGNORECASE) -- should handle url() even though it is not allowed
+  #++
   IMPORTANT_IN_PROPERTY_RX = /[\s]*\!important[\s]*/i
   STRIP_CSS_COMMENTS_RX = /\/\*.*?\*\//m
   STRIP_HTML_COMMENTS_RX = /\<\!\-\-|\-\-\>/m
@@ -39,4 +42,5 @@ module CssParser
   RE_COLOUR_HEX = /(#([0-9a-f]{6}|[0-9a-f]{3})([\s;]|$))/i
   RE_COLOUR_NAMED = /([\s]*^)?(aqua|black|blue|fuchsia|gray|green|lime|maroon|navy|olive|orange|purple|red|silver|teal|white|yellow|transparent)([\s]*$)?/i
   RE_COLOUR = Regexp.union(RE_COLOUR_RGB, RE_COLOUR_HEX, RE_COLOUR_NAMED)
+  # :startdoc:
 end

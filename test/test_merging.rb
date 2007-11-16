@@ -23,7 +23,14 @@ class MergingTests < Test::Unit::TestCase
     assert_equal '5px;', merged['margin']
   end
 
-  def test_higher_specificity_should_take_precedence
+  def test_multiple_selectors_should_have_zero_specificity
+    rs1 = RuleSet.new('p, a[rel="external"]', 'color: black;')
+    rs2 = RuleSet.new('a', 'color: blue;')
+    merged = CssParser.merge(rs1, rs2)
+    assert_equal 'blue;', merged['color']
+  end
+
+  def test_setting_specificity
     rs1 = RuleSet.new(nil, 'color: red;', 20)
     rs2 = RuleSet.new(nil, 'color: blue;', 10)
     merged = CssParser.merge(rs1, rs2)
@@ -69,5 +76,4 @@ class MergingTests < Test::Unit::TestCase
     merged = CssParser.merge(rs)
     assert_equal rs.object_id, merged.object_id
   end
-
 end

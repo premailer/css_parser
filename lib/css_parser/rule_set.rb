@@ -1,4 +1,4 @@
-module CssParser # :nodoc:
+module CssParser
   class RuleSet
     # Patterns for specificity calculations
     RE_ELEMENTS_AND_PSEUDO_ELEMENTS = /((^|[\s\+\>]+)[\w]+|\:(first\-line|first\-letter|before|after))/i
@@ -7,7 +7,8 @@ module CssParser # :nodoc:
     # Array of selector strings.
     attr_reader   :selectors
     
-    attr_reader   :specificity
+    # Integer with the specificity to use for this RuleSet.
+    attr_accessor   :specificity
 
     def initialize(selectors, block, specificity = nil)
       @selectors = []
@@ -16,7 +17,6 @@ module CssParser # :nodoc:
       @declarations = {}
       parse_selectors!(selectors) if selectors
       parse_declarations!(block)
-      #expand_shorthand!
     end
 
 
@@ -56,13 +56,6 @@ module CssParser # :nodoc:
       @declarations[property] = {:value => value, :is_important => is_important}
     end
     alias_method :[]=, :add_declaration!
-    
-
-    # Append a declaration to the current RuleSet.
-    #def add_declaration!(property, value)
-    #  @declarations[property] = value
-    #  parse_declarations!
-    #end
 
     # Iterate through selectors.
     #
@@ -78,7 +71,7 @@ module CssParser # :nodoc:
       if @specificity
         @selectors.each { |sel| yield sel.strip, declarations, @specificity }
       else
-        @selectors.each { |sel| yield sel.strip, declarations, Parser.calculate_specificity(sel) }
+        @selectors.each { |sel| yield sel.strip, declarations, CssParser.calculate_specificity(sel) }
       end
     end
 
@@ -92,7 +85,6 @@ module CssParser # :nodoc:
     end
 
     # Return all declarations as a string.
-    #
     #--
     # TODO: Clean-up regexp doesn't seem to work
     #++
@@ -117,18 +109,11 @@ module CssParser # :nodoc:
       expand_background_shorthand!
     end
 
+    # Create shorthand declarations (e.g. +margin+ or +font+) whenever possible.
     def create_shorthand!
       create_background_shorthand!
       create_dimensions_shorthand!
       create_font_shorthand!
-    end
-
-    # Escape declarations for use in inline <tt>style</tt> attributes.
-    def escape_declarations!
-      #if str =~ CssParser::RE_STRING1
-      #  puts "#{str} is double quoted"
-      #end
-      @declarations.gsub!(/\"/, "'")
     end
 
 private
@@ -136,6 +121,8 @@ private
       @declarations = {}
 
       return unless block
+
+      block.gsub!(/(^[\s]*)|([\s]*$)/, '')
 
       block.split(/[\;$]+/m).each do |decs|
         if matches = decs.match(/(.[^:]*)\:(.[^;]*)(;|\Z)/i)

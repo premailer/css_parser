@@ -7,30 +7,40 @@ require 'lib/css_parser/regexps'
 require 'lib/css_parser/parser'
 
 module CssParser
-
-  attr :folded_declaration_cache
-
   # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules 
   # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).
   #
   # Takes one or more RuleSet objects.
   #
-  # If a RuleSet object has its specificity defined, that specificity is used in 
-  # the cascade calculations.  If no specificity is set, the specificity is 
-  # calculated using the RuleSet's selectors. (TODO: WHICH ONE?)  If no selectors
-  # are present, the RuleSets are processed in order, with later ones taking 
-  # precendence.
-  #
   # Returns a RuleSet.
   #
-  # ==== Example
-  #  declaration_hashes = [{:specificity => 10, :declarations => 'color: red; font: 300 italic 11px/14px verdana, helvetica, sans-serif;'},
-  #                        {:specificity => 1000, :declarations => 'font-weight: normal'}]
+  # ==== Cascading
+  # If a RuleSet object has its +specificity+ defined, that specificity is 
+  # used in the cascade calculations.  
   #
-  #  fold_declarations(declaration_hashes).inspect
+  # If no specificity is explicitly set and the RuleSet has *one* selector, 
+  # the specificity is calculated using that selector.
   #
-  #  => "font-weight: normal; font-size: 11px; line-height: 14px; font-family: verdana, helvetica, sans-serif; 
-  #      color: red; font-style: italic;"
+  # If no selectors or multiple selectors are present, the specificity is 
+  # treated as 0.
+  #
+  # ==== Example #1
+  #   rs1 = RuleSet.new(nil, 'color: black;')
+  #   rs2 = RuleSet.new(nil, 'margin: 0px;')
+  #
+  #   merged = CssParser.merge(rs1, rs2)
+  #
+  #   puts merged
+  #   => "{ margin: 0px; color: black; }"
+  #
+  # ==== Example #2
+  #   rs1 = RuleSet.new(nil, 'background-color: black;')
+  #   rs1 = RuleSet.new(nil, 'background-image: none;')
+  #
+  #   merged = CssParser.merge(rs1, rs2)
+  #
+  #   puts merged
+  #   => "{ background: none black; }"
   #--
   # TODO: declaration_hashes should be able to contain a RuleSet
   #       this should be a Class method
@@ -50,7 +60,15 @@ module CssParser
       #raise ArgumentError, "parameters must be CssParser::RuleSets." unless rule_set.kind_of?(CssParser::RuleSet)
 
       rule_set.expand_shorthand!
-      specificity = rule_set.specificity || 0
+      
+      specificity = rule_set.specificity
+      unless specificity
+        if rule_set.selectors.length == 1
+          specificity = calculate_specificity(rule_set.selectors[0])
+        else
+          specificity = 0
+        end
+      end
 
       rule_set.each_declaration do |property, value, is_important|
         # Add the property to the list to be folded per http://www.w3.org/TR/CSS21/cascade.html#cascading-order
@@ -73,5 +91,60 @@ module CssParser
     merged.create_shorthand!
     merged
   end
+
+  # Calculates the specificity of a CSS selector
+  # per http://www.w3.org/TR/CSS21/cascade.html#specificity
+  #
+  # Returns an integer.
+  #
+  # ==== Example
+  #  CssParser.calculate_specificity('#content div p:first-line a:link')
+  #  => 114
+  #--
+  # Thanks to Rafael Salazar and Nick Fitzsimons on the css-discuss list for their help.
+  #++
+  def CssParser.calculate_specificity(selector)
+    a = 0
+    b = selector.scan(/\#/).length
+    c = selector.scan(NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX).length
+    d = selector.scan(ELEMENTS_AND_PSEUDO_ELEMENTS_RX).length
+
+    (a.to_s + b.to_s + c.to_s + d.to_s).to_i
+  rescue
+    return 0
+  end
+
+  # Make <tt>url()</tt> links absolute.
+  #
+  # Takes a block of CSS and returns it with all relative URIs converted to absolute URIs.
+  #
+  # "For CSS style sheets, the base URI is that of the style sheet, not that of the source document."
+  # per http://www.w3.org/TR/CSS21/syndata.html#uri
+  #
+  # Returns a string.
+  #
+  # ==== Example
+  #  CssParser.convert_uris("body { background: url('../style/yellow.png?abc=123') };", 
+  #               "http://example.org/style/basic.css").inspect
+  #  => "body { background: url('http://example.org/style/yellow.png?abc=123') };"
+  def self.convert_uris(css, base_uri)
+    out = ''
+    base_uri = URI.parse(base_uri) unless base_uri.kind_of?(URI)
+
+    out = css.gsub(URI_RX) do |s|
+      uri = $1.to_s
+      uri.gsub!(/["']+/, '')
+      # Don't process URLs that are already absolute
+      unless uri =~ /^[a-z]+\:\/\//i
+        begin
+          uri = base_uri.merge(uri) 
+        rescue; end
+      end
+      "url('" + uri.to_s + "')"
+    end
+    out
+  end
+
+
 
 end

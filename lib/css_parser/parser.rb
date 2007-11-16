@@ -1,4 +1,4 @@
-module CssParser # :nodoc:
+module CssParser
   # Exception class used for any errors encountered while downloading remote files.
   class RemoteFileError < IOError; end
 
@@ -61,23 +61,25 @@ module CssParser # :nodoc:
     # The default value is <tt>:all</tt>.
     #
     # ==== Examples
-    #  find('#content')
+    #  find_by_selector('#content')
     #  => 'font-size: 13px; line-height: 1.2;'
     #
-    #  find('#content', [:screen, :handheld])
+    #  find_by_selector('#content', [:screen, :handheld])
     #  => 'font-size: 13px; line-height: 1.2;'
     #
-    #  find('#content', :print)
+    #  find_by_selector('#content', :print)
     #  => 'font-size: 11pt; line-height: 1.2;'
     #
     # Returns an array of declarations.
-    def find(selector, media_types = :all)
+    def find_by_selector(selector, media_types = :all)
       out = []
       each_selector(media_types) do |sel, dec, spec|
         out << dec if sel.strip == selector.strip
       end
       out
     end
+    alias_method :[], :find_by_selector
+
 
     # Add a raw block of CSS.
     #
@@ -96,11 +98,13 @@ module CssParser # :nodoc:
     # TODO: add media_type
     #++
     def add_block!(block, options = {})
-      options = {:base_uri => nil, :charset => nil}.merge(options)
+      options = {:base_uri => nil, :charset => nil, :media_types => :all}.merge(options)
       
       block = cleanup_block(block)
 
-      block = convert_uris(block, options[:base_uri]) if options[:base_uri]
+      if options[:base_uri] and @options[:absolute_paths]
+        block = CssParser.convert_uris(block, options[:base_uri])
+      end
       
       parse_block_into_rule_sets!(block, options)
       
@@ -145,7 +149,7 @@ module CssParser # :nodoc:
     # See RuleSet#each_selector for +options+.
     def each_selector(media_types = :all, options = {}) # :yields: selectors, declarations, specificity
       each_rule_set(media_types) do |rule_set|
-        puts rule_set
+        #puts rule_set
         rule_set.each_selector(options) do |selectors, declarations, specificity|
           yield selectors, declarations, specificity
         end
@@ -184,16 +188,13 @@ module CssParser # :nodoc:
       current_selectors = ''
       current_declarations = ''
 
-      # TODO: this fails on '}}'
-      block.scan(/((.[^\{\}"\s]*)([\{\}"\s]?))/).each do |matches|
+      block.scan(/([\\]?[{}\s"]|(.[^\s"{}\\]*))/).each do |matches|
       #block.scan(/((.[^{}"\n\r\f\s]*)[\s]|(.[^{}"\n\r\f]*)\{|(.[^{}"\n\r\f]*)\}|(.[^{}"\n\r\f]*)\"|(.*)[\s]+)/).each do |matches|
         token = matches[0]
-        if token =~ /[^\/]"/ # found un-escaped double quote
+        #puts "TOKEN: #{token}" unless token =~ /^[\s]*$/
+        if token =~ /\A"/ # found un-escaped double quote
           in_string = !in_string
-        end
-        
-        puts token
-
+        end       
 
         if in_declarations
           current_declarations += token
@@ -204,8 +205,7 @@ module CssParser # :nodoc:
             in_declarations = false
 
             unless current_declarations.strip.empty?
-              #puts "saving rule with #{media_types.inspect}"
-              puts 'will save ' + current_selectors + '::' + current_declarations
+              #puts "SAVING #{current_selectors} -> #{current_declarations}"
               add_rule!(current_selectors, current_declarations, media_types)
             end
 
@@ -221,8 +221,8 @@ module CssParser # :nodoc:
             block_depth = block_depth + 1
             in_at_media_rule = false
           else
-            token.gsub!(/\,/, '')
-            media_types << token.strip.downcase.to_sym
+            token.gsub!(/[,\s]*/, '')
+            media_types << token.strip.downcase.to_sym unless token.empty?
           end
         elsif in_charset or token =~ /@charset/i
           # iterate until we are out of the charset declaration
@@ -231,70 +231,20 @@ module CssParser # :nodoc:
           if token =~ /\}/ and not in_string
             block_depth = block_depth - 1
           else
-            current_selectors += token
             if token =~ /\{/ and not in_string
-              current_selectors.gsub!(/\{[\s]*$/, '')
               current_selectors.gsub!(/^[\s]*/, '')
               current_selectors.gsub!(/[\s]*$/, '')
               in_declarations = true
+            else
+              current_selectors += token
             end
           end
         end
       end
     end
 
-    # Make <tt>url()</tt> links absolute.
-    #
-    # Takes a block of CSS and returns it with all relative URIs converted to absolute URIs.
-    #
-    # "For CSS style sheets, the base URI is that of the style sheet, not that of the source document."
-    # per http://www.w3.org/TR/CSS21/syndata.html#uri
-    #
-    # Returns a string.
-    #
-    # ==== Example
-    #  convert_uris("body { background: url('../style/yellow.png?abc=123') };", 
-    #               "http://example.org/style/basic.css").inspect
-    #  => "body { background: url('http://example.org/style/yellow.png?abc=123') };"
-    def self.convert_uris(css, base_uri)
-      out = ''
-      base_uri = URI.parse(base_uri) unless base_uri.kind_of?(URI)
-
-      out = css.gsub(URI_RX) do |s|
-        uri = $1.to_s
-        uri.gsub!(/["']+/, '')
-        # Don't process URLs that are already absolute
-        unless uri =~ /^[a-z]+\:\/\//i
-          begin
-            uri = base_uri.merge(uri) 
-          rescue; end
-        end
-        "url('" + uri.to_s + "')"
-      end
-      out
-    end
-
-    # Calculates the specificity of a CSS selector
-    # per http://www.w3.org/TR/CSS21/cascade.html#specificity
-    #
-    # Thanks to Rafael Salazar and Nick Fitzsimons on the css-discuss list for their help.
-    #
-    # Returns an integer.
-    #
-    # ==== Example
-    #  calculate_specificity('#content div p:first-line a:link')
-    #  => 114
-    def self.calculate_specificity(selector)
-      a = 0
-      b = selector.scan(/\#/).length
-      c = selector.scan(NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX).length
-      d = selector.scan(ELEMENTS_AND_PSEUDO_ELEMENTS_RX).length
-
-      (a.to_s + b.to_s + c.to_s + d.to_s).to_i
-    end
-
     # Load a remote CSS file.
-    def load_file!(uri, base_uri = nil, media_types = :all)
+    def load_uri!(uri, base_uri = nil, media_types = :all)
       base_uri = uri if base_uri.nil?
       src, charset = read_remote_file(uri)
 
@@ -312,7 +262,7 @@ module CssParser # :nodoc:
         end
 
         # Recurse
-        load_file!(import_uri, nil, media_types)
+        load_uri!(import_uri, nil, media_types)
       end
 
       # Remove @import declarations
@@ -372,19 +322,6 @@ module CssParser # :nodoc:
       rescue
         raise RemoteFileError if @options[:io_exceptions]
         return '', nil
-      end
-    end
-
-    # Determine is a property should overwrite an existing propery
-    # per http://www.w3.org/TR/CSS21/cascade.html#cascading-order
-    def should_overwrite?(existing_properties, property, specificity, is_important) # :nodoc:
-       if not existing_properties.has_key?(property) or
-          is_important or # step 2
-          existing_properties[property][:specificity] < specificity or # step 3
-          existing_properties[property][:specificity] == specificity # step 4    
-        return true
-      else
-        return false
       end
     end
 
