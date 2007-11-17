@@ -8,6 +8,22 @@ class CssParserTests < Test::Unit::TestCase
     @cp = Parser.new
   end
 
+  def test_at_page_rule
+    # from http://www.w3.org/TR/CSS21/page.html#page-selectors
+    css = <<-EOT
+      @page { margin: 2cm }
+
+      @page :first {
+        margin-top: 10cm
+      }
+    EOT
+
+    @cp.add_block!(css)
+
+    assert_equal 'margin: 2cm;', @cp.find_by_selector('@page').join(' ')
+    assert_equal 'margin-top: 10cm;', @cp.find_by_selector('@page :first').join(' ')
+  end
+
   def test_should_ignore_comments
     # see http://www.w3.org/Style/CSS/Test/CSS2.1/current/html4/t040109-c17-comments-00-b.htm
     css =<<-EOT

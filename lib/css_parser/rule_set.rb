@@ -12,7 +12,6 @@ module CssParser
 
     def initialize(selectors, block, specificity = nil)
       @selectors = []
-#      @block = block
       @specificity = specificity
       @declarations = {}
       parse_selectors!(selectors) if selectors
@@ -245,6 +244,12 @@ private
 
       bg_props = {}
 
+
+      if m = value.match(Regexp.union(CssParser::URI_RX, /none/i)).to_s
+        bg_props['background-image'] = m.strip unless m.empty?
+        value.gsub!(Regexp.union(CssParser::URI_RX, /none/i), '')
+      end
+
       if m = value.match(/([\s]*^)?(scroll|fixed)([\s]*$)?/i).to_s
         bg_props['background-attachment'] = m.strip unless m.empty?
       end
@@ -265,9 +270,6 @@ private
         end
       end
 
-      if m = value.match(Regexp.union(CssParser::URI_RX, /none/i)).to_s
-        bg_props['background-image'] = m.strip unless m.empty?
-      end
 
       if value =~ /([\s]*^)?inherit([\s]*$)?/i
         ['background-color', 'background-image', 'background-attachment', 'background-repeat', 'background-position'].each do |prop|

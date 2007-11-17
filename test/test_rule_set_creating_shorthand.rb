@@ -64,6 +64,14 @@ class RuleSetCreatingShorthandTests < Test::Unit::TestCase
     assert_properties_are_deleted(combined, properties)
   end
 
+  def test_property_values_in_url
+    rs = RuleSet.new('#header', "background:url(http://example.com/1528/www/top-logo.jpg) no-repeat top right; padding: 79px 0 10px 0;  text-align:left;")
+    rs.expand_shorthand!
+    assert_equal('top right;', rs['background-position'])
+    rs.create_shorthand!
+    assert_equal('url(http://example.com/1528/www/top-logo.jpg) no-repeat top right;', rs['background'])
+end
+
 protected
   def assert_properties_are_deleted(ruleset, properties)
     properties.each do |property, value|
