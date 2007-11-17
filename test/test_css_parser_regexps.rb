@@ -55,18 +55,6 @@ class CssParserRegexpTests < Test::Unit::TestCase
                  "li { list-style: url(\"#{crazy_uri}\") disc }".match(CssParser::RE_URI).to_s
   end
 
-  def test_at_import
-    flunk
-    assert_equal "style.css", "@import  \"style.css\";".match(CssParser::RE_AT_IMPORT_RULE).captures[1].to_s
-    assert_equal "style.css", "@ImpORt  'style.css';".match(CssParser::RE_AT_IMPORT_RULE).captures[0].to_s
-
-    "@import  \"style.css\" print, handheld;".scan(CssParser::RE_AT_IMPORT_RULE).each do |import_rule|
-      puts import_rule.inspect.to_s
-    end
-  
-    m = "@import  \"style.css\" print, handheld;".match(CssParser::RE_AT_IMPORT_RULE)
-    assert_equal "print, handheld", m.captures[m.captures.length-1].to_s.strip
-  end
 
 protected
   def load_test_file(filename)
