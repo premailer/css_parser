@@ -48,6 +48,11 @@ module CssParser
     #
     # If the property already exists its value will be over-written.
     def add_declaration!(property, value)
+      if value.nil? or value.empty?
+        @declarations.delete(property)
+        return
+      end
+      
       value.gsub!(/;\Z/, '')
       is_important = !value.gsub!(CssParser::IMPORTANT_IN_PROPERTY_RX, '').nil?
       property = property.downcase.strip
@@ -373,9 +378,5 @@ private
       end
 
     end
-
-
-
-
   end
 end
