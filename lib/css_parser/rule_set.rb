@@ -144,6 +144,7 @@ private
       @selectors = selectors.split(',') 
     end
 
+public
     # Split shorthand dimensional declarations (e.g. <tt>margin: 0px auto;</tt>)
     # into their constituent parts.
     def expand_dimensions_shorthand! # :nodoc:
