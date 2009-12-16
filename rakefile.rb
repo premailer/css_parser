@@ -40,7 +40,7 @@ Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'doc'
   rdoc.title    = 'Ruby CSS Parser'
   rdoc.options << '--all' << '--inline-source' << '--line-numbers'
-  rdoc.rdoc_files.include('README')
+  rdoc.rdoc_files.include('README.rdoc')
   rdoc.rdoc_files.include('CHANGELOG')
   rdoc.rdoc_files.include('LICENSE')
   rdoc.rdoc_files.include('lib/*.rb')
@@ -53,7 +53,7 @@ Rake::RDocTask.new(:fancy) do |rdoc|
   rdoc.rdoc_dir = 'fdoc'
   rdoc.title    = 'Ruby CSS Parser'
   rdoc.options << '--all' << '--inline-source' << '--line-numbers'
-  rdoc.rdoc_files.include('README')
+  rdoc.rdoc_files.include('README.rdoc')
   rdoc.rdoc_files.include('CHANGELOG')
   rdoc.rdoc_files.include('LICENSE')
   rdoc.rdoc_files.include('lib/*.rb')
@@ -73,7 +73,7 @@ spec = Gem::Specification.new do |s|
   s.files = FileList['lib/*.rb', 'lib/**/*.rb', 'test/**/*'].to_a
   s.test_files = Dir.glob('test/test_*.rb') 
   s.has_rdoc = true
-  s.extra_rdoc_files = ['README', 'CHANGELOG', 'LICENSE']
+  s.extra_rdoc_files = ['README.rdoc', 'CHANGELOG', 'LICENSE']
   s.rdoc_options << '--all' << '--inline-source' << '--line-numbers'
 end
 
