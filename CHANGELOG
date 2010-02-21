@@ -1,5 +1,8 @@
 === Ruby CSS Parser CHANGELOG
 
+==== Version 1.0.1
+ * Fallback for declartions without sort order
+
 ==== Version 1.0.0
  * Various test fixes and udpate for Ruby 1.9 (thanks to Tyler Cunnion)
  * Allow setting CSS declarations to nil

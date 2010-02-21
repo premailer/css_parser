@@ -52,7 +52,7 @@ directory.
 
 === Credits and code
 
-By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007-09.
+By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007-10.
 
 Project homepage: http://github.com/alexdunae/css_parser
 
