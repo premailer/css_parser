@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-# Test cases for the CssParser's downloading functions.
-class CssParserDownloadingTests < Test::Unit::TestCase
+# Test cases for the CssParser's loading functions.
+class CssParserLoadingTests < Test::Unit::TestCase
   include CssParser
   include WEBrick
 
