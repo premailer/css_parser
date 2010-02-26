@@ -14,7 +14,7 @@ class CssParserDownloadingTests < Test::Unit::TestCase
     www_root = File.dirname(__FILE__) + '/fixtures/'
 
     @server_thread = Thread.new do
-      s = WEBrick::HTTPServer.new(:Port => 12000, :DocumentRoot => www_root, :Logger => Log.new(nil, BasicLog::ERROR), :AccessLog => [])
+      s = WEBrick::HTTPServer.new(:Port => 12000, :DocumentRoot => www_root, :Logger => Log.new(nil, BasicLog::FATAL), :AccessLog => [])
       @port = s.config[:Port]
       begin
         s.start
@@ -47,6 +47,15 @@ class CssParserDownloadingTests < Test::Unit::TestCase
     assert_equal 'text-decoration: none;', @cp.find_by_selector('a').join(' ')
     
     # from '/subdir/../simple.css'
+    assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
+  end
+
+  def test_following_at_import_rules_from_add_block
+    css_block = '@import "../simple.css";'
+ 
+    @cp.add_block!(css_block, :base_uri => "#{@uri_base}/subdir/")
+    
+    # from 'simple.css'
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
   end
 

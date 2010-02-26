@@ -104,6 +104,30 @@ module CssParser
       if options[:base_uri] and @options[:absolute_paths]
         block = CssParser.convert_uris(block, options[:base_uri])
       end
+
+      # Load @imported CSS
+      block.scan(RE_AT_IMPORT_RULE).each do |import_rule|        
+        media_types = []
+        if media_string = import_rule[import_rule.length-1]
+          media_string.split(/\s|\,/).each do |t|
+            media_types << t.to_sym unless t.empty?
+          end
+        end
+
+        import_path = import_rule[1].to_s.gsub(/['"]*/, '').strip
+        
+        if options[:base_uri]
+          import_uri = URI.parse(options[:base_uri].to_s).merge(import_path)
+          load_uri!(import_uri, options[:base_uri], media_types)
+        else
+          puts 'TODO: readfile'
+        end     
+      end
+
+      # Remove @import declarations
+      block.gsub!(RE_AT_IMPORT_RULE, '')
+
+
       
       parse_block_into_rule_sets!(block, options)
       
@@ -242,35 +266,14 @@ module CssParser
       end
     end
 
+    
+
     # Load a remote CSS file.
     def load_uri!(uri, base_uri = nil, media_types = :all)
       base_uri = uri if base_uri.nil?
       src, charset = read_remote_file(uri)
 
-      # Load @imported CSS
-      src.scan(RE_AT_IMPORT_RULE).each do |import_rule|        
-        import_path = import_rule[1].to_s.gsub(/['"]*/, '').strip
-        import_uri = URI.parse(base_uri.to_s).merge(import_path)
-        #puts import_uri.to_s
-
-        media_types = []
-        if media_string = import_rule[import_rule.length-1]
-          media_string.split(/\s|\,/).each do |t|
-            media_types << t.to_sym unless t.empty?
-          end
-        end
-
-        # Recurse
-        load_uri!(import_uri, nil, media_types)
-      end
-
-      # Remove @import declarations
-      src.gsub!(RE_AT_IMPORT_RULE, '')
-
-      # Relative paths need to be converted here
-      src = CssParser.convert_uris(src, base_uri) if base_uri and @options[:absolute_paths]
-
-      add_block!(src, {:media_types => media_types})
+      add_block!(src, {:media_types => media_types, :base_uri => base_uri})
     end
 
   protected
