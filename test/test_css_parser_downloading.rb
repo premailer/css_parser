@@ -32,12 +32,32 @@ class CssParserDownloadingTests < Test::Unit::TestCase
     @server_thread = nil
   end
 
+  def test_loading_a_local_file
+    file_name = File.dirname(__FILE__) + '/fixtures/simple.css'
+    @cp.load_file!(file_name)
+    assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
+  end
+
   def test_loading_a_remote_file
     @cp.load_uri!("#{@uri_base}/simple.css")
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
   end
 
-  def test_following_at_import_rules
+  def test_following_at_import_rules_local
+    base_dir = File.dirname(__FILE__) + '/fixtures'
+    @cp.load_file!('import1.css', base_dir)
+
+    # from '/import1.css'
+    assert_equal 'color: lime;', @cp.find_by_selector('div').join(' ')
+
+    # from '/subdir/import2.css'
+    assert_equal 'text-decoration: none;', @cp.find_by_selector('a').join(' ')
+    
+    # from '/subdir/../simple.css'
+    assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
+  end
+
+  def test_following_at_import_rules_remote
     @cp.load_uri!("#{@uri_base}/import1.css")
 
     # from '/import1.css'

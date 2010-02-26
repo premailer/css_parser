@@ -82,6 +82,9 @@ module CssParser
 
     # Add a raw block of CSS.
     #
+    # In order to follow +@import+ rules you must supply either a
+    # +:base_dir+ or +:base_uri+ option.
+    #
     # ==== Example
     #   css = <<-EOT
     #     body { font-size: 10pt }
@@ -97,7 +100,7 @@ module CssParser
     # TODO: add media_type
     #++
     def add_block!(block, options = {})
-      options = {:base_uri => nil, :charset => nil, :media_types => :all}.merge(options)
+      options = {:base_uri => nil, :base_dir => nil, :charset => nil, :media_types => :all}.merge(options)
       
       block = cleanup_block(block)
 
@@ -119,8 +122,8 @@ module CssParser
         if options[:base_uri]
           import_uri = URI.parse(options[:base_uri].to_s).merge(import_path)
           load_uri!(import_uri, options[:base_uri], media_types)
-        else
-          puts 'TODO: readfile'
+        elsif options[:base_dir]
+          load_file!(import_path, options[:base_dir], media_types)
         end     
       end
 
@@ -266,8 +269,6 @@ module CssParser
       end
     end
 
-    
-
     # Load a remote CSS file.
     def load_uri!(uri, base_uri = nil, media_types = :all)
       base_uri = uri if base_uri.nil?
@@ -275,6 +276,19 @@ module CssParser
 
       add_block!(src, {:media_types => media_types, :base_uri => base_uri})
     end
+    
+    # Load a local CSS file.
+    def load_file!(file_name, base_dir = nil, media_types = :all)
+      file_name = File.expand_path(file_name, base_dir)
+      return unless File.readable?(file_name)
+
+      src = IO.read(file_name)
+      base_dir = File.dirname(file_name)
+
+      add_block!(src, {:media_types => media_types, :base_dir => base_dir})
+    end
+    
+    
 
   protected
     # Strip comments and clean up blank lines from a block of CSS.
