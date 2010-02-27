@@ -15,7 +15,13 @@ Done.
   include CssParser
 
   parser = CssParser::Parser.new
-  parser.load_file!('http://example.com/styles/style.css')
+  parser.load_uri!('http://example.com/styles/style.css')
+
+  # load a remote file, setting the base_uri and media_types
+  parser.load_uri!('../style.css', 'http://example.com/styles/inc/', [:screen, :handheld])
+  
+  # load a local file, setting the base_dir and media_types
+  parser.load_file!('print.css', '~/styles/', :print)
 
   # lookup a rule by a selector
   parser.find('#content')
@@ -28,7 +34,7 @@ Done.
   parser.each_selector(:screen) do |selector, declarations, specificity|
     ...
   end
-
+  
   # add a block of CSS
   css = <<-EOT
     body { margin: 0 1em; }
