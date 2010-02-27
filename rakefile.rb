@@ -14,12 +14,9 @@ class File
       file_with_path = path+'/'+filename
       return file_with_path if file?(file_with_path) 
     end
-    
-  
     raise ArgumentError, "Can't find file #{filename} in Ruby library path"
   end
 end
-
 
 include CssParser
 
@@ -30,7 +27,6 @@ Rake::TestTask.new do |t|
   t.test_files = FileList['test/test*.rb'].exclude('test_helper.rb')
   t.verbose = false
 end
-
 
 desc 'Generate documentation.'
 Rake::RDocTask.new(:rdoc) do |rdoc|

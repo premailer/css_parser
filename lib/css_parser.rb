@@ -2,9 +2,6 @@ require 'uri'
 require 'digest/md5'
 require 'zlib'
 require 'iconv'
-require File.dirname(__FILE__) + '/css_parser/rule_set'
-require File.dirname(__FILE__) + '/css_parser/regexps'
-require File.dirname(__FILE__) + '/css_parser/parser'
 
 module CssParser
   VERSION = '1.1.0'
@@ -148,3 +145,7 @@ module CssParser
     out
   end
 end
+
+require File.dirname(__FILE__) + '/css_parser/rule_set'
+require File.dirname(__FILE__) + '/css_parser/regexps'
+require File.dirname(__FILE__) + '/css_parser/parser'
