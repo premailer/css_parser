@@ -84,7 +84,7 @@ module CssParser
 
     # Iterate through declarations.
     def each_declaration # :yields: property, value, is_important
-      decs = @declarations.sort { |a,b| a[1][:order].nil? || b[1][:order].nil? ? 1 : a[1][:order] <=> b[1][:order] }
+      decs = @declarations.sort { |a,b| a[1][:order].nil? || b[1][:order].nil? ? 0 : a[1][:order] <=> b[1][:order] }
       decs.each do |property, data|
         value = data[:value]
         yield property.downcase.strip, value.strip, data[:is_important]
