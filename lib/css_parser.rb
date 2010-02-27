@@ -1,13 +1,14 @@
-$:.unshift File.dirname(__FILE__)
 require 'uri'
 require 'digest/md5'
 require 'zlib'
 require 'iconv'
-require 'css_parser/rule_set'
-require 'css_parser/regexps'
-require 'css_parser/parser'
+require File.dirname(__FILE__) + '/css_parser/rule_set'
+require File.dirname(__FILE__) + '/css_parser/regexps'
+require File.dirname(__FILE__) + '/css_parser/parser'
 
 module CssParser
+  VERSION = '1.1.0'
+
   # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules 
   # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).
   #
