@@ -4,9 +4,8 @@ Load, parse and cascade CSS rule sets in Ruby.
 
 === Setup
 
-Install the gem (hosted on GemCutter).
+Install the gem.
 
-   gem sources -a http://gemcutter.org/
    gem install css_parser
 
 Done.
