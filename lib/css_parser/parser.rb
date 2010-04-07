@@ -21,7 +21,7 @@ module CssParser
     STRIP_HTML_COMMENTS_RX = /\<\!\-\-|\-\-\>/m
 
     # Initial parsing
-    RE_AT_IMPORT_RULE = /\@import[\s]+(url\()?["']+(.[^'"]*)["']\)?([\w\s\,]*);?/i
+    RE_AT_IMPORT_RULE = /\@import[\s]+(url\()?["']*(.[^'"]*)["']?\)?([\w\s\,]*);?/i
 
     #--
     # RE_AT_IMPORT_RULE = Regexp.new('@import[\s]*(' + RE_STRING.to_s + ')([\w\s\,]*)[;]?', Regexp::IGNORECASE) -- should handle url() even though it is not allowed
