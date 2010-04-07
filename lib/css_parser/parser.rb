@@ -95,7 +95,7 @@ module CssParser
     #   EOT
     #
     #   parser = CssParser::Parser.new
-    #   parser.load_css!(css)
+    #   parser.add_block!(css)
     #--
     # TODO: add media_type
     #++
