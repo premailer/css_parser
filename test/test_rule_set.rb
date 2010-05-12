@@ -75,6 +75,12 @@ class RuleSetTests < Test::Unit::TestCase
     assert_equal(declarations.split(' ').sort, rs.declarations_to_s.split(' ').sort)
   end
 
+  def test_important_declarations_to_s
+    declarations = 'color: #fff; font-weight: bold !important;'
+    rs = RuleSet.new('#content p, a', declarations)
+    assert_equal(declarations.split(' ').sort, rs.declarations_to_s.split(' ').sort)
+  end
+
   def test_overriding_specificity
     rs = RuleSet.new('#content p, a', 'color: white', 1000)
     rs.each_selector do |sel, decs, spec|

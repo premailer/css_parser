@@ -98,8 +98,10 @@ module CssParser
     def declarations_to_s(options = {})
      options = {:force_important => false}.merge(options)
      str = ''
-     importance = options[:force_important] ? ' !important' : ''
-     each_declaration { |prop, val| str += "#{prop}: #{val}#{importance}; " }
+     each_declaration do |prop, val, is_important|
+       importance = (options[:force_important] || is_important) ? ' !important' : ''
+       str += "#{prop}: #{val}#{importance}; "
+     end
      str.gsub(/^[\s]+|[\n\r\f\t]*|[\s]+$/mx, '').strip
     end
 
