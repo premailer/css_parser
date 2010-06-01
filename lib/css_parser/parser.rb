@@ -269,9 +269,11 @@ module CssParser
     # Load a remote CSS file.
     def load_uri!(uri, base_uri = nil, media_types = :all)
       base_uri = uri if base_uri.nil?
-      src, charset = read_remote_file(uri)
 
-      add_block!(src, {:media_types => media_types, :base_uri => base_uri})
+      src, charset = read_remote_file(uri)
+      unless src.empty?
+        add_block!(src, {:media_types => media_types, :base_uri => base_uri})
+      end
     end
     
     # Load a local CSS file.
@@ -312,7 +314,11 @@ module CssParser
     # TODO: add option to fail silently or throw and exception on a 404
     #++
     def read_remote_file(uri) # :nodoc:
-      raise CircularReferenceError, "can't load #{uri.to_s} more than once" if @loaded_uris.include?(uri.to_s)
+      if @loaded_uris.include?(uri.to_s)
+        raise CircularReferenceError, "can't load #{uri.to_s} more than once" if @options[:io_exceptions]
+        return '', nil
+      end
+
       @loaded_uris << uri.to_s
 
       begin
