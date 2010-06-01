@@ -338,7 +338,7 @@ module CssParser
 
         fh.close
         return src, fh.charset
-      rescue
+      rescue Exception => e
         raise RemoteFileError if @options[:io_exceptions]
         return '', nil
       end
