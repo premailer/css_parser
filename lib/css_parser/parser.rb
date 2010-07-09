@@ -271,6 +271,11 @@ module CssParser
 
     # Load a remote CSS file.
     def load_uri!(uri, base_uri = nil, media_types = :all)
+      uri = URI.parse(uri) unless uri.respond_to? :scheme
+      if uri.scheme == 'file' or uri.scheme.nil?
+        uri.path = File.expand_path(uri.path)
+        uri.scheme = 'file'
+      end
       base_uri = uri if base_uri.nil?
       src, charset = read_remote_file(uri)
 
@@ -320,21 +325,27 @@ module CssParser
 
       begin
       #fh = open(uri, 'rb')
-        fh = open(uri, 'rb', 'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip')
-
-        if fh.content_encoding.include?('gzip')
+        if uri.scheme == 'file'
+          fh = open(uri.path, 'rb')
+        else
+          fh = open(uri, 'rb', 'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip')
+        end 
+        
+        if fh.respond_to?(:content_encoding) and fh.content_encoding.include?('gzip')
           remote_src = Zlib::GzipReader.new(fh).read
         else
           remote_src = fh.read
         end
 
-        #puts "reading #{uri} (#{fh.charset})"
+        charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
 
-        ic = Iconv.new('UTF-8//IGNORE', fh.charset)
+        #puts "reading #{uri} (#{charset})"
+
+        ic = Iconv.new('UTF-8//IGNORE', charset)
         src = ic.iconv(remote_src)
 
         fh.close
-        return src, fh.charset
+        return src, charset
       rescue
         raise RemoteFileError if @options[:io_exceptions]
         return '', nil
