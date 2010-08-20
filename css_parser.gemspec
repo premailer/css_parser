@@ -1,5 +1,3 @@
-require 'rake'
-
 Gem::Specification.new do |s|
   s.name     = "css_parser"
   s.version  = "1.1.0"
@@ -12,7 +10,7 @@ Gem::Specification.new do |s|
   s.author  = "Alex Dunae"
   s.platform = Gem::Platform::RUBY
   s.rdoc_options << '--all' << '--inline-source' << '--line-numbers' << '--charset' << 'utf-8'
-  s.files = FileList['lib/*.rb', 'lib/**/*.rb', 'test/**/*'].to_a
+  s.files = (Dir.glob('lib/*.rb') | Dir.glob('lib/**/*.rb') | Dir.glob('test/**/*'))
   s.test_files = Dir.glob('test/test_*.rb') 
 end
 
