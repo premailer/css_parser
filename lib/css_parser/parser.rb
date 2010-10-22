@@ -312,7 +312,11 @@ module CssParser
     # TODO: add option to fail silently or throw and exception on a 404
     #++
     def read_remote_file(uri) # :nodoc:
-      raise CircularReferenceError, "can't load #{uri.to_s} more than once" if @loaded_uris.include?(uri.to_s)
+      if @loaded_uris.include?(uri.to_s)
+        raise CircularReferenceError, "can't load #{uri.to_s} more than once" if @options[:io_exceptions]
+        return '', nil
+      end
+      
       @loaded_uris << uri.to_s
 
       begin

@@ -91,6 +91,13 @@ class CssParserLoadingTests < Test::Unit::TestCase
     assert_raise CircularReferenceError do
       @cp.load_uri!("#{@uri_base}/import-circular-reference.css")
     end
+
+    cp_without_exceptions = Parser.new(:io_exceptions => false)
+
+    assert_nothing_raised CircularReferenceError do
+      cp_without_exceptions.load_uri!("#{@uri_base}/import-circular-reference.css")
+    end
+    
   end
 
   def test_toggling_not_found_exceptions
