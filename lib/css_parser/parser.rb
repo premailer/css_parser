@@ -21,7 +21,7 @@ module CssParser
     STRIP_HTML_COMMENTS_RX = /\<\!\-\-|\-\-\>/m
 
     # Initial parsing
-    RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?["']?([^'"\s\)]*)["']?\)?([\w\s\,^\])]*)\)?[;\n]?/
+    RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)?["']?([^'"\s\)]*)["']?\)?([\w\s\,^\])]*)\)?[;\n]?/
 
     #--
     # RE_AT_IMPORT_RULE = Regexp.new('@import[\s]*(' + RE_STRING.to_s + ')([\w\s\,]*)[;]?', Regexp::IGNORECASE) -- should handle url() even though it is not allowed
@@ -269,9 +269,11 @@ module CssParser
     # Load a remote CSS file.
     def load_uri!(uri, base_uri = nil, media_types = :all)
       base_uri = uri if base_uri.nil?
-      src, charset = read_remote_file(uri)
 
-      add_block!(src, {:media_types => media_types, :base_uri => base_uri})
+      src, charset = read_remote_file(uri)
+      unless src.empty?
+        add_block!(src, {:media_types => media_types, :base_uri => base_uri})
+      end
     end
     
     # Load a local CSS file.
@@ -316,7 +318,7 @@ module CssParser
         raise CircularReferenceError, "can't load #{uri.to_s} more than once" if @options[:io_exceptions]
         return '', nil
       end
-      
+
       @loaded_uris << uri.to_s
 
       begin
@@ -336,7 +338,7 @@ module CssParser
 
         fh.close
         return src, fh.charset
-      rescue
+      rescue Exception => e
         raise RemoteFileError if @options[:io_exceptions]
         return '', nil
       end
