@@ -1,4 +1,5 @@
 require 'uri'
+require 'open-uri'
 require 'digest/md5'
 require 'zlib'
 require 'iconv'
