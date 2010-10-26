@@ -5,7 +5,7 @@ require 'zlib'
 require 'iconv'
 
 module CssParser
-  VERSION = '1.1.0'
+  VERSION = '1.1.1'
 
   # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules 
   # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).

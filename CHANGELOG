@@ -1,5 +1,10 @@
 === Ruby CSS Parser CHANGELOG
 
+==== Version 1.1.1
+ * Ruby 1.9 compatibility
+ * @import regexp updates
+ * various bug fixes
+
 ==== Version 1.1.0
  * Added support for local @import
  * Better remote @import handling
