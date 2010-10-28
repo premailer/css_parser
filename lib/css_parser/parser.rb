@@ -264,12 +264,17 @@ module CssParser
 
     # Load a remote CSS file.
     def load_uri!(uri, base_uri = nil, media_types = :all)
+      uri = URI.parse(uri) unless uri.respond_to? :scheme
+      if uri.scheme == 'file' or uri.scheme.nil?
+        uri.path = File.expand_path(uri.path)
+        uri.scheme = 'file'
+      end
       base_uri = uri if base_uri.nil?
 
       src, charset = read_remote_file(uri)
-      unless src.empty?
+#      unless src.empty?
         add_block!(src, {:media_types => media_types, :base_uri => base_uri})
-      end
+#      end
     end
     
     # Load a local CSS file.
@@ -323,36 +328,45 @@ module CssParser
         uri = URI.parse(uri.to_s)    
         http = Net::HTTP.new(uri.host, uri.port)
 
-        if uri.scheme == 'https'
-          http.use_ssl = true 
-          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        if uri.scheme == 'file'
+          # local file
+          fh = open(uri.path, 'rb')
+          src = fh.read
+          fh.close
+        else
+          # remote file
+          if uri.scheme == 'https'
+            http.use_ssl = true 
+            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          end
+
+          res, src = http.get(uri.path, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
+          charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
+
+          if res.code.to_i >= 400
+            raise RemoteFileError if @options[:io_exceptions]
+            return '', nil
+          end
+
+          case res['content-encoding']
+            when 'gzip'
+              io = Zlib::GzipReader.new(StringIO.new(res.body))
+              src = io.read
+            when 'deflate'
+              io = Zlib::Inflate.new
+              src = io.inflate(res.body)
+          end
         end
 
-        res, src = http.get(uri.path, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
-
-        if res.code.to_i >= 400
-          raise RemoteFileError if @options[:io_exceptions]
-          return '', nil
+        if charset
+          ic = Iconv.new('UTF-8//IGNORE', charset)
+          src = ic.iconv(src)
         end
-
-        case res['content-encoding']
-          when 'gzip'
-            io = Zlib::GzipReader.new(StringIO.new(res.body))
-            src = io.read
-          when 'deflate'
-            io = Zlib::Inflate.new
-            src = io.inflate(res.body)
-        end
-
-        # TODO
-        #ic = Iconv.new('UTF-8//IGNORE', fh.charset)
-        #src = ic.iconv(remote_src)
-
-        return src, charset
-      rescue Exception => e
+      rescue
         raise RemoteFileError if @options[:io_exceptions]
-        return '', nil
       end
+
+      return src, charset  
     end
 
   private
