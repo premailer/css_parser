@@ -1,5 +1,11 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.1.2
+ * improve parsing of malformed declarations
+ * improve support for local files
+ * added support for loading over SSL
+ * added support for deflate
+
 ==== Version 1.1.1
  * Ruby 1.9 compatibility
  * @import regexp updates
