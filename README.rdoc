@@ -65,6 +65,6 @@ By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007-10.
 
 Project homepage: http://github.com/alexdunae/css_parser
 
-Thanks to {Tyler Cunnion}[http://github.com/tylercunnion] for the updates leading to 1.0.0.
+Thanks to {all the wonderful contributors}[http://github.com/alexdunae/css_parser/contributors] for their updates.
 
 Made on Vancouver Island.
