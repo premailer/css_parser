@@ -83,7 +83,6 @@ class CssParserTests < Test::Unit::TestCase
   end
 
   def test_ignoring_malformed_declarations
-    flunk
     # dervived from http://www.w3.org/TR/CSS21/syndata.html#parsing-errors
     css = <<-EOT
       p { color:green }

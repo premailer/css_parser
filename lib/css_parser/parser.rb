@@ -195,7 +195,7 @@ module CssParser
       options = {:media_types => :all}.merge(options)
       media_types = options[:media_types]
 
-      in_declarations = false
+      in_declarations = 0
 
       block_depth = 0
 
@@ -215,13 +215,25 @@ module CssParser
           in_string = !in_string
         end       
 
-        if in_declarations
+        if in_declarations > 0
+
+          # too deep, malformed declaration block
+          if in_declarations > 1
+            in_declarations -= 1 if token =~ /\}/
+            next
+          end
+          
+          if token =~ /\{/
+            in_declarations += 1
+            next
+          end
+        
           current_declarations += token
 
           if token =~ /\}/ and not in_string
             current_declarations.gsub!(/\}[\s]*$/, '')
             
-            in_declarations = false
+            in_declarations -= 1
 
             unless current_declarations.strip.empty?
               #puts "SAVING #{current_selectors} -> #{current_declarations}"
@@ -253,7 +265,7 @@ module CssParser
             if token =~ /\{/ and not in_string
               current_selectors.gsub!(/^[\s]*/, '')
               current_selectors.gsub!(/[\s]*$/, '')
-              in_declarations = true
+              in_declarations += 1
             else
               current_selectors += token
             end
