@@ -263,6 +263,8 @@ module CssParser
     end
 
     # Load a remote CSS file.
+    #
+    # You can also pass in file://test.css
     def load_uri!(uri, base_uri = nil, media_types = :all)
       uri = URI.parse(uri) unless uri.respond_to? :scheme
       if uri.scheme == 'file' or uri.scheme.nil?
@@ -272,9 +274,7 @@ module CssParser
       base_uri = uri if base_uri.nil?
 
       src, charset = read_remote_file(uri)
-#      unless src.empty?
-        add_block!(src, {:media_types => media_types, :base_uri => base_uri})
-#      end
+      add_block!(src, {:media_types => media_types, :base_uri => base_uri})
     end
     
     # Load a local CSS file.

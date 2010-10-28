@@ -17,6 +17,10 @@ Done.
   parser = CssParser::Parser.new
   parser.load_uri!('http://example.com/styles/style.css')
 
+  parser = CssParser::Parser.new
+  parser.load_uri!('file://home/user/styles/style.css')
+
+
   # load a remote file, setting the base_uri and media_types
   parser.load_uri!('../style.css', 'http://example.com/styles/inc/', [:screen, :handheld])
   
