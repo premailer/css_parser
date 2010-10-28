@@ -23,11 +23,7 @@ module CssParser
     # Initial parsing
     RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s\)]*)["']?\)?([\w\s\,^\])]*)\)?[;\n]?/
 
-    #--
-    # RE_AT_IMPORT_RULE = Regexp.new('@import[\s]*(' + RE_STRING.to_s + ')([\w\s\,]*)[;]?', Regexp::IGNORECASE) -- should handle url() even though it is not allowed
-    #++
-
-    # Array of CSS files that have been loaded.
+     # Array of CSS files that have been loaded.
     attr_reader   :loaded_uris
 
     #attr_reader   :rules
