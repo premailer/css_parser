@@ -11,10 +11,10 @@ class CssParserLoadingTests < Test::Unit::TestCase
 
     @uri_base = 'http://localhost:12000'
 
-    www_root = File.dirname(__FILE__) + '/fixtures/'
+    @www_root = File.dirname(__FILE__) + '/fixtures/'
 
     @server_thread = Thread.new do
-      s = WEBrick::HTTPServer.new(:Port => 12000, :DocumentRoot => www_root, :Logger => Log.new(nil, BasicLog::FATAL), :AccessLog => [])
+      s = WEBrick::HTTPServer.new(:Port => 12000, :DocumentRoot => @www_root, :Logger => Log.new(nil, BasicLog::FATAL), :AccessLog => [])
       @port = s.config[:Port]
       begin
         s.start
@@ -25,13 +25,13 @@ class CssParserLoadingTests < Test::Unit::TestCase
 
     sleep 1 # ensure the server has time to load
   end
-
+ 
   def teardown
     @server_thread.kill
     @server_thread.join(5)
     @server_thread = nil
   end
-
+ 
   def test_loading_a_local_file
     file_name = File.dirname(__FILE__) + '/fixtures/simple.css'
     @cp.load_file!(file_name)
@@ -42,6 +42,14 @@ class CssParserLoadingTests < Test::Unit::TestCase
     @cp.load_uri!("#{@uri_base}/simple.css")
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
   end
+
+  # http://github.com/alexdunae/css_parser/issues#issue/4
+  def test_loading_a_remote_file_over_ssl
+    # TODO: test SSL locally
+    @cp.load_uri!("https://www.expresspardons.com/inc/screen.css")
+    assert_match /margin\: 0\;/, @cp.find_by_selector('body').join(' ')
+  end
+
 
   def test_following_at_import_rules_local
     base_dir = File.dirname(__FILE__) + '/fixtures'

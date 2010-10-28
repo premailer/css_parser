@@ -321,23 +321,38 @@ module CssParser
 
       @loaded_uris << uri.to_s
 
-      begin
-      #fh = open(uri, 'rb')
-        fh = open(uri, 'rb', 'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip')
+      src = '', charset = nil
 
-        if fh.content_encoding.include?('gzip')
-          remote_src = Zlib::GzipReader.new(fh).read
-        else
-          remote_src = fh.read
+      begin
+        uri = URI.parse(uri.to_s)    
+        http = Net::HTTP.new(uri.host, uri.port)
+
+        if uri.scheme == 'https'
+          http.use_ssl = true 
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
         end
 
-        #puts "reading #{uri} (#{fh.charset})"
+        res, src = http.get(uri.path, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
 
-        ic = Iconv.new('UTF-8//IGNORE', fh.charset)
-        src = ic.iconv(remote_src)
+        if res.code.to_i >= 400
+          raise RemoteFileError if @options[:io_exceptions]
+          return '', nil
+        end
 
-        fh.close
-        return src, fh.charset
+        case res['content-encoding']
+          when 'gzip'
+            io = Zlib::GzipReader.new(StringIO.new(res.body))
+            src = io.read
+          when 'deflate'
+            io = Zlib::Inflate.new
+            src = io.inflate(res.body)
+        end
+
+        # TODO
+        #ic = Iconv.new('UTF-8//IGNORE', fh.charset)
+        #src = ic.iconv(remote_src)
+
+        return src, charset
       rescue Exception => e
         raise RemoteFileError if @options[:io_exceptions]
         return '', nil

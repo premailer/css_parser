@@ -1,7 +1,9 @@
 require 'uri'
+require 'net/https'
 require 'open-uri'
 require 'digest/md5'
 require 'zlib'
+require 'stringio'
 require 'iconv'
 
 module CssParser
