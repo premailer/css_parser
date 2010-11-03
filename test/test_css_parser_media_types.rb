@@ -56,7 +56,7 @@ class CssParserMediaTypesTests < Test::Unit::TestCase
     assert @cp.find_by_selector('body', :handheld).empty?
   end
   
-  def test_adding_block_and_limiting_media_types
+  def test_adding_block_and_limiting_media_types1
     css = <<-EOT
       @import "import1.css", print
     EOT
@@ -68,7 +68,7 @@ class CssParserMediaTypesTests < Test::Unit::TestCase
 
   end
   
-  def test_adding_block_and_limiting_media_types
+  def test_adding_block_and_limiting_media_types2
     css = <<-EOT
       @import "import1.css", print
     EOT
@@ -78,6 +78,18 @@ class CssParserMediaTypesTests < Test::Unit::TestCase
     @cp.add_block!(css, :only_media_types => :print, :base_dir => base_dir)
     assert_match 'color: lime', @cp.find_by_selector('div').join(' ')
   end  
+
+  def test_adding_block_and_limiting_media_types
+    css = <<-EOT
+      @import "import1.css"
+    EOT
+    
+    base_dir = File.dirname(__FILE__)  + '/fixtures/'
+
+    @cp.add_block!(css, :only_media_types => :print, :base_dir => base_dir)
+    assert_match 'color: lime', @cp.find_by_selector('div').join(' ')
+  end  
+
 
   def test_adding_rule_set_with_media_type
     @cp.add_rule!('body', 'color: black;', [:handheld,:tty])

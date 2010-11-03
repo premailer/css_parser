@@ -115,8 +115,8 @@ module CssParser
             media_types << t.to_sym unless t.empty?
           end
         end
-        
-        next unless options[:only_media_types].include?(:all) or (media_types & options[:only_media_types]).length > 0
+              
+        next unless options[:only_media_types].include?(:all) or media_types.length < 1 or (media_types & options[:only_media_types]).length > 0
 
         import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
 
