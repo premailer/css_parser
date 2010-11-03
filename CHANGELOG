@@ -1,5 +1,8 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.1.3
+ * allow limiting by media type in add_block!
+
 === Version 1.1.2
  * improve parsing of malformed declarations
  * improve support for local files
