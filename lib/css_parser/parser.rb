@@ -81,6 +81,10 @@ module CssParser
     # In order to follow +@import+ rules you must supply either a
     # +:base_dir+ or +:base_uri+ option.
     #
+    # Use the +:media_types+ option to set the media type(s) for this block.  Takes an array of symbols.
+    #
+    # Use the +:only_media_types+ option to selectively follow +@import+ rules.  Takes an array of symbols.
+    #
     # ==== Example
     #   css = <<-EOT
     #     body { font-size: 10pt }
@@ -92,12 +96,11 @@ module CssParser
     #
     #   parser = CssParser::Parser.new
     #   parser.add_block!(css)
-    #--
-    # TODO: add media_type
-    #++
     def add_block!(block, options = {})
-      options = {:base_uri => nil, :base_dir => nil, :charset => nil, :media_types => :all}.merge(options)
-      
+      options = {:base_uri => nil, :base_dir => nil, :charset => nil, :media_types => :all, :only_media_types => :all}.merge(options)
+      options[:media_types] = [options[:media_types]].flatten
+      options[:only_media_types] = [options[:only_media_types]].flatten
+
       block = cleanup_block(block)
 
       if options[:base_uri] and @options[:absolute_paths]
@@ -105,16 +108,18 @@ module CssParser
       end
 
       # Load @imported CSS
-      block.scan(RE_AT_IMPORT_RULE).each do |import_rule|        
+      block.scan(RE_AT_IMPORT_RULE).each do |import_rule|    
         media_types = []
         if media_string = import_rule[-1]
           media_string.split(/\s|\,/).each do |t|
             media_types << t.to_sym unless t.empty?
           end
         end
+        
+        next unless options[:only_media_types].include?(:all) or (media_types & options[:only_media_types]).length > 0
 
         import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
-        
+
         if options[:base_uri]
           import_uri = URI.parse(options[:base_uri].to_s).merge(import_path)
           load_uri!(import_uri, options[:base_uri], media_types)
