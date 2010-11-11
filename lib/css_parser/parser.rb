@@ -291,7 +291,10 @@ module CssParser
       base_uri = uri if base_uri.nil?
 
       src, charset = read_remote_file(uri)
-      add_block!(src, {:media_types => media_types, :base_uri => base_uri})
+
+      if src
+        add_block!(src, {:media_types => media_types, :base_uri => base_uri})
+      end
     end
     
     # Load a local CSS file.
@@ -381,6 +384,7 @@ module CssParser
         end
       rescue
         raise RemoteFileError if @options[:io_exceptions]
+        return nil, nil
       end
 
       return src, charset  
