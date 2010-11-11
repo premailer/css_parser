@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/test_helper'
+require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
 # Test cases for the handling of media types
 class CssParserMediaTypesTests < Test::Unit::TestCase

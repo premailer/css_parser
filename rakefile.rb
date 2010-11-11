@@ -1,9 +1,11 @@
+$:.unshift File.expand_path('../lib', __FILE__)
+
 require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'fileutils'
-require 'lib/css_parser'
+require 'css_parser'
 
 class File
   # find a file in the load path or raise an exception if the file can

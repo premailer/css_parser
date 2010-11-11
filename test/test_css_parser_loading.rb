@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/test_helper'
+require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
 # Test cases for the CssParser's loading functions.
 class CssParserLoadingTests < Test::Unit::TestCase
