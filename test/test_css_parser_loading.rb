@@ -39,7 +39,7 @@ class CssParserLoadingTests < Test::Unit::TestCase
   end
 
   def test_loading_a_local_file_with_scheme
-    file_name = 'file://' + File.dirname(__FILE__) + '/fixtures/simple.css'
+    file_name = 'file://' + File.expand_path(File.dirname(__FILE__)) + '/fixtures/simple.css'
     @cp.load_uri!(file_name)
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
   end
