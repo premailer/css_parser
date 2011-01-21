@@ -61,7 +61,7 @@ directory.
 
 === Credits and code
 
-By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007-10.
+By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007-11.
 
 Project homepage: http://github.com/alexdunae/css_parser
 
