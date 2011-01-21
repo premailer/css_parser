@@ -300,11 +300,13 @@ public
 
     # Looks for long format CSS background properties (e.g. <tt>background-color</tt>) and 
     # converts them into a shorthand CSS <tt>background</tt> property.
+    #
+    # Leaves properties declared !important alone.
     def create_background_shorthand! # :nodoc:
       new_value = ''
       ['background-color', 'background-image', 'background-repeat', 
        'background-position', 'background-attachment'].each do |property|
-        if @declarations.has_key?(property)
+        if @declarations.has_key?(property) and not @declarations[property][:is_important]
           new_value += @declarations[property][:value] + ' '
           @declarations.delete(property)
         end
