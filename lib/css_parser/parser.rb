@@ -115,7 +115,7 @@ module CssParser
             media_types << t.to_sym unless t.empty?
           end
         end
-              
+
         next unless options[:only_media_types].include?(:all) or media_types.length < 1 or (media_types & options[:only_media_types]).length > 0
 
         import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
@@ -282,18 +282,35 @@ module CssParser
     # Load a remote CSS file.
     #
     # You can also pass in file://test.css
-    def load_uri!(uri, base_uri = nil, media_types = :all)
+    #
+    # See add_block! for options.
+    #
+    # Deprecated: originally accepted three params: `uri`, `base_uri` and `media_types`
+    def load_uri!(uri, options = {}, deprecated = nil)
       uri = URI.parse(uri) unless uri.respond_to? :scheme
+      #base_uri = nil, media_types = :all, options = {}
+
+      opts = {:base_uri => nil, :media_types => :all}
+
+      if options.is_a? Hash
+        opts.merge!(options)
+      else
+        opts[:base_uri] = options if options.is_a? String
+        opts[:media_types] = deprecated if deprecated
+      end
+      
+      
       if uri.scheme == 'file' or uri.scheme.nil?
         uri.path = File.expand_path(uri.path)
         uri.scheme = 'file'
       end
-      base_uri = uri if base_uri.nil?
+
+      opts[:base_uri] = uri if opts[:base_uri].nil?
 
       src, charset = read_remote_file(uri)
 
       if src
-        add_block!(src, {:media_types => media_types, :base_uri => base_uri})
+        add_block!(src, opts)
       end
     end
     

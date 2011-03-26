@@ -22,7 +22,7 @@ Done.
 
 
   # load a remote file, setting the base_uri and media_types
-  parser.load_uri!('../style.css', 'http://example.com/styles/inc/', [:screen, :handheld])
+  parser.load_uri!('../style.css', {:base_uri => 'http://example.com/styles/inc/', :media_types => [:screen, :handheld])
   
   # load a local file, setting the base_dir and media_types
   parser.load_file!('print.css', '~/styles/', :print)
