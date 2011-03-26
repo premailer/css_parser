@@ -27,6 +27,11 @@ class CssParserBasicTests < Test::Unit::TestCase
     assert_equal 'margin: 0px;', @cp.find_by_selector('body').join
   end
 
+  def test_adding_block_without_closing_brace
+    @cp.add_block!('p { color: red;')
+    assert_equal 'color: red;', @cp.find_by_selector('p').join
+  end
+
   def test_adding_a_rule
     @cp.add_rule!('div', 'color: blue;')
     assert_equal 'color: blue;', @cp.find_by_selector('div').join(' ')

@@ -215,6 +215,7 @@ module CssParser
       block.scan(/([\\]?[{}\s"]|(.[^\s"{}\\]*))/).each do |matches|
       #block.scan(/((.[^{}"\n\r\f\s]*)[\s]|(.[^{}"\n\r\f]*)\{|(.[^{}"\n\r\f]*)\}|(.[^{}"\n\r\f]*)\"|(.*)[\s]+)/).each do |matches|
         token = matches[0]
+
         #puts "TOKEN: #{token}" unless token =~ /^[\s]*$/
         if token =~ /\A"/ # found un-escaped double quote
           in_string = !in_string
@@ -277,6 +278,11 @@ module CssParser
           end
         end
       end
+
+      # check for unclosed braces          
+      if in_declarations > 0
+        add_rule!(current_selectors, current_declarations, media_types)
+      end        
     end
 
     # Load a remote CSS file.
