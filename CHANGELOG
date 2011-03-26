@@ -1,5 +1,8 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.1.6
+ * Fix media type handling in add_block! and load_uri!
+
 === Version 1.1.5
  * Fix merging of !important declarations
  
