@@ -125,31 +125,6 @@ module CssParser
       create_font_shorthand!
     end
 
-private
-    def parse_declarations!(block) # :nodoc:
-      @declarations = {}
-
-      return unless block
-
-      block.gsub!(/(^[\s]*)|([\s]*$)/, '')
-
-      block.split(/[\;$]+/m).each do |decs|
-        if matches = decs.match(/(.[^:]*)\:(.[^;]*)(;|\Z)/i)
-          property, value, end_of_declaration = matches.captures
-
-          add_declaration!(property, value)
-        end
-      end
-    end
-
-    #--
-    # TODO: way too simplistic
-    #++
-    def parse_selectors!(selectors) # :nodoc:
-      @selectors = selectors.split(',') 
-    end
-
-public
     # Split shorthand dimensional declarations (e.g. <tt>margin: 0px auto;</tt>)
     # into their constituent parts.
     def expand_dimensions_shorthand! # :nodoc:
@@ -389,6 +364,30 @@ public
        @declarations.delete(prop)
       end
 
+    end
+
+  private
+    def parse_declarations!(block) # :nodoc:
+      @declarations = {}
+
+      return unless block
+
+      block.gsub!(/(^[\s]*)|([\s]*$)/, '')
+
+      block.split(/[\;$]+/m).each do |decs|
+        if matches = decs.match(/(.[^:]*)\:(.[^;]*)(;|\Z)/i)
+          property, value, end_of_declaration = matches.captures
+
+          add_declaration!(property, value)
+        end
+      end
+    end
+
+    #--
+    # TODO: way too simplistic
+    #++
+    def parse_selectors!(selectors) # :nodoc:
+      @selectors = selectors.split(',') 
     end
   end
 end
