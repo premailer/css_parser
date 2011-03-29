@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name     = "css_parser"
-  s.version  = "1.1.6"
-  s.date     = "2011-03-25"
+  s.version  = "1.1.7"
+  s.date     = "2011-03-29"
   s.summary  = "Ruby CSS parser."
   s.description  = "A set of classes for parsing CSS in Ruby."
   s.email    = "code@dunae.ca"
