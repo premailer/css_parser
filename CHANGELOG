@@ -1,5 +1,8 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.1.8
+ * Fix syntax error
+
 === Version 1.1.7
  * Automatically close missing braces at the end of a block
 
