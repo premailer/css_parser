@@ -64,6 +64,13 @@ module CssParser
     end
     alias_method :[]=, :add_declaration!
 
+    # Remove CSS declaration from the current RuleSet.
+    #
+    #  rule_set.remove_declaration!('color')
+    def remove_declaration!(property)
+      @declarations.delete(property)
+    end
+
     # Iterate through selectors.
     #
     # Options
