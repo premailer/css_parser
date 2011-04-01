@@ -1,5 +1,8 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.1.9
+ * Add remove_declaration! to RuleSet
+
 === Version 1.1.8
  * Fix syntax error
 
