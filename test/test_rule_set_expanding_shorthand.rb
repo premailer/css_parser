@@ -11,8 +11,7 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
   def test_expanding_border_shorthand
     declarations = expand_declarations('border: 1px solid red')
     assert_equal '1px', declarations['border-top-width']
-    assert_equal 'solid', declarations['border-bottom-style']
-    
+    assert_equal 'solid', declarations['border-bottom-style']  
     
     declarations = expand_declarations('border-color: red rgb(255, 0, 0) rgb(2% ,2%,2%)')
     assert_equal 'red', declarations['border-top-color']

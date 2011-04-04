@@ -120,6 +120,7 @@ module CssParser
 
     # Split shorthand declarations (e.g. +margin+ or +font+) into their constituent parts.
     def expand_shorthand!
+      # border must be expanded before dimensions
       expand_border_shorthand!
       expand_dimensions_shorthand!
       expand_font_shorthand!
@@ -134,7 +135,7 @@ module CssParser
     end
 
     # Split shorthand border declarations (e.g. <tt>border: 1px red;</tt>)
-    # into their constituent parts.
+    # Additional splitting happens in expand_dimensions_shorthand!
     def expand_border_shorthand! # :nodoc:
       if @declarations.has_key?('border')
         value = @declarations['border'][:value]
@@ -153,23 +154,35 @@ module CssParser
 
         @declarations.delete('border')        
       end
-      
-      {'border-color' => 'color', 'border-style' => 'style', 'border-width' => 'width'}.each do |property, abbreviated|
+    end
+
+    # Split shorthand dimensional declarations (e.g. <tt>margin: 0px auto;</tt>)
+    # into their constituent parts.  Handles margin, padding, border-color, border-style and border-width.
+    def expand_dimensions_shorthand! # :nodoc:
+      {'margin'       => 'margin-%s',
+       'padding'      => 'padding-%s',
+       'border-color' => 'border-%s-color', 
+       'border-style' => 'border-%s-style', 
+       'border-width' => 'border-%s-width'}.each do |property, expanded|
+
         next unless @declarations.has_key?(property)
-        value = @declarations[property][:value]
         
-        # RGB and HSL vales are the only ones that can have spaces (within params) for borders
-        # we cheat a bit here by stripping spaces after commas in RGB and HSL values
-        # so that we can split easily on strings
+        value = @declarations[property][:value]
+
+        # RGB and HSL values in borders are the only units that can have spaces (within params).
+        # We cheat a bit here by stripping spaces after commas in RGB and HSL values so that we 
+        # can split easily on spaces.
+        #
+        # TODO: rgba, hsl, hsla
         value.gsub!(RE_COLOUR_RGB) { |c| c.gsub(/[\s]+/, '') }
 
-        # TODO: rgbA, hslA
-        # TODO: border-radius
-
         matches = value.strip.split(/[\s]+/)
-        t, r, b, l = matches[0], matches[0], matches[0], matches[0]
-        
+
+        t, r, b, l = nil
+
         case matches.length
+          when 1
+            t, r, b, l = matches[0], matches[0], matches[0], matches[0]
           when 2
             t, b = matches[0], matches[0]
             r, l = matches[1], matches[1]
@@ -183,53 +196,12 @@ module CssParser
             b =  matches[2]
             l = matches[3]
         end
-        
+
         values = @declarations[property]
-        
-        @declarations["border-top-#{abbreviated}"]    = values.merge(:value => t.to_s)
-        @declarations["border-right-#{abbreviated}"]  = values.merge(:value => r.to_s)
-        @declarations["border-bottom-#{abbreviated}"] = values.merge(:value => b.to_s)
-        @declarations["border-left-#{abbreviated}"]   = values.merge(:value => l.to_s)
-        @declarations.delete(property)
-      end
-    end
-
-    # Split shorthand dimensional declarations (e.g. <tt>margin: 0px auto;</tt>)
-    # into their constituent parts.
-    def expand_dimensions_shorthand! # :nodoc:
-      ['margin', 'padding'].each do |property|
-
-        next unless @declarations.has_key?(property)
-        
-        value = @declarations[property][:value]
-        is_important = @declarations[property][:is_important]
-        order = @declarations[property][:order]
-        t, r, b, l = nil
-
-        matches = value.scan(CssParser::BOX_MODEL_UNITS_RX)
-
-        case matches.length
-          when 1
-            t, r, b, l = matches[0][0], matches[0][0], matches[0][0], matches[0][0]
-          when 2
-            t, b = matches[0][0], matches[0][0]
-            r, l = matches[1][0], matches[1][0]
-          when 3
-            t =  matches[0][0]
-            r, l = matches[1][0], matches[1][0]
-            b =  matches[2][0]
-          when 4
-            t =  matches[0][0]
-            r = matches[1][0]
-            b =  matches[2][0]
-            l = matches[3][0]
-        end
-
-        values = { :is_important => is_important, :order => order }
-        @declarations["#{property}-top"]    = values.merge(:value => t.to_s)
-        @declarations["#{property}-right"]  = values.merge(:value => r.to_s)
-        @declarations["#{property}-bottom"] = values.merge(:value => b.to_s)
-        @declarations["#{property}-left"]   = values.merge(:value => l.to_s)
+        @declarations[expanded % 'top']    = values.merge(:value => t.to_s)
+        @declarations[expanded % 'right']  = values.merge(:value => r.to_s)
+        @declarations[expanded % 'bottom'] = values.merge(:value => b.to_s)
+        @declarations[expanded % 'left']   = values.merge(:value => l.to_s)
         @declarations.delete(property)
       end
     end
