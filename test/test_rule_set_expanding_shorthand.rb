@@ -9,6 +9,9 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
 
 # ==== Dimensions shorthand
   def test_expanding_border_shorthand
+    declarations = expand_declarations('border: none')
+    assert_equal 'none', declarations['border-right-style']
+
     declarations = expand_declarations('border: 1px solid red')
     assert_equal '1px', declarations['border-top-width']
     assert_equal 'solid', declarations['border-bottom-style']  

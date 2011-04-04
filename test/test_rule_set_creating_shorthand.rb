@@ -30,6 +30,10 @@ class RuleSetCreatingShorthandTests < Test::Unit::TestCase
     combined = create_shorthand(properties)
     assert_equal '22% rgba(255, 0, 0);', combined['border']
     assert_equal '', combined['border-width']
+    
+    properties = {'border-top-style' => 'none', 'border-right-style' => 'none', 'border-bottom-style' => 'none', 'border-left-style' => 'none'}
+    combined = create_shorthand(properties)
+    assert_equal 'none;', combined['border']
   end
 
 # ==== Dimensions shorthand
