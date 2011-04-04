@@ -32,6 +32,9 @@ module CssParser
   RE_LENGTH_OR_PERCENTAGE = Regexp.new('([\-]*(([0-9]*\.[0-9]+)|[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|\%))', Regexp::IGNORECASE)
   RE_BACKGROUND_POSITION = Regexp.new("((#{RE_LENGTH_OR_PERCENTAGE})|left|center|right|top|bottom)", Regexp::IGNORECASE | Regexp::EXTENDED)
   FONT_UNITS_RX = /(([x]+\-)*small|medium|large[r]*|auto|inherit|([0-9]+|[0-9]*\.[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|\%)*)/i
+  RE_BORDER_STYLE = /([\s]*^)?(none|hidden|dotted|dashed|solid|double|dot-dash|dot-dot-dash|wave|groove|ridge|inset|outset)([\s]*$)?/imx
+  RE_BORDER_UNITS = Regexp.union(BOX_MODEL_UNITS_RX, /(thin|medium|thick)/i)
+  
  
   # Patterns for specificity calculations
   ELEMENTS_AND_PSEUDO_ELEMENTS_RX = /((^|[\s\+\>]+)[\w]+|\:(first\-line|first\-letter|before|after))/i

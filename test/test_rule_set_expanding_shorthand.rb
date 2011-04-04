@@ -8,6 +8,24 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
   end
 
 # ==== Dimensions shorthand
+  def test_expanding_border_shorthand
+    declarations = expand_declarations('border: 1px solid red')
+    assert_equal '1px', declarations['border-top-width']
+    assert_equal 'solid', declarations['border-bottom-style']
+    
+    
+    declarations = expand_declarations('border-color: red rgb(255, 0, 0) rgb(2% ,2%,2%)')
+    assert_equal 'red', declarations['border-top-color']
+    assert_equal 'rgb(2%,2%,2%)', declarations['border-bottom-color']
+    assert_equal 'rgb(255,0,0)', declarations['border-left-color']
+
+    declarations = expand_declarations('border: thin dot-dot-dash')
+    assert_equal 'dot-dot-dash', declarations['border-left-style']
+    assert_equal 'thin', declarations['border-left-width']
+    assert_nil declarations['border-left-color']
+  end
+
+# ==== Dimensions shorthand
   def test_getting_dimensions_from_shorthand
     # test various shorthand forms
     ['margin: 0px auto', 'margin: 0px auto 0px', 'margin: 0px auto 0px'].each do |shorthand|

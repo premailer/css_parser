@@ -120,6 +120,7 @@ module CssParser
 
     # Split shorthand declarations (e.g. +margin+ or +font+) into their constituent parts.
     def expand_shorthand!
+      expand_border_shorthand!
       expand_dimensions_shorthand!
       expand_font_shorthand!
       expand_background_shorthand!
@@ -130,6 +131,67 @@ module CssParser
       create_background_shorthand!
       create_dimensions_shorthand!
       create_font_shorthand!
+    end
+
+    # Split shorthand border declarations (e.g. <tt>border: 1px red;</tt>)
+    # into their constituent parts.
+    def expand_border_shorthand! # :nodoc:
+      if @declarations.has_key?('border')
+        value = @declarations['border'][:value]
+
+        if units = value.match(CssParser::RE_BORDER_UNITS).to_s
+          @declarations['border-width'] = @declarations['border'].merge({:value => units}) unless units.empty?
+        end
+            
+        if colour = value.match(CssParser::RE_COLOUR).to_s
+          @declarations['border-color'] = @declarations['border'].merge({:value => colour}) unless colour.empty?
+        end
+
+        if style = value.scan(CssParser::RE_BORDER_STYLE).to_s
+          @declarations['border-style'] = @declarations['border'].merge({:value => style}) unless style.empty?
+        end
+
+        @declarations.delete('border')        
+      end
+      
+      {'border-color' => 'color', 'border-style' => 'style', 'border-width' => 'width'}.each do |property, abbreviated|
+        next unless @declarations.has_key?(property)
+        value = @declarations[property][:value]
+        
+        # RGB and HSL vales are the only ones that can have spaces (within params) for borders
+        # we cheat a bit here by stripping spaces after commas in RGB and HSL values
+        # so that we can split easily on strings
+        value.gsub!(RE_COLOUR_RGB) { |c| c.gsub(/[\s]+/, '') }
+
+        # TODO: rgbA, hslA
+        # TODO: border-radius
+
+        matches = value.strip.split(/[\s]+/)
+        t, r, b, l = matches[0], matches[0], matches[0], matches[0]
+        
+        case matches.length
+          when 2
+            t, b = matches[0], matches[0]
+            r, l = matches[1], matches[1]
+          when 3
+            t =  matches[0]
+            r, l = matches[1], matches[1]
+            b =  matches[2]
+          when 4
+            t =  matches[0]
+            r = matches[1]
+            b =  matches[2]
+            l = matches[3]
+        end
+        
+        values = @declarations[property]
+        
+        @declarations["border-top-#{abbreviated}"]    = values.merge(:value => t.to_s)
+        @declarations["border-right-#{abbreviated}"]  = values.merge(:value => r.to_s)
+        @declarations["border-bottom-#{abbreviated}"] = values.merge(:value => b.to_s)
+        @declarations["border-left-#{abbreviated}"]   = values.merge(:value => l.to_s)
+        @declarations.delete(property)
+      end
     end
 
     # Split shorthand dimensional declarations (e.g. <tt>margin: 0px auto;</tt>)
@@ -227,7 +289,6 @@ module CssParser
       @declarations.delete('font')
     end
 
-
     # Convert shorthand background declarations (e.g. <tt>background: url("chess.png") gray 50% repeat fixed;</tt>)
     # into their constituent parts.
     #
@@ -240,7 +301,6 @@ module CssParser
       order = @declarations['background'][:order]
 
       bg_props = {}
-
 
       if m = value.match(Regexp.union(CssParser::URI_RX, /none/i)).to_s
         bg_props['background-image'] = m.strip unless m.empty?
@@ -297,6 +357,45 @@ module CssParser
       unless new_value.strip.empty?
         @declarations['background'] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
       end
+    end
+    
+    # Looks for long format CSS border properties converts them into shorthand CSS properties.
+    def create_border_shorthand! # :nodoc:
+      # geometric
+      directions = ['top', 'right', 'bottom', 'left']
+      ['margin', 'padding'].each do |property|
+        values = {}      
+
+        foldable = @declarations.select { |dim, val| dim == "#{property}-top" or dim == "#{property}-right" or dim == "#{property}-bottom" or dim == "#{property}-left" }
+        # All four dimensions must be present
+        if foldable.length == 4
+          values = {}
+
+          directions.each { |d| values[d.to_sym] = @declarations["#{property}-#{d}"][:value].downcase.strip }
+
+          if values[:left] == values[:right]
+            if values[:top] == values[:bottom] 
+              if values[:top] == values[:left] # All four sides are equal
+                new_value = values[:top]
+              else # Top and bottom are equal, left and right are equal
+                new_value = values[:top] + ' ' + values[:left]
+              end
+            else # Only left and right are equal
+              new_value = values[:top] + ' ' + values[:left] + ' ' + values[:bottom]
+            end
+          else # No sides are equal
+            new_value = values[:top] + ' ' + values[:right] + ' ' + values[:bottom] + ' ' + values[:left]
+          end # done creating 'new_value'
+
+          # Save the new value
+          unless new_value.strip.empty?
+            @declarations[property] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
+          end
+
+          # Delete the shorthand values
+          directions.each { |d| @declarations.delete("#{property}-#{d}") }
+        end
+      end # done iterating through margin and padding
     end
 
     # Looks for long format CSS dimensional properties (i.e. <tt>margin</tt> and <tt>padding</tt>) and 
