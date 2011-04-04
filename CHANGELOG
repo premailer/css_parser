@@ -47,6 +47,5 @@
  * Initial version forked from Premailer project
 
 ==== TODO: Future
- * border shorthand/folding support
  * re-implement caching on CssParser.merge
  * correctly parse http://www.webstandards.org/files/acid2/test.html

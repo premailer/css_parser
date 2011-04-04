@@ -131,6 +131,8 @@ module CssParser
     def create_shorthand!
       create_background_shorthand!
       create_dimensions_shorthand!
+      # border must be shortened after dimensions
+      create_border_shorthand!
       create_font_shorthand!
     end
 
@@ -140,16 +142,16 @@ module CssParser
       if @declarations.has_key?('border')
         value = @declarations['border'][:value]
 
-        if units = value.match(CssParser::RE_BORDER_UNITS).to_s
-          @declarations['border-width'] = @declarations['border'].merge({:value => units}) unless units.empty?
+        if units = value.match(CssParser::RE_BORDER_UNITS)
+          @declarations['border-width'] = @declarations['border'].merge({:value => units[0].strip}) unless units[0].empty?
         end
             
-        if colour = value.match(CssParser::RE_COLOUR).to_s
-          @declarations['border-color'] = @declarations['border'].merge({:value => colour}) unless colour.empty?
+        if colour = value.match(CssParser::RE_COLOUR)
+          @declarations['border-color'] = @declarations['border'].merge({:value => colour[0].strip}) unless colour[0].empty?
         end
 
-        if style = value.scan(CssParser::RE_BORDER_STYLE).to_s
-          @declarations['border-style'] = @declarations['border'].merge({:value => style}) unless style.empty?
+        if style = value.match(CssParser::RE_BORDER_STYLE)
+          @declarations['border-style'] = @declarations['border'].merge({:value => style[0].strip}) unless style[0].empty?
         end
 
         @declarations.delete('border')        
@@ -311,7 +313,6 @@ module CssParser
       @declarations.delete('background')
     end
 
-
     # Looks for long format CSS background properties (e.g. <tt>background-color</tt>) and 
     # converts them into a shorthand CSS <tt>background</tt> property.
     #
@@ -331,59 +332,43 @@ module CssParser
       end
     end
     
-    # Looks for long format CSS border properties converts them into shorthand CSS properties.
+    # Combine border-color, border-style and border-width into border
+    # Should be run after create_dimensions_shorthand!
+    #
+    # TODO: this is extremely similar to create_background_shorthand! and should be combined
     def create_border_shorthand! # :nodoc:
-      # geometric
-      directions = ['top', 'right', 'bottom', 'left']
-      ['margin', 'padding'].each do |property|
-        values = {}      
-
-        foldable = @declarations.select { |dim, val| dim == "#{property}-top" or dim == "#{property}-right" or dim == "#{property}-bottom" or dim == "#{property}-left" }
-        # All four dimensions must be present
-        if foldable.length == 4
-          values = {}
-
-          directions.each { |d| values[d.to_sym] = @declarations["#{property}-#{d}"][:value].downcase.strip }
-
-          if values[:left] == values[:right]
-            if values[:top] == values[:bottom] 
-              if values[:top] == values[:left] # All four sides are equal
-                new_value = values[:top]
-              else # Top and bottom are equal, left and right are equal
-                new_value = values[:top] + ' ' + values[:left]
-              end
-            else # Only left and right are equal
-              new_value = values[:top] + ' ' + values[:left] + ' ' + values[:bottom]
-            end
-          else # No sides are equal
-            new_value = values[:top] + ' ' + values[:right] + ' ' + values[:bottom] + ' ' + values[:left]
-          end # done creating 'new_value'
-
-          # Save the new value
-          unless new_value.strip.empty?
-            @declarations[property] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
-          end
-
-          # Delete the shorthand values
-          directions.each { |d| @declarations.delete("#{property}-#{d}") }
+      new_value = ''
+      ['border-width', 'border-style', 'border-color'].each do |property|
+        if @declarations.has_key?(property) and not @declarations[property][:is_important]
+          new_value += @declarations[property][:value] + ' '
+          @declarations.delete(property)
         end
-      end # done iterating through margin and padding
+      end
+
+      unless new_value.strip.empty?
+        @declarations['border'] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
+      end
     end
-
-    # Looks for long format CSS dimensional properties (i.e. <tt>margin</tt> and <tt>padding</tt>) and 
-    # converts them into shorthand CSS properties.
+    
+    # Looks for long format CSS dimensional properties (margin, padding, border-color, border-style and border-width) 
+    # and converts them into shorthand CSS properties.
     def create_dimensions_shorthand! # :nodoc:
-      # geometric
       directions = ['top', 'right', 'bottom', 'left']
-      ['margin', 'padding'].each do |property|
-        values = {}      
 
-        foldable = @declarations.select { |dim, val| dim == "#{property}-top" or dim == "#{property}-right" or dim == "#{property}-bottom" or dim == "#{property}-left" }
+      {'margin'       => 'margin-%s',
+       'padding'      => 'padding-%s',
+       'border-color' => 'border-%s-color', 
+       'border-style' => 'border-%s-style', 
+       'border-width' => 'border-%s-width'}.each do |property, expanded|
+
+        foldable = @declarations.select do |dim, val| 
+          dim == expanded % 'top' or dim == expanded % 'right' or dim == expanded % 'bottom' or dim == expanded % 'left'
+        end
         # All four dimensions must be present
         if foldable.length == 4
           values = {}
 
-          directions.each { |d| values[d.to_sym] = @declarations["#{property}-#{d}"][:value].downcase.strip }
+          directions.each { |d| values[d.to_sym] = @declarations[expanded % d][:value].downcase.strip }
 
           if values[:left] == values[:right]
             if values[:top] == values[:bottom] 
@@ -397,17 +382,15 @@ module CssParser
             end
           else # No sides are equal
             new_value = values[:top] + ' ' + values[:right] + ' ' + values[:bottom] + ' ' + values[:left]
-          end # done creating 'new_value'
-
-          # Save the new value
-          unless new_value.strip.empty?
-            @declarations[property] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
           end
 
-          # Delete the shorthand values
-          directions.each { |d| @declarations.delete("#{property}-#{d}") }
+          new_value.strip!
+          @declarations[property] = {:value => new_value.strip} unless new_value.empty?
+
+          # Delete the longhand values
+          directions.each { |d| @declarations.delete(expanded % d) }
         end
-      end # done iterating through margin and padding
+      end
     end
 
 

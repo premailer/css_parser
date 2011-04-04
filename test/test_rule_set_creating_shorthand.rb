@@ -8,6 +8,30 @@ class RuleSetCreatingShorthandTests < Test::Unit::TestCase
     @cp = CssParser::Parser.new
   end
 
+# ==== Border shorthand
+  def test_combining_borders_into_shorthand
+    properties = {'border-top-width' => 'auto', 'border-right-width' => 'thin', 'border-bottom-width' => 'auto', 'border-left-width' => '0px'}
+
+    combined = create_shorthand(properties)
+
+    assert_equal('auto thin auto 0px;', combined['border'])
+
+    # after creating shorthand, all long-hand properties should be deleted
+    assert_properties_are_deleted(combined, properties)
+
+    # should not combine if any properties are missing
+    properties.delete('border-top-width')
+
+    combined = create_shorthand(properties)
+
+    assert_equal '', combined['border-width']
+    
+    properties = {'border-width' => '22%', 'border-color' => 'rgba(255, 0, 0)'}
+    combined = create_shorthand(properties)
+    assert_equal '22% rgba(255, 0, 0);', combined['border']
+    assert_equal '', combined['border-width']
+  end
+
 # ==== Dimensions shorthand
   def test_combining_dimensions_into_shorthand
     properties = {'margin-right' => 'auto', 'margin-bottom' => '0px', 'margin-left' => 'auto', 'margin-top' => '0px', 
