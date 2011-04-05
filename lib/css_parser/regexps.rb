@@ -37,7 +37,7 @@ module CssParser
   
  
   # Patterns for specificity calculations
-  ELEMENTS_AND_PSEUDO_ELEMENTS_RX = /
+  NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX= /
     (\.[\w]+)                     # classes
     |
     \[(\w+)                       # attributes
@@ -55,7 +55,7 @@ module CssParser
       |empty|contains
     ))
   /ix
-  NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX = /
+  ELEMENTS_AND_PSEUDO_ELEMENTS_RX = /
     ((^|[\s\+\>\~]+)[\w]+       # elements
     |                   
     \:{1,2}(                    # pseudo-elements
