@@ -109,7 +109,7 @@ module CssParser
        importance = (options[:force_important] || is_important) ? ' !important' : ''
        str += "#{prop}: #{val}#{importance}; "
      end
-     str.gsub(/^[\s]+|[\n\r\f\t]*|[\s]+$/mx, '').strip
+     str.gsub(/^[\s^(\{)]+|[\n\r\f\t]*|[\s]+$/mx, '').strip
     end
 
     # Return the CSS rule set as a string.
