@@ -135,26 +135,20 @@ module CssParser
       create_border_shorthand!
       create_font_shorthand!
     end
-
+    
     # Split shorthand border declarations (e.g. <tt>border: 1px red;</tt>)
     # Additional splitting happens in expand_dimensions_shorthand!
     def expand_border_shorthand! # :nodoc:
-      if @declarations.has_key?('border')
-        value = @declarations['border'][:value]
+      ['border', 'border-left', 'border-right', 'border-top', 'border-bottom'].each do |k|
+        next unless @declarations.has_key?(k)
 
-        if units = value.match(CssParser::RE_BORDER_UNITS)
-          @declarations['border-width'] = @declarations['border'].merge({:value => units[0].strip}) unless units[0].empty?
-        end
-            
-        if colour = value.match(CssParser::RE_COLOUR)
-          @declarations['border-color'] = @declarations['border'].merge({:value => colour[0].strip}) unless colour[0].empty?
-        end
+        value = @declarations[k][:value]
 
-        if style = value.match(CssParser::RE_BORDER_STYLE)
-          @declarations['border-style'] = @declarations['border'].merge({:value => style[0].strip}) unless style[0].empty?
-        end
+        split_declaration(k, "#{k}-width", value.slice!(CssParser::RE_BORDER_UNITS))
+        split_declaration(k, "#{k}-color", value.slice!(CssParser::RE_COLOUR))
+        split_declaration(k, "#{k}-style", value.slice!(CssParser::RE_BORDER_STYLE))
 
-        @declarations.delete('border')        
+        @declarations.delete(k)   
       end
     end
 
@@ -200,10 +194,12 @@ module CssParser
         end
 
         values = @declarations[property]
-        @declarations[expanded % 'top']    = values.merge(:value => t.to_s)
-        @declarations[expanded % 'right']  = values.merge(:value => r.to_s)
-        @declarations[expanded % 'bottom'] = values.merge(:value => b.to_s)
-        @declarations[expanded % 'left']   = values.merge(:value => l.to_s)
+        
+        split_declaration(property, expanded % 'top', t)
+        split_declaration(property, expanded % 'right', r)
+        split_declaration(property, expanded % 'bottom', b)
+        split_declaration(property, expanded % 'left', l)
+
         @declarations.delete(property)
       end
     end
@@ -276,23 +272,12 @@ module CssParser
 
       bg_props = {}
 
-      if m = value.match(Regexp.union(CssParser::URI_RX, /none/i)).to_s
-        bg_props['background-image'] = m.strip unless m.empty?
-        value.gsub!(Regexp.union(CssParser::URI_RX, /none/i), '')
-      end
+      split_declaration('background', "background-image", value.slice!(Regexp.union(CssParser::URI_RX, /none/i)))
+      split_declaration('background', "background-attachment", value.slice!(/([\s]*^)?(scroll|fixed)([\s]*$)?/i))
+      split_declaration('background', "background-repeat", value.slice!(/([\s]*^)?(repeat(\-x|\-y)*|no\-repeat)([\s]*$)?/i))
+      split_declaration('background', "background-color", value.slice!(CssParser::RE_COLOUR))
 
-      if m = value.match(/([\s]*^)?(scroll|fixed)([\s]*$)?/i).to_s
-        bg_props['background-attachment'] = m.strip unless m.empty?
-      end
-
-      if m = value.match(/([\s]*^)?(repeat(\-x|\-y)*|no\-repeat)([\s]*$)?/i).to_s
-        bg_props['background-repeat'] = m.strip unless m.empty?
-      end
-
-      if m = value.match(CssParser::RE_COLOUR).to_s
-        bg_props['background-color'] = m.strip unless m.empty?
-      end
-
+      # TODO clean this up
       value.scan(CssParser::RE_BACKGROUND_POSITION).each do |m|
         if bg_props.has_key?('background-position')
           bg_props['background-position'] += ' ' + m[0].to_s.strip unless m.empty?
@@ -338,12 +323,19 @@ module CssParser
     # TODO: this is extremely similar to create_background_shorthand! and should be combined
     def create_border_shorthand! # :nodoc:
       new_value = ''
+      
       ['border-width', 'border-style', 'border-color'].each do |property|
         if @declarations.has_key?(property) and not @declarations[property][:is_important]
+          
+          # can't merge if any value contains a space (i.e. has multiple values)
+          return if @declarations[property][:value].strip =~ /[\s]/
           new_value += @declarations[property][:value] + ' '
-          @declarations.delete(property)
         end
       end
+
+      @declarations.delete('border-width')
+      @declarations.delete('border-style')
+      @declarations.delete('border-color')
 
       unless new_value.strip.empty?
         @declarations['border'] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
@@ -428,6 +420,26 @@ module CssParser
     end
 
   private
+
+    # utility method for re-assign shorthand elements to longhand versions
+    def split_declaration(src, dest, v)  # :nodoc:
+      return unless v and not v.empty?
+
+      atts = @declarations[src]
+
+      if @declarations.has_key?(dest)
+        #puts "dest #{dest} already exists"
+      
+        if @declarations[dest][:order] > @declarations[src][:order]
+          #puts "skipping #{dest}:#{v} due to order "        
+          return
+        else
+          @declarations[dest] = {}    
+        end
+      end
+      @declarations[dest] = @declarations[src].merge({:value => v.to_s.strip})    
+    end
+  
     def parse_declarations!(block) # :nodoc:
       @declarations = {}
 

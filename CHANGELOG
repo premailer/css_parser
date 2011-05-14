@@ -1,5 +1,9 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.2.0
+ * Border shorthand handling
+ * Specificity improvements
+
 === Version 1.1.9
  * Add remove_declaration! to RuleSet
 
