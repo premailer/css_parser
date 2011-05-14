@@ -267,33 +267,18 @@ module CssParser
       return unless @declarations.has_key?('background')
 
       value = @declarations['background'][:value]
-      is_important = @declarations['background'][:is_important]
-      order = @declarations['background'][:order]
-
-      bg_props = {}
-
-      split_declaration('background', "background-image", value.slice!(Regexp.union(CssParser::URI_RX, /none/i)))
-      split_declaration('background', "background-attachment", value.slice!(/([\s]*^)?(scroll|fixed)([\s]*$)?/i))
-      split_declaration('background', "background-repeat", value.slice!(/([\s]*^)?(repeat(\-x|\-y)*|no\-repeat)([\s]*$)?/i))
-      split_declaration('background', "background-color", value.slice!(CssParser::RE_COLOUR))
-
-      # TODO clean this up
-      value.scan(CssParser::RE_BACKGROUND_POSITION).each do |m|
-        if bg_props.has_key?('background-position')
-          bg_props['background-position'] += ' ' + m[0].to_s.strip unless m.empty?
-        else
-          bg_props['background-position'] =  m[0].to_s.strip unless m.empty?
-        end
-      end
-
 
       if value =~ /([\s]*^)?inherit([\s]*$)?/i
         ['background-color', 'background-image', 'background-attachment', 'background-repeat', 'background-position'].each do |prop|
-            bg_props["#{prop}"] = 'inherit' unless bg_props.has_key?(prop) and not bg_props[prop].empty?
+          split_declaration('background', prop, 'inherit')          
         end
       end
 
-      bg_props.each { |bg_prop, bg_val| @declarations[bg_prop] = {:value => bg_val, :is_important => is_important, :order => order} }
+      split_declaration('background', 'background-image', value.slice!(Regexp.union(CssParser::URI_RX, /none/i)))
+      split_declaration('background', 'background-attachment', value.slice!(/([\s]*^)?(scroll|fixed)([\s]*$)?/i))
+      split_declaration('background', 'background-repeat', value.slice!(/([\s]*^)?(repeat(\-x|\-y)*|no\-repeat)([\s]*$)?/i))
+      split_declaration('background', 'background-color', value.slice!(CssParser::RE_COLOUR))
+      split_declaration('background', 'background-position', value.slice(CssParser::RE_BACKGROUND_POSITION))
 
       @declarations.delete('background')
     end
