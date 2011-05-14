@@ -170,7 +170,7 @@ module CssParser
         # can split easily on spaces.
         #
         # TODO: rgba, hsl, hsla
-        value.gsub!(RE_COLOUR_RGB) { |c| c.gsub(/[\s]+/, '') }
+        value.gsub!(RE_COLOUR) { |c| c.gsub(/[\s]+/, '') }
 
         matches = value.strip.split(/[\s]+/)
 

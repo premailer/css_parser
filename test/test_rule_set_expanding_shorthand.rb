@@ -16,10 +16,10 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
     assert_equal '1px', declarations['border-top-width']
     assert_equal 'solid', declarations['border-bottom-style']  
     
-    declarations = expand_declarations('border-color: red rgb(255, 0, 0) rgb(2% ,2%,2%)')
+    declarations = expand_declarations('border-color: red hsla(255, 0, 0, 5) rgb(2% ,2%,2%)')
     assert_equal 'red', declarations['border-top-color']
     assert_equal 'rgb(2%,2%,2%)', declarations['border-bottom-color']
-    assert_equal 'rgb(255,0,0)', declarations['border-left-color']
+    assert_equal 'hsla(255,0,0,5)', declarations['border-left-color']
 
     declarations = expand_declarations('border: thin dot-dot-dash')
     assert_equal 'dot-dot-dash', declarations['border-left-style']
