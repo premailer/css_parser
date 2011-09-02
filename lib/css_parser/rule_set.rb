@@ -410,8 +410,6 @@ module CssParser
     def split_declaration(src, dest, v)  # :nodoc:
       return unless v and not v.empty?
 
-      atts = @declarations[src]
-
       if @declarations.has_key?(dest)
         #puts "dest #{dest} already exists"
       
