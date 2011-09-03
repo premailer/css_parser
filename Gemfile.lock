@@ -1,0 +1,17 @@
+PATH
+  remote: .
+  specs:
+    css_parser (1.2.0)
+      addressable
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    addressable (2.2.6)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  addressable
+  css_parser!
