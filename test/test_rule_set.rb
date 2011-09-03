@@ -34,13 +34,13 @@ class RuleSetTests < Test::Unit::TestCase
        {:selector => "#content p", :declarations => "color: #fff;", :specificity => 101},
        {:selector => "a", :declarations => "color: #fff;", :specificity => 1}
     ]
-    
+
     actual = []
     rs = RuleSet.new('#content p, a', 'color: #fff;')
     rs.each_selector do |sel, decs, spec|
       actual << {:selector => sel, :declarations => decs, :specificity => spec}
     end
-    
+
     assert_equal(expected, actual)
   end
 
@@ -50,13 +50,13 @@ class RuleSetTests < Test::Unit::TestCase
        {:property => 'background', :value => 'white none no-repeat', :is_important => true},
        {:property => 'color', :value => '#fff', :is_important => false}
     ])
-    
+
     actual = Set.new
     rs = RuleSet.new(nil, 'color: #fff; Background: white none no-repeat !important; margin: 1px -0.25em;')
     rs.each_declaration do |prop, val, imp|
       actual << {:property => prop, :value => val, :is_important => imp}
     end
-    
+
     assert_equal(expected, actual)
   end
 

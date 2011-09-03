@@ -1,4 +1,10 @@
 module CssParser
+
+
+  def self.regex_possible_values *values
+    Regexp.new("([\s]*^)?(#{values.join('|')})([\s]*$)?", 'i')
+  end
+
   # :stopdoc:
   # Base types
   RE_NL = Regexp.new('(\n|\r\n|\r|\f)')
@@ -12,6 +18,8 @@ module CssParser
   RE_STRING2 = Regexp.new('(\'(.[^\n\r\f\\\']*|\\\\' + RE_NL.to_s + '|' + RE_ESCAPE.to_s + ')*\')')
   RE_STRING = Regexp.union(RE_STRING1, RE_STRING2)
 
+  RE_INHERIT = regex_possible_values 'inherit'
+
   RE_URI = Regexp.new('(url\([\s]*([\s]*' + RE_STRING.to_s + '[\s]*)[\s]*\))|(url\([\s]*([!#$%&*\-~]|' + RE_NON_ASCII.to_s + '|' + RE_ESCAPE.to_s + ')*[\s]*)\)', Regexp::IGNORECASE | Regexp::EXTENDED  | Regexp::MULTILINE, 'n')
   URI_RX = /url\(("([^"]*)"|'([^']*)'|([^)]*))\)/im
 
@@ -23,7 +31,16 @@ module CssParser
   
   #RE_AT_IMPORT_RULE = Regexp.new('@import[\s]*(' + RE_STRING.to_s + ')([\w\s\,]*)[;]?', Regexp::IGNORECASE) -- should handle url() even though it is not allowed
   #++
-  IMPORTANT_IN_PROPERTY_RX = /[\s]*\!important[\s]*/i
+  IMPORTANT_IN_PROPERTY_RX = /[\s]*!important[\s]*/i
+
+  RE_INSIDE_OUTSIDE = regex_possible_values 'inside', 'outside'
+  RE_SCROLL_FIXED = regex_possible_values 'scroll', 'fixed'
+  RE_REPEAT = regex_possible_values 'repeat(\-x|\-y)*|no\-repeat'
+  RE_LIST_STYLE_TYPE = regex_possible_values 'disc', 'circle', 'square', 'decimal-leading-zero', 'decimal', 'lower-roman',
+                                             'upper-roman', 'lower-greek', 'lower-alpha', 'lower-latin', 'upper-alpha',
+                                             'upper-latin', 'hebrew', 'armenian', 'georgian', 'cjk-ideographic', 'hiragana',
+                                             'hira-gana-iroha', 'katakana-iroha', 'katakana', 'none'
+
   STRIP_CSS_COMMENTS_RX = /\/\*.*?\*\//m
   STRIP_HTML_COMMENTS_RX = /\<\!\-\-|\-\-\>/m
 

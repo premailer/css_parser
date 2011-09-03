@@ -183,6 +183,31 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
     end
   end
 
+  # ==== List-style shorthand
+  def test_getting_list_style_properties_from_shorthand
+    expected = {'list-style-image' => 'url(\'chess.png\')', 'list-style-type' => 'katakana',
+                  'list-style-position' => 'inside'}
+
+    shorthand = "list-style: katakana inside url(\'chess.png\');"
+    declarations = expand_declarations(shorthand)
+    assert_equal expected, declarations
+  end
+
+  def test_getting_list_style_position_from_shorthand
+    ['inside', 'outside'].each do |position|
+      shorthand = "list-style: katakana #{position} url('chess.png');"
+      declarations = expand_declarations(shorthand)
+      assert_equal(position, declarations['list-style-position'])
+    end
+  end
+
+  def test_getting_list_style_type_from_shorthand
+    ['disc', 'circle', 'square', 'decimal', 'decimal-leading-zero', 'lower-roman', 'upper-roman', 'lower-greek', 'lower-alpha', 'lower-latin', 'upper-alpha', 'upper-latin', 'hebrew', 'armenian', 'georgian', 'cjk-ideographic', 'hiragana', 'katakana', 'hira-gana-iroha', 'katakana-iroha', 'none'].each do |type|
+      shorthand = "list-style: #{type} inside url('chess.png');"
+      declarations = expand_declarations(shorthand)
+      assert_equal(type, declarations['list-style-type'])
+    end
+  end
 
 protected
   def expand_declarations(declarations)
