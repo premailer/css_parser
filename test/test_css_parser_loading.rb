@@ -52,7 +52,7 @@ class CssParserLoadingTests < Test::Unit::TestCase
   # http://github.com/alexdunae/css_parser/issues#issue/4
   def test_loading_a_remote_file_over_ssl
     # TODO: test SSL locally
-    @cp.load_uri!("https://www.expresspardons.com/inc/screen.css")
+    @cp.load_uri!("https://dialect.ca/inc/screen.css")
     assert_match /margin\: 0\;/, @cp.find_by_selector('body').join(' ')
   end
 
