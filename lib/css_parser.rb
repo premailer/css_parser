@@ -1,3 +1,4 @@
+require 'addressable/uri'
 require 'uri'
 require 'net/https'
 require 'open-uri'
@@ -139,7 +140,7 @@ module CssParser
   #               "http://example.org/style/basic.css").inspect
   #  => "body { background: url('http://example.org/style/yellow.png?abc=123') };"
   def self.convert_uris(css, base_uri)
-    base_uri = URI.parse(base_uri) unless base_uri.kind_of?(URI)
+    base_uri = Addressable::URI.parse(base_uri) unless base_uri.kind_of?(URI)
 
     css.gsub(URI_RX) do
       uri = $1.to_s

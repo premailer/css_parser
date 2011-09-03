@@ -8,6 +8,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/alexdunae/css_parser"
   s.has_rdoc = true
   s.author  = "Alex Dunae"
+  s.add_dependency('addressable')
   s.platform = Gem::Platform::RUBY
   s.rdoc_options << '--all' << '--inline-source' << '--line-numbers' << '--charset' << 'utf-8'
   s.files = (Dir.glob('lib/*.rb') | Dir.glob('lib/**/*.rb') | Dir.glob('test/**/*'))

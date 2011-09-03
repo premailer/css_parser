@@ -83,6 +83,17 @@ class CssParserLoadingTests < Test::Unit::TestCase
     # from '/subdir/../simple.css'
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
   end
+  
+  def test_following_badly_escaped_import_rules
+    css_block = '@import "http://example.com/css?family=Droid+Sans:regular,bold|Droid+Serif:regular,italic,bold,bolditalic&subset=latin";'
+
+    assert_nothing_raised do
+      @cp.add_block!(css_block, :base_uri => "#{@uri_base}/subdir/")
+    end
+    
+    # from 'simple.css'
+#    assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
+  end
 
   def test_following_at_import_rules_from_add_block
     css_block = '@import "../simple.css";'

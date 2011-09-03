@@ -121,7 +121,7 @@ module CssParser
         import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
 
         if options[:base_uri]
-          import_uri = URI.parse(options[:base_uri].to_s).merge(import_path)
+          import_uri = Addressable::URI.parse(options[:base_uri].to_s) + Addressable::URI.parse(import_path)
           load_uri!(import_uri, options[:base_uri], media_types)
         elsif options[:base_dir]
           load_file!(import_path, options[:base_dir], media_types)
@@ -293,7 +293,7 @@ module CssParser
     #
     # Deprecated: originally accepted three params: `uri`, `base_uri` and `media_types`
     def load_uri!(uri, options = {}, deprecated = nil)
-      uri = URI.parse(uri) unless uri.respond_to? :scheme
+      uri = Addressable::URI.parse(uri) unless uri.respond_to? :scheme
       #base_uri = nil, media_types = :all, options = {}
 
       opts = {:base_uri => nil, :media_types => :all}
@@ -368,7 +368,7 @@ module CssParser
       src = '', charset = nil
 
       begin
-        uri = URI.parse(uri.to_s)    
+        uri = Addressable::URI.parse(uri.to_s)    
         http = Net::HTTP.new(uri.host, uri.port)
 
         if uri.scheme == 'file'
