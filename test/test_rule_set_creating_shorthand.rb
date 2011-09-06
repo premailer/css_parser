@@ -14,7 +14,8 @@ class RuleSetCreatingShorthandTests < Test::Unit::TestCase
 
     combined = create_shorthand(properties)
 
-    assert_equal('auto thin auto 0px;', combined['border'])
+    assert_equal('', combined['border'])
+    assert_equal('auto thin auto 0px;', combined['border-width'])
 
     # after creating shorthand, all long-hand properties should be deleted
     assert_properties_are_deleted(combined, properties)

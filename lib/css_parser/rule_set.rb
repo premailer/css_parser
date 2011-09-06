@@ -311,9 +311,9 @@ module CssParser
       
       ['border-width', 'border-style', 'border-color'].each do |property|
         if @declarations.has_key?(property) and not @declarations[property][:is_important]
-          
           # can't merge if any value contains a space (i.e. has multiple values)
-          return if @declarations[property][:value].strip =~ /[\s]/
+          # we temporarily remove any spaces after commas for the check (inside rgba, etc...)
+          return if @declarations[property][:value].gsub(/\,[\s]/, ',').strip =~ /[\s]/
           new_value += @declarations[property][:value] + ' '
         end
       end
