@@ -324,6 +324,7 @@ module CssParser
     def load_file!(file_name, base_dir = nil, media_types = :all)
       file_name = File.expand_path(file_name, base_dir)
       return unless File.readable?(file_name)
+      return unless circular_reference_check(file_name)
 
       src = IO.read(file_name)
       base_dir = File.dirname(file_name)
@@ -334,6 +335,21 @@ module CssParser
     
 
   protected
+    # Check that a path hasn't been loaded already
+    #
+    # Raises a CircularReferenceError exception if io_exceptions are on, 
+    # otherwise returns true/false.
+    def circular_reference_check(path)
+      path = path.to_s
+      if @loaded_uris.include?(path)
+        raise CircularReferenceError, "can't load #{path} more than once" if @options[:io_exceptions]
+        return false
+      else
+        @loaded_uris << path
+        return true
+      end
+    end
+  
     # Strip comments and clean up blank lines from a block of CSS.
     #
     # Returns a string.
@@ -358,12 +374,7 @@ module CssParser
     # TODO: add option to fail silently or throw and exception on a 404
     #++
     def read_remote_file(uri) # :nodoc:
-      if @loaded_uris.include?(uri.to_s)
-        raise CircularReferenceError, "can't load #{uri.to_s} more than once" if @options[:io_exceptions]
-        return '', nil
-      end
-
-      @loaded_uris << uri.to_s
+      return nil, nil unless circular_reference_check(uri.to_s)    
 
       src = '', charset = nil
 

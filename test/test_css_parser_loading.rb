@@ -109,20 +109,19 @@ class CssParserLoadingTests < Test::Unit::TestCase
     assert_equal '', @cp.find_by_selector('p', :tty).join(' ')
   end
 
-  def test_throwing_circular_reference_exception
+  def test_local_circular_reference_exception
+    assert_raise CircularReferenceError do
+      @cp.load_file!(File.dirname(__FILE__) + '/fixtures/import-circular-reference.css')
+    end
+  end
+
+  def test_remote_circular_reference_exception
     assert_raise CircularReferenceError do
       @cp.load_uri!("#{@uri_base}/import-circular-reference.css")
     end
-
-    cp_without_exceptions = Parser.new(:io_exceptions => false)
-
-    assert_nothing_raised CircularReferenceError do
-      cp_without_exceptions.load_uri!("#{@uri_base}/import-circular-reference.css")
-    end
-    
   end
 
-  def test_toggling_circular_reference_exception
+  def test_suppressing_circular_reference_exceptions
     cp_without_exceptions = Parser.new(:io_exceptions => false)
 
     assert_nothing_raised CircularReferenceError do
