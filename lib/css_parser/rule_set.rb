@@ -343,7 +343,7 @@ module CssParser
           # can't merge if any value contains a space (i.e. has multiple values)
           # we temporarily remove any spaces after commas for the check (inside rgba, etc...)
           return if @declarations[property][:value].gsub(/\,[\s]/, ',').strip =~ /[\s]/
-          new_value += @declarations[property][:value] + ' '
+          values << @declarations[property][:value]
         end
       end
 
