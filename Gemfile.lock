@@ -13,5 +13,4 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  addressable
   css_parser!
