@@ -93,6 +93,21 @@ class RuleSetCreatingShorthandTests < Test::Unit::TestCase
     assert_properties_are_deleted(combined, properties)
   end
 
+
+# ==== List-style shorthand
+  def test_combining_list_style_into_shorthand
+    properties = {'list-style-image' => 'url(\'chess.png\')', 'list-style-type' => 'katakana',
+                  'list-style-position' => 'inside'}
+
+    combined = create_shorthand(properties)
+
+    assert_equal('katakana inside url(\'chess.png\');', combined['list-style'])
+
+    # after creating shorthand, all long-hand properties should be deleted
+    assert_properties_are_deleted(combined, properties)
+  end
+
+
   def test_property_values_in_url
     rs = RuleSet.new('#header', "background:url(http://example.com/1528/www/top-logo.jpg) no-repeat top right; padding: 79px 0 10px 0;  text-align:left;")
     rs.expand_shorthand!

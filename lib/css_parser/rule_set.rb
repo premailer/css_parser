@@ -4,6 +4,9 @@ module CssParser
     RE_ELEMENTS_AND_PSEUDO_ELEMENTS = /((^|[\s\+\>]+)[\w]+|\:(first\-line|first\-letter|before|after))/i
     RE_NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES = /(\.[\w]+)|(\[[\w]+)|(\:(link|first\-child|lang))/i
 
+    BACKGROUND_PROPERTIES = ['background-color', 'background-image', 'background-repeat', 'background-position', 'background-attachment']
+    LIST_STYLE_PROPERTIES = ['list-style-type', 'list-style-position', 'list-style-image']
+
     # Array of selector strings.
     attr_reader   :selectors
     
@@ -125,17 +128,33 @@ module CssParser
       expand_dimensions_shorthand!
       expand_font_shorthand!
       expand_background_shorthand!
+      expand_list_style_shorthand!
     end
 
-    # Create shorthand declarations (e.g. +margin+ or +font+) whenever possible.
-    def create_shorthand!
-      create_background_shorthand!
-      create_dimensions_shorthand!
-      # border must be shortened after dimensions
-      create_border_shorthand!
-      create_font_shorthand!
+    # Convert shorthand background declarations (e.g. <tt>background: url("chess.png") gray 50% repeat fixed;</tt>)
+    # into their constituent parts.
+    #
+    # See http://www.w3.org/TR/CSS21/colors.html#propdef-background
+    def expand_background_shorthand! # :nodoc:
+      return unless @declarations.has_key?('background')
+
+      value = @declarations['background'][:value]
+
+      if value =~ CssParser::RE_INHERIT
+        BACKGROUND_PROPERTIES.each do |prop|
+          split_declaration('background', prop, 'inherit')
+        end
+      end
+
+      split_declaration('background', 'background-image', value.slice!(Regexp.union(CssParser::URI_RX, /none/i)))
+      split_declaration('background', 'background-attachment', value.slice!(CssParser::RE_SCROLL_FIXED))
+      split_declaration('background', 'background-repeat', value.slice!(CssParser::RE_REPEAT))
+      split_declaration('background', 'background-color', value.slice!(CssParser::RE_COLOUR))
+      split_declaration('background', 'background-position', value.slice(CssParser::RE_BACKGROUND_POSITION))
+
+      @declarations.delete('background')
     end
-    
+
     # Split shorthand border declarations (e.g. <tt>border: 1px red;</tt>)
     # Additional splitting happens in expand_dimensions_shorthand!
     def expand_border_shorthand! # :nodoc:
@@ -193,8 +212,6 @@ module CssParser
             l = matches[3]
         end
 
-        values = @declarations[property]
-        
         split_declaration(property, expanded % 'top', t)
         split_declaration(property, expanded % 'right', r)
         split_declaration(property, expanded % 'bottom', b)
@@ -259,47 +276,59 @@ module CssParser
       @declarations.delete('font')
     end
 
-    # Convert shorthand background declarations (e.g. <tt>background: url("chess.png") gray 50% repeat fixed;</tt>)
+    # Convert shorthand list-style declarations (e.g. <tt>list-style: lower-alpha outside;</tt>)
     # into their constituent parts.
     #
-    # See http://www.w3.org/TR/CSS21/colors.html#propdef-background
-    def expand_background_shorthand! # :nodoc:
-      return unless @declarations.has_key?('background')
+    # See http://www.w3.org/TR/CSS21/generate.html#lists
+    def expand_list_style_shorthand! # :nodoc:
+      return unless @declarations.has_key?('list-style')
 
-      value = @declarations['background'][:value]
+      value = @declarations['list-style'][:value]
 
-      if value =~ /([\s]*^)?inherit([\s]*$)?/i
-        ['background-color', 'background-image', 'background-attachment', 'background-repeat', 'background-position'].each do |prop|
-          split_declaration('background', prop, 'inherit')          
+      if value =~ CssParser::RE_INHERIT
+        LIST_STYLE_PROPERTIES.each do |prop|
+          split_declaration('list-style', prop, 'inherit')
         end
       end
 
-      split_declaration('background', 'background-image', value.slice!(Regexp.union(CssParser::URI_RX, /none/i)))
-      split_declaration('background', 'background-attachment', value.slice!(/([\s]*^)?(scroll|fixed)([\s]*$)?/i))
-      split_declaration('background', 'background-repeat', value.slice!(/([\s]*^)?(repeat(\-x|\-y)*|no\-repeat)([\s]*$)?/i))
-      split_declaration('background', 'background-color', value.slice!(CssParser::RE_COLOUR))
-      split_declaration('background', 'background-position', value.slice(CssParser::RE_BACKGROUND_POSITION))
+      split_declaration('list-style', 'list-style-type', value.slice!(CssParser::RE_LIST_STYLE_TYPE))
+      split_declaration('list-style', 'list-style-position', value.slice!(CssParser::RE_INSIDE_OUTSIDE))
+      split_declaration('list-style', 'list-style-image', value.slice!(Regexp.union(CssParser::URI_RX, /none/i)))
 
-      @declarations.delete('background')
+      @declarations.delete('list-style')
     end
 
-    # Looks for long format CSS background properties (e.g. <tt>background-color</tt>) and 
+    # Create shorthand declarations (e.g. +margin+ or +font+) whenever possible.
+    def create_shorthand!
+      create_background_shorthand!
+      create_dimensions_shorthand!
+      # border must be shortened after dimensions
+      create_border_shorthand!
+      create_font_shorthand!
+      create_list_style_shorthand!
+    end
+
+    # Combine several properties into a shorthand one
+    def create_shorthand_properties! properties, shorthand_property # :nodoc:
+      values = []
+      properties.each do |property|
+         if @declarations.has_key?(property) and not @declarations[property][:is_important]
+          values << @declarations[property][:value]
+           @declarations.delete(property)
+         end
+       end
+
+      unless values.empty?
+        @declarations[shorthand_property] = {:value => values.join(' ')}
+      end
+    end
+
+    # Looks for long format CSS background properties (e.g. <tt>background-color</tt>) and
     # converts them into a shorthand CSS <tt>background</tt> property.
     #
     # Leaves properties declared !important alone.
     def create_background_shorthand! # :nodoc:
-      new_value = ''
-      ['background-color', 'background-image', 'background-repeat', 
-       'background-position', 'background-attachment'].each do |property|
-        if @declarations.has_key?(property) and not @declarations[property][:is_important]
-          new_value += @declarations[property][:value] + ' '
-          @declarations.delete(property)
-        end
-      end
-
-      unless new_value.strip.empty?
-        @declarations['background'] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
-      end
+      create_shorthand_properties! BACKGROUND_PROPERTIES, 'background'
     end
     
     # Combine border-color, border-style and border-width into border
@@ -307,7 +336,7 @@ module CssParser
     #
     # TODO: this is extremely similar to create_background_shorthand! and should be combined
     def create_border_shorthand! # :nodoc:
-      new_value = ''
+      values = []
       
       ['border-width', 'border-style', 'border-color'].each do |property|
         if @declarations.has_key?(property) and not @declarations[property][:is_important]
@@ -322,8 +351,8 @@ module CssParser
       @declarations.delete('border-style')
       @declarations.delete('border-color')
 
-      unless new_value.strip.empty?
-        @declarations['border'] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
+      unless values.empty?
+        @declarations['border'] = {:value => values.join(' ')}
       end
     end
     
@@ -402,6 +431,14 @@ module CssParser
        @declarations.delete(prop)
       end
 
+    end
+
+    # Looks for long format CSS list-style properties (e.g. <tt>list-style-type</tt>) and
+    # converts them into a shorthand CSS <tt>list-style</tt> property.
+    #
+    # Leaves properties declared !important alone.
+    def create_list_style_shorthand! # :nodoc:
+      create_shorthand_properties! LIST_STYLE_PROPERTIES, 'list-style'
     end
 
   private
