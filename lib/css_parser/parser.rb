@@ -379,8 +379,7 @@ module CssParser
       src = '', charset = nil
 
       begin
-        uri = Addressable::URI.parse(uri.to_s)    
-        http = Net::HTTP.new(uri.host, uri.port)
+        uri = Addressable::URI.parse(uri.to_s)          
 
         if uri.scheme == 'file'
           # local file
@@ -390,8 +389,12 @@ module CssParser
         else
           # remote file
           if uri.scheme == 'https'
+            uri.port = 443 unless uri.port
+            http = Net::HTTP.new(uri.host, uri.port)
             http.use_ssl = true 
             http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          else
+            http = Net::HTTP.new(uri.host, uri.port)
           end
 
           res, src = http.get(uri.path, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
