@@ -1,8 +1,15 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.2.1
+ * Better border shorthand handling
+ * List shorthand handling
+ * Malformed URI handling improvements
+ * Use Bundler
+ 
 === Version 1.2.0
- * Border shorthand handling
  * Specificity improvements
+ * RGBA, HSL and HSLA support
+ * Bug fixes
 
 === Version 1.1.9
  * Add remove_declaration! to RuleSet

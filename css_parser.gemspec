@@ -1,11 +1,11 @@
 Gem::Specification.new do |s|
   s.name     = "css_parser"
-  s.version  = "1.2.0"
-  s.date     = "2011-05-13"
+  s.version  = "1.2.1"
+  s.date     = "2011-09-07"
   s.summary  = "Ruby CSS parser."
   s.description  = "A set of classes for parsing CSS in Ruby."
   s.email    = "code@dunae.ca"
-  s.homepage = "http://github.com/alexdunae/css_parser"
+  s.homepage = "https://github.com/alexdunae/css_parser"
   s.has_rdoc = true
   s.author  = "Alex Dunae"
   s.add_dependency('addressable')
