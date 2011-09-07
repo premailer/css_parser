@@ -59,6 +59,15 @@ class RuleSetCreatingShorthandTests < Test::Unit::TestCase
     assert_equal '', combined['margin']
     assert_equal '', combined['padding']
   end
+  
+# ==== Dimensions shorthand, auto property
+  def test_combining_dimensions_into_shorthand_with_auto
+    rs = RuleSet.new('#page', "margin: 0; margin-left: auto; margin-right: auto;")
+    rs.expand_shorthand!
+    assert_equal('auto;', rs['margin-left'])
+    rs.create_shorthand!
+    assert_equal('0 auto;', rs['margin'])
+  end
 
 # ==== Font shorthand
   def test_combining_font_into_shorthand
