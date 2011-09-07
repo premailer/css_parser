@@ -1,5 +1,8 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.2.2
+ * Fix merging of multiple !important rules to match the spec
+
 === Version 1.2.1
  * Better border shorthand handling
  * List shorthand handling
