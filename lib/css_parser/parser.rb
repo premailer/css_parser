@@ -119,7 +119,7 @@ module CssParser
         next unless options[:only_media_types].include?(:all) or media_types.length < 1 or (media_types & options[:only_media_types]).length > 0
 
         import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
-
+        
         if options[:base_uri]
           import_uri = Addressable::URI.parse(options[:base_uri].to_s) + Addressable::URI.parse(import_path)
           load_uri!(import_uri, options[:base_uri], media_types)
@@ -330,8 +330,7 @@ module CssParser
         opts[:base_uri] = options if options.is_a? String
         opts[:media_types] = deprecated if deprecated
       end
-      
-      
+            
       if uri.scheme == 'file' or uri.scheme.nil?
         uri.path = File.expand_path(uri.path)
         uri.scheme = 'file'
@@ -340,7 +339,6 @@ module CssParser
       opts[:base_uri] = uri if opts[:base_uri].nil?
 
       src, charset = read_remote_file(uri)
-
       if src
         add_block!(src, opts)
       end
@@ -423,7 +421,8 @@ module CssParser
             http = Net::HTTP.new(uri.host, uri.port)
           end
 
-          res, src = http.get(uri.path, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
+          res = http.get(uri.path, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
+          src = res.body
           charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
 
           if res.code.to_i >= 400
