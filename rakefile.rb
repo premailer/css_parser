@@ -24,6 +24,8 @@ end
 
 include CssParser
 
+task :default => [:test]
+
 desc 'Run the unit tests.'
 Rake::TestTask.new do |t|
   t.libs << 'lib'
