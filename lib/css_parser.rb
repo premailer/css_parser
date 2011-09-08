@@ -78,8 +78,10 @@ module CssParser
         # Add the property to the list to be folded per http://www.w3.org/TR/CSS21/cascade.html#cascading-order
         if not properties.has_key?(property)
           properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}
-        elsif is_important and not properties[property][:is_important]
-          properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}      
+        elsif is_important
+          if not properties[property][:is_important] or properties[property][:specificity] <= specificity
+            properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}      
+          end
         elsif properties[property][:specificity] < specificity or properties[property][:specificity] == specificity
           unless properties[property][:is_important]
             properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}            

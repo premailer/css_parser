@@ -98,6 +98,12 @@ class MergingTests < Test::Unit::TestCase
     rs2 = RuleSet.new(nil, 'color: red !important;', 1)
     merged = CssParser.merge(rs1, rs2)
     assert_equal 'black !important;', merged['color']    
+
+    rs3 = RuleSet.new(nil, 'color: blue !important;', 1000)
+    merged = CssParser.merge(rs1, rs2, rs3)
+    assert_equal 'blue !important;', merged['color']    
+
+
   end
 
   def test_merging_shorthand_important
