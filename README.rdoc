@@ -59,6 +59,8 @@ The download/import tests use WEBrick.  The tests set up
 a temporary server on port 12000 and pull down files from the <tt>test/fixtures/</tt> 
 directory.
 
+Tested with Ruby 1.8.7, Ruby 1.9.2, Ruby 1.9.3-preview1, REE 1.8.7 and JRuby 1.6.4.
+
 === Credits and code
 
 By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007-11.
