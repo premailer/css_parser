@@ -5,7 +5,7 @@ require 'open-uri'
 require 'digest/md5'
 require 'zlib'
 require 'stringio'
-require 'iconv'
+require 'iconv' unless String.method_defined?(:encode)
 
 module CssParser
   VERSION = '1.2.5'

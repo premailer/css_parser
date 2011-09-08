@@ -441,8 +441,12 @@ module CssParser
         end
 
         if charset
-          ic = Iconv.new('UTF-8//IGNORE', charset)
-          src = ic.iconv(src)
+          if String.method_defined?(:encode)
+            src.encode!('UTF-8', charset)
+          else
+            ic = Iconv.new('UTF-8//IGNORE', charset)
+            src = ic.iconv(src)
+          end
         end
       rescue
         raise RemoteFileError if @options[:io_exceptions]
