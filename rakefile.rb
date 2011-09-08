@@ -5,7 +5,6 @@ require 'bundler/setup'
 require 'rake'
 require 'rake/testtask'
 require 'rdoc/task'
-require 'rake/gempackagetask'
 require 'fileutils'
 require 'css_parser'
 
