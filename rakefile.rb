@@ -4,7 +4,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'rake'
 require 'rake/testtask'
-require 'rake/rdoctask'
+require 'rdoc/task'
 require 'rake/gempackagetask'
 require 'fileutils'
 require 'css_parser'
@@ -35,7 +35,7 @@ Rake::TestTask.new do |t|
 end
 
 desc 'Generate documentation.'
-Rake::RDocTask.new(:rdoc) do |rdoc|
+RDoc::Task.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'doc'
   rdoc.title    = 'Ruby CSS Parser'
   rdoc.options << '--all' << '--inline-source' << '--line-numbers'
@@ -44,17 +44,4 @@ Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_files.include('LICENSE')
   rdoc.rdoc_files.include('lib/*.rb')
   rdoc.rdoc_files.include('lib/css_parser/*.rb')
-end
-
-desc 'Generate fancy documentation.'
-Rake::RDocTask.new(:fancy) do |rdoc|
-  rdoc.rdoc_dir = 'fdoc'
-  rdoc.title    = 'Ruby CSS Parser'
-  rdoc.options << '--all' << '--inline-source' << '--line-numbers'
-  rdoc.rdoc_files.include('README.rdoc')
-  rdoc.rdoc_files.include('CHANGELOG')
-  rdoc.rdoc_files.include('LICENSE')
-  rdoc.rdoc_files.include('lib/*.rb')
-  rdoc.rdoc_files.include('lib/css_parser/*.rb')
-  rdoc.template = File.expand_path(File.dirname(__FILE__) + '/doc-template.rb')
 end

@@ -3,14 +3,18 @@ PATH
   specs:
     css_parser (1.2.5)
       addressable
+      rdoc
 
 GEM
   remote: http://rubygems.org/
   specs:
     addressable (2.2.6)
+    rake (0.9.2)
+    rdoc (3.9.4)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   css_parser!
+  rake
