@@ -1,5 +1,8 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.2.3
+ * First pass of media query support
+
 === Version 1.2.2
  * Fix merging of multiple !important rules to match the spec
 

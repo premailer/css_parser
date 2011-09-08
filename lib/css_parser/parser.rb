@@ -21,13 +21,11 @@ module CssParser
     STRIP_HTML_COMMENTS_RX = /\<\!\-\-|\-\-\>/m
 
     # Initial parsing
-    RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s\)]*)["']?\)?([\w\s\,^\])]*)\)?[;\n]?/
+    RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s\)]*)["']?\)?([\w\s\,^\]\(\))]*)\)?[;\n]?/
 
      # Array of CSS files that have been loaded.
     attr_reader   :loaded_uris
-
-    #attr_reader   :rules
-
+    
     #--
     # Class variable? see http://www.oreillynet.com/ruby/blog/2007/01/nubygems_dont_use_class_variab_1.html
     #++
@@ -98,24 +96,26 @@ module CssParser
     #   parser.add_block!(css)
     def add_block!(block, options = {})
       options = {:base_uri => nil, :base_dir => nil, :charset => nil, :media_types => :all, :only_media_types => :all}.merge(options)
-      options[:media_types] = [options[:media_types]].flatten
-      options[:only_media_types] = [options[:only_media_types]].flatten
+      options[:media_types] = [options[:media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
+      options[:only_media_types] = [options[:only_media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
 
       block = cleanup_block(block)
 
       if options[:base_uri] and @options[:absolute_paths]
         block = CssParser.convert_uris(block, options[:base_uri])
       end
-
+      
       # Load @imported CSS
-      block.scan(RE_AT_IMPORT_RULE).each do |import_rule|    
+      block.scan(RE_AT_IMPORT_RULE).each do |import_rule|
         media_types = []
         if media_string = import_rule[-1]
-          media_string.split(/\s|\,/).each do |t|
-            media_types << t.to_sym unless t.empty?
+          media_string.split(/[,]/).each do |t|
+            media_types << CssParser.sanitize_media_query(t) unless t.empty?
           end
+        else
+          media_types = [:all]
         end
-
+        
         next unless options[:only_media_types].include?(:all) or media_types.length < 1 or (media_types & options[:only_media_types]).length > 0
 
         import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
@@ -148,7 +148,7 @@ module CssParser
     def add_rule_set!(ruleset, media_types = :all)
       raise ArgumentError unless ruleset.kind_of?(CssParser::RuleSet)
 
-      media_types = [media_types] if media_types.kind_of?(Symbol)
+      media_types = [media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
 
       @rules << {:media_types => media_types, :rules => ruleset}
     end
@@ -158,7 +158,7 @@ module CssParser
     # +media_types+ can be a symbol or an array of symbols.
     def each_rule_set(media_types = :all) # :yields: rule_set
       media_types = [:all] if media_types.nil?
-      media_types = [media_types] if media_types.kind_of?(Symbol)
+      media_types = [media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
 
       @rules.each do |block|
         if media_types.include?(:all) or block[:media_types].any? { |mt| media_types.include?(mt) }
@@ -173,7 +173,6 @@ module CssParser
     # See RuleSet#each_selector for +options+.
     def each_selector(media_types = :all, options = {}) # :yields: selectors, declarations, specificity
       each_rule_set(media_types) do |rule_set|
-        #puts rule_set
         rule_set.each_selector(options) do |selectors, declarations, specificity|
           yield selectors, declarations, specificity
         end
@@ -188,6 +187,21 @@ module CssParser
       end
       out
     end
+    
+    # A hash of { :media_query => rule_sets }
+    def rules_by_media_query
+      rules_by_media = {}
+      @rules.each do |block|
+        block[:media_types].each do |mt|
+          unless rules_by_media.has_key?(mt)
+            rules_by_media[mt] = []
+          end
+          rules_by_media[mt] << block[:rules]
+        end
+      end
+      
+      rules_by_media
+    end
 
     # Merge declarations with the same selector.
     def compact! # :nodoc:
@@ -197,32 +211,31 @@ module CssParser
     end
 
     def parse_block_into_rule_sets!(block, options = {}) # :nodoc:
-      options = {:media_types => :all}.merge(options)
-      media_types = options[:media_types]
+      current_media_queries = [:all]
+      if options[:media_types]
+        current_media_queries = options[:media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
+      end
 
       in_declarations = 0
-
       block_depth = 0
 
-      # @charset is ignored for now
-      in_charset = false
+      in_charset = false # @charset is ignored for now
       in_string = false
       in_at_media_rule = false
+      in_media_block = false
 
       current_selectors = ''
+      current_media_query = ''
       current_declarations = ''
 
       block.scan(/([\\]?[{}\s"]|(.[^\s"{}\\]*))/).each do |matches|
-      #block.scan(/((.[^{}"\n\r\f\s]*)[\s]|(.[^{}"\n\r\f]*)\{|(.[^{}"\n\r\f]*)\}|(.[^{}"\n\r\f]*)\"|(.*)[\s]+)/).each do |matches|
         token = matches[0]
 
-        #puts "TOKEN: #{token}" unless token =~ /^[\s]*$/
         if token =~ /\A"/ # found un-escaped double quote
           in_string = !in_string
         end       
 
         if in_declarations > 0
-
           # too deep, malformed declaration block
           if in_declarations > 1
             in_declarations -= 1 if token =~ /\}/
@@ -242,8 +255,7 @@ module CssParser
             in_declarations -= 1
 
             unless current_declarations.strip.empty?
-              #puts "SAVING #{current_selectors} -> #{current_declarations}"
-              add_rule!(current_selectors, current_declarations, media_types)
+              add_rule!(current_selectors, current_declarations, current_media_queries)
             end
 
             current_selectors = ''
@@ -257,9 +269,17 @@ module CssParser
           if token =~ /\{/
             block_depth = block_depth + 1
             in_at_media_rule = false
+            in_media_block = true
+            current_media_queries << CssParser.sanitize_media_query(current_media_query)
+            current_media_query = ''
+          elsif token =~ /[,]/
+            # new media query begins
+            token.gsub!(/[,]/, ' ')
+            current_media_query += token.strip + ' '
+            current_media_queries << CssParser.sanitize_media_query(current_media_query)
+            current_media_query = ''
           else
-            token.gsub!(/[,\s]*/, '')
-            media_types << token.strip.downcase.to_sym unless token.empty?
+            current_media_query += token.strip + ' '
           end
         elsif in_charset or token =~ /@charset/i
           # iterate until we are out of the charset declaration
@@ -267,6 +287,12 @@ module CssParser
         else
           if token =~ /\}/ and not in_string
             block_depth = block_depth - 1
+
+            # reset the current media query scope
+            if in_media_block
+              current_media_queries = []
+              in_media_block = false
+            end
           else
             if token =~ /\{/ and not in_string
               current_selectors.gsub!(/^[\s]*/, '')
@@ -281,8 +307,8 @@ module CssParser
 
       # check for unclosed braces          
       if in_declarations > 0
-        add_rule!(current_selectors, current_declarations, media_types)
-      end        
+        add_rule!(current_selectors, current_declarations, current_media_queries)
+      end
     end
 
     # Load a remote CSS file.

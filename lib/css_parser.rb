@@ -8,7 +8,7 @@ require 'stringio'
 require 'iconv'
 
 module CssParser
-  VERSION = '1.2.2'
+  VERSION = '1.2.3'
 
   # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules 
   # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).
@@ -151,6 +151,12 @@ module CssParser
       end
       "url('#{uri.to_s}')"
     end
+  end
+  
+  def self.sanitize_media_query(raw)
+    mq = raw.to_s.gsub(/[\s]+/, ' ').strip
+    mq = 'all' if mq.empty?
+    mq.to_sym
   end
 end
 
