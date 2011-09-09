@@ -1,5 +1,8 @@
 === Ruby CSS Parser CHANGELOG
 
+=== Version 1.2.6
+ * JRuby and Ruby 1.9.3-preview1 compat
+
 === Version 1.2.5
  * Fix merging of multiple !important rules to match the spec
 

@@ -8,7 +8,7 @@ require 'stringio'
 require 'iconv' unless String.method_defined?(:encode)
 
 module CssParser
-  VERSION = '1.2.5'
+  VERSION = '1.2.6'
 
   # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules 
   # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).
