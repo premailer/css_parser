@@ -356,6 +356,12 @@ module CssParser
       add_block!(src, {:media_types => media_types, :base_dir => base_dir})
     end
     
+    # Load a local CSS string.
+    def load_string!(src, base_dir = nil, media_types = :all)
+      
+      add_block!(src, {:media_types => media_types, :base_dir => base_dir})
+    end
+    
     
 
   protected
