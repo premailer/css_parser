@@ -118,7 +118,7 @@ module CssParser
     # Return the CSS rule set as a string.
     def to_s
       decs = declarations_to_s
-      "#{@selectors.join} { #{decs} }"
+      "#{@selectors.join(',')} { #{decs} }"
     end
 
     # Split shorthand declarations (e.g. +margin+ or +font+) into their constituent parts.

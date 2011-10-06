@@ -69,6 +69,12 @@ class RuleSetTests < Test::Unit::TestCase
     assert_equal(expected, actual)
   end
 
+  def test_multiple_selectors_to_s
+    selectors = "#content p, a"
+    rs = RuleSet.new(selectors, "color: #fff;")
+    assert_match(/^\s*#content p,\s*a\s*\{/, rs.to_s)
+  end
+
   def test_declarations_to_s
     declarations = 'color: #fff; font-weight: bold;'
     rs = RuleSet.new('#content p, a', declarations)
