@@ -42,6 +42,18 @@ class CssParserRegexpTests < Test::Unit::TestCase
       assert_no_match(CssParser::RE_COLOUR, colour)
     end
   end
+  
+  def test_gradients
+    ['linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
+     '-o-linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
+     '-moz-linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
+     '-webkit-linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
+     '-ms-linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)'].each do |grad|
+       assert_match(CssParser::RE_GRADIENT, grad)
+    end
+
+  end
+
 
   def test_uris
     crazy_uri = 'http://www.example.com:80/~/redb%20all.png?test=test&test;test+test#test!'
