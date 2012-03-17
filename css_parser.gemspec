@@ -1,13 +1,13 @@
 Gem::Specification.new do |s|
-  s.name     = "css_parser"
-  s.version  = "1.2.6"
-  s.date     = "2011-09-08"
+  s.name     = "kajabi-css_parser"
+  s.version  = "1.2.7"
+  s.date     = "2011-12-13"
   s.summary  = "Ruby CSS parser."
   s.description  = "A set of classes for parsing CSS in Ruby."
-  s.email    = "code@dunae.ca"
-  s.homepage = "https://github.com/alexdunae/css_parser"
+  s.email    = ["xternal1+github@gmail.com", "code@dunae.ca"]
+  s.homepage = "https://github.com/kajabi/css_parser"
   s.has_rdoc = true
-  s.author  = "Alex Dunae"
+  s.authors  = ["Brendon Murphy",  "Alex Dunae"]
   s.add_dependency('addressable')
   s.add_dependency('rdoc')
   s.add_development_dependency('rake')

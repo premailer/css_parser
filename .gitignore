@@ -4,3 +4,4 @@ css_parser-*.gem
 *.DS_Store
 html/
 rdoc/
+Gemfile.lock
