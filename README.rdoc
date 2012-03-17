@@ -28,11 +28,11 @@ Done.
   parser.load_file!('print.css', '~/styles/', :print)
 
   # lookup a rule by a selector
-  parser.find('#content')
+  parser.find_by_selector('#content')
   #=> 'font-size: 13px; line-height: 1.2;'
 
   # lookup a rule by a selector and media type
-  parser.find('#content', [:screen, :handheld])
+  parser.find_by_selector('#content', [:screen, :handheld])
 
   # iterate through selectors by media type
   parser.each_selector(:screen) do |selector, declarations, specificity|
