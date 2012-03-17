@@ -55,6 +55,11 @@ class CssParserLoadingTests < Test::Unit::TestCase
     @cp.load_uri!("https://dialect.ca/inc/screen.css")
     assert_match /margin\: 0\;/, @cp.find_by_selector('body').join(' ')
   end
+  
+  def test_loading_a_string
+    @cp.load_string!("p{margin:0px}")
+    assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
+  end
 
 
   def test_following_at_import_rules_local
