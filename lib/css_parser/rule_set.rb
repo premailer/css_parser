@@ -146,7 +146,7 @@ module CssParser
         end
       end
 
-      split_declaration('background', 'background-image', value.slice!(Regexp.union(CssParser::URI_RX, CssParser::GRADIENT_RX, /none/i)))
+      split_declaration('background', 'background-image', value.slice!(Regexp.union(CssParser::URI_RX, CssParser::RE_GRADIENT, /none/i)))
       split_declaration('background', 'background-attachment', value.slice!(CssParser::RE_SCROLL_FIXED))
       split_declaration('background', 'background-repeat', value.slice!(CssParser::RE_REPEAT))
       split_declaration('background', 'background-color', value.slice!(CssParser::RE_COLOUR))
