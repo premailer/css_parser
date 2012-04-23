@@ -467,11 +467,17 @@ module CssParser
 
       block.gsub!(/(^[\s]*)|([\s]*$)/, '')
 
+      continuation = ''
       block.split(/[\;$]+/m).each do |decs|
-        if matches = decs.match(/(.[^:]*)\:(.[^;]*)(;|\Z)/i)
+        decs = continuation + decs
+        if decs =~ /\([^)]*\Z/ # if it has an unmatched parenthesis
+          continuation = decs + ';'
+
+        elsif matches = decs.match(/(.[^:]*)\s*:\s*(.+)(;?\s*\Z)/i)
           property, value, end_of_declaration = matches.captures
 
           add_declaration!(property, value)
+          continuation = ''
         end
       end
     end

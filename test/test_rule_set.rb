@@ -69,6 +69,13 @@ class RuleSetTests < Test::Unit::TestCase
     assert_equal(expected, actual)
   end
 
+  def test_each_declaration_containing_semicolons
+    rs = RuleSet.new(nil, "background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAiCAMAAAB7);" +
+                          "background-repeat: no-repeat")
+    assert_equal('url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAiCAMAAAB7);', rs['background-image'])
+    assert_equal('no-repeat;', rs['background-repeat'])
+  end
+
   def test_multiple_selectors_to_s
     selectors = "#content p, a"
     rs = RuleSet.new(selectors, "color: #fff;")
