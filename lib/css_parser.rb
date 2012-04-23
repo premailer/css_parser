@@ -67,10 +67,10 @@ module CssParser
       
       specificity = rule_set.specificity
       unless specificity
-        if rule_set.selectors.length == 1
-          specificity = calculate_specificity(rule_set.selectors[0])
-        else
+        if rule_set.selectors.length == 0
           specificity = 0
+        else
+          specificity = rule_set.selectors.map { |s| calculate_specificity(s) }.compact.max || 0
         end
       end
 
