@@ -69,6 +69,12 @@ class RuleSetTests < Test::Unit::TestCase
     assert_equal(expected, actual)
   end
 
+  def test_selector_sanitization
+    selectors = "h1, h2,\nh3 "
+    rs = RuleSet.new(selectors, "color: #fff;")
+    assert rs.selectors.member?("h3")
+  end
+
   def test_multiple_selectors_to_s
     selectors = "#content p, a"
     rs = RuleSet.new(selectors, "color: #fff;")

@@ -23,6 +23,20 @@ class MergingTests < Test::Unit::TestCase
     assert_equal 'black;', merged['color']
   end
 
+  def test_merging_with_compound_selectors
+    @cp.add_block! "body { margin: 0; }"
+    @cp.add_block! "h2   { margin: 5px; }"
+
+    rules = @cp.find_rule_sets([ "body", "h2" ])
+    assert_equal "margin: 5px;", CssParser.merge(rules).declarations_to_s
+
+    @cp = CssParser::Parser.new
+    @cp.add_block! "body { margin: 0; }"
+    @cp.add_block! "h2,h1 { margin: 5px; }"
+
+    rules = @cp.find_rule_sets([ "body", "h2" ])
+    assert_equal "margin: 5px;", CssParser.merge(rules).declarations_to_s
+  end
 
   def test_merging_multiple
     rs1 = RuleSet.new(nil, 'color: black;')
@@ -85,23 +99,23 @@ class MergingTests < Test::Unit::TestCase
     merged = CssParser.merge(rs)
     assert_equal rs.object_id, merged.object_id
   end
-  
+
   def test_merging_important
     rs1 = RuleSet.new(nil, 'color: black !important;')
     rs2 = RuleSet.new(nil, 'color: red;')
     merged = CssParser.merge(rs1, rs2)
-    assert_equal 'black !important;', merged['color']    
+    assert_equal 'black !important;', merged['color']
   end
 
   def test_merging_multiple_important
     rs1 = RuleSet.new(nil, 'color: black !important;', 1000)
     rs2 = RuleSet.new(nil, 'color: red !important;', 1)
     merged = CssParser.merge(rs1, rs2)
-    assert_equal 'black !important;', merged['color']    
+    assert_equal 'black !important;', merged['color']
 
     rs3 = RuleSet.new(nil, 'color: blue !important;', 1000)
     merged = CssParser.merge(rs1, rs2, rs3)
-    assert_equal 'blue !important;', merged['color']    
+    assert_equal 'blue !important;', merged['color']
 
 
   end
