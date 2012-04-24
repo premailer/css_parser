@@ -46,11 +46,11 @@ class MergingTests < Test::Unit::TestCase
     assert_equal '5px;', merged['margin']
   end
 
-  def test_multiple_selectors_should_have_zero_specificity
+  def test_multiple_selectors_should_have_proper_specificity
     rs1 = RuleSet.new('p, a[rel="external"]', 'color: black;')
     rs2 = RuleSet.new('a', 'color: blue;')
     merged = CssParser.merge(rs1, rs2)
-    assert_equal 'blue;', merged['color']
+    assert_equal 'black;', merged['color']
   end
 
   def test_setting_specificity

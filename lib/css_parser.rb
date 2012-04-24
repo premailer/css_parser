@@ -24,8 +24,9 @@ module CssParser
   # If no specificity is explicitly set and the RuleSet has *one* selector, 
   # the specificity is calculated using that selector.
   #
-  # If no selectors or multiple selectors are present, the specificity is 
-  # treated as 0.
+  # If no selectors the specificity is treated as 0.
+  #
+  # If multiple selectors are present then the greatest specificity is used.
   #
   # ==== Example #1
   #   rs1 = RuleSet.new(nil, 'color: black;')
