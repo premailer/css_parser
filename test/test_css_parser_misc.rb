@@ -101,6 +101,18 @@ class CssParserTests < Test::Unit::TestCase
     end
   end
 
+  def test_find_rule_sets
+    css = <<-EOT
+      h1, h2 { color: blue; }
+      h1 { font-size: 10px; }
+      h2 { font-size: 5px; }
+    EOT
+
+    @cp.add_block!(css)
+    assert_equal 2, @cp.find_rule_sets(["h2"]).size
+    assert_equal 3, @cp.find_rule_sets(["h1", "h2"]).size
+  end
+
   def test_calculating_specificity
     # from http://www.w3.org/TR/CSS21/cascade.html#specificity
     assert_equal 0,   CssParser.calculate_specificity('*')

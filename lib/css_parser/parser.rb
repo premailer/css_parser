@@ -73,6 +73,20 @@ module CssParser
     end
     alias_method :[], :find_by_selector
 
+    # Finds the rule sets that match the given selectors
+    def find_rule_sets(selectors, media_types = :all)
+      rule_sets = []
+
+      selectors.each do |selector|
+        each_rule_set(media_types) do |rule_set|
+          if !rule_sets.member?(rule_set) && rule_set.selectors.member?(selector)
+            rule_sets << rule_set
+          end
+        end
+      end
+
+      rule_sets
+    end
 
     # Add a raw block of CSS.
     #

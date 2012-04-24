@@ -22,7 +22,6 @@ module CssParser
       parse_declarations!(block)
     end
 
-
     # Get the value of a property
     def get_value(property)
       return '' unless property and not property.empty?
@@ -480,7 +479,7 @@ module CssParser
     # TODO: way too simplistic
     #++
     def parse_selectors!(selectors) # :nodoc:
-      @selectors = selectors.split(',') 
+      @selectors = selectors.split(',').map { |s| s.strip }
     end
   end
 end
