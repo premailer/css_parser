@@ -22,7 +22,7 @@ module CssParser
 
   RE_URI = Regexp.new('(url\([\s]*([\s]*' + RE_STRING.to_s + '[\s]*)[\s]*\))|(url\([\s]*([!#$%&*\-~]|' + RE_NON_ASCII.to_s + '|' + RE_ESCAPE.to_s + ')*[\s]*)\)', Regexp::IGNORECASE | Regexp::EXTENDED  | Regexp::MULTILINE, 'n')
   URI_RX = /url\(("([^"]*)"|'([^']*)'|([^)]*))\)/im
-  RE_GRADIENT = /[a-z\-]*gradient\([a-z ,#%0-9\(\)]*\)$/im
+  RE_GRADIENT = /[-a-z]*gradient\([-a-z0-9 .,#%()]*\)/im
 
   # Initial parsing
   RE_AT_IMPORT_RULE = /\@import[\s]+(url\()?["''"]?(.[^'"\s"']*)["''"]?\)?([\w\s\,^\])]*)\)?;?/
