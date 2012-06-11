@@ -11,14 +11,14 @@ class CssParserRegexpTests < Test::Unit::TestCase
     ['"abcd"', '" A sd sédrcv \'dsf\' asd rfg asd"', '"A\ d??ef 123!"',
      "\"this is\\\n a test\"", '"back\67round"', '"r\000065 ed"',
      "'abcd'", "' A sd sedrcv \"dsf\" asd rf—&23$%#%$g asd'", "'A\\\n def 123!'",
-     "'this is\\\n a test'", "'back\\67round'", "'r\\000065 ed'"     
+     "'this is\\\n a test'", "'back\\67round'", "'r\\000065 ed'"
     ].each do |str|
       assert_equal str, str.match(CssParser::RE_STRING).to_s
     end
 
     test_string = "p { background: red url(\"url\\.'p'ng\"); }"
     assert_equal "\"url\\.'p'ng\"", test_string.match(CssParser::RE_STRING).to_s
-  
+
   end
 
   def test_unicode
@@ -42,7 +42,7 @@ class CssParserRegexpTests < Test::Unit::TestCase
       assert_no_match(CssParser::RE_COLOUR, colour)
     end
   end
-  
+
   def test_gradients
     ['linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
      '-o-linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
@@ -57,15 +57,20 @@ class CssParserRegexpTests < Test::Unit::TestCase
 
   def test_uris
     crazy_uri = 'http://www.example.com:80/~/redb%20all.png?test=test&test;test+test#test!'
-    
-    assert_equal "url('#{crazy_uri}')", 
+
+    assert_equal "url('#{crazy_uri}')",
                   "li { list-style: url('#{crazy_uri}') disc }".match(CssParser::RE_URI).to_s
 
-    assert_equal "url(#{crazy_uri})", 
+    assert_equal "url(#{crazy_uri})",
                   "li { list-style: url(#{crazy_uri}) disc }".match(CssParser::RE_URI).to_s
 
-    assert_equal "url(\"#{crazy_uri}\")", 
+    assert_equal "url(\"#{crazy_uri}\")",
                  "li { list-style: url(\"#{crazy_uri}\") disc }".match(CssParser::RE_URI).to_s
+  end
+
+  def test_important
+    assert_match(CssParser::IMPORTANT_IN_PROPERTY_RX, "color: #f00 !important   ;")
+    assert_no_match(CssParser::IMPORTANT_IN_PROPERTY_RX, "color: #f00 !importantish;")
   end
 
 
