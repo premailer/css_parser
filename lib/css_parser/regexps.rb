@@ -1,6 +1,4 @@
 module CssParser
-
-
   def self.regex_possible_values *values
     Regexp.new("([\s]*^)?(#{values.join('|')})([\s]*$)?", 'i')
   end

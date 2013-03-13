@@ -7,10 +7,14 @@ require 'zlib'
 require 'stringio'
 require 'iconv' unless String.method_defined?(:encode)
 
-module CssParser
-  VERSION = '1.2.6'
+require 'css_parser/rule_set'
+require 'css_parser/regexps'
+require 'css_parser/parser'
 
-  # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules 
+module CssParser
+  autoload :VERSION, "css_parser/version"
+
+  # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules
   # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).
   #
   # Takes one or more RuleSet objects.
@@ -48,7 +52,7 @@ module CssParser
   #--
   # TODO: declaration_hashes should be able to contain a RuleSet
   #       this should be a Class method
-  def CssParser.merge(*rule_sets)
+  def self.merge(*rule_sets)
     @folded_declaration_cache = {}
 
     # in case called like CssParser.merge([rule_set, rule_set])
@@ -116,7 +120,7 @@ module CssParser
   #--
   # Thanks to Rafael Salazar and Nick Fitzsimons on the css-discuss list for their help.
   #++
-  def CssParser.calculate_specificity(selector)
+  def self.calculate_specificity(selector)
     a = 0
     b = selector.scan(/\#/).length
     c = selector.scan(NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX).length
@@ -162,7 +166,3 @@ module CssParser
     mq.to_sym
   end
 end
-
-require File.dirname(__FILE__) + '/css_parser/rule_set'
-require File.dirname(__FILE__) + '/css_parser/regexps'
-require File.dirname(__FILE__) + '/css_parser/parser'
