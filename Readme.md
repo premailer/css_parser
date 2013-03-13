@@ -64,6 +64,8 @@ Runs on Ruby 1.8.7, Ruby 1.9.2, Ruby 1.9.3, REE 1.8.7 and JRuby.
 
 By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007-11.
 
+License: MIT
+
 Thanks to [all the wonderful contributors](http://github.com/alexdunae/css_parser/contributors) for their updates.
 
 Made on Vancouver Island.

@@ -1,6 +1,0 @@
-doc/*
-pkg/*
-css_parser-*.gem
-*.DS_Store
-html/
-rdoc/

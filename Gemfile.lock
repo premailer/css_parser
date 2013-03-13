@@ -3,26 +3,25 @@ PATH
   specs:
     css_parser (1.2.6)
       addressable
-      rdoc
 
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.2.7)
+    addressable (2.3.3)
     bouncy-castle-java (1.5.0146.1)
+    bump (0.3.12)
     jruby-openssl (0.7.6.1)
       bouncy-castle-java (>= 1.5.0146.1)
-    json (1.6.5)
-    json (1.6.5-java)
     rake (0.9.2.2)
-    rdoc (3.12)
-      json (~> 1.4)
+    test-unit (2.5.4)
 
 PLATFORMS
   java
   ruby
 
 DEPENDENCIES
+  bump
   css_parser!
   jruby-openssl
   rake
+  test-unit (>= 2.5.3)
