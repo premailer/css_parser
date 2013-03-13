@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'bundler/setup'
 require 'test/unit'
 require 'net/http'
 require 'open-uri'

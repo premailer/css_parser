@@ -7,15 +7,15 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
     @cp = CssParser::Parser.new
   end
 
-# ==== Dimensions shorthand
+  # Dimensions shorthand
   def test_expanding_border_shorthand
     declarations = expand_declarations('border: none')
     assert_equal 'none', declarations['border-right-style']
 
     declarations = expand_declarations('border: 1px solid red')
     assert_equal '1px', declarations['border-top-width']
-    assert_equal 'solid', declarations['border-bottom-style']  
-    
+    assert_equal 'solid', declarations['border-bottom-style']
+
     declarations = expand_declarations('border-color: red hsla(255, 0, 0, 5) rgb(2% ,2%,2%)')
     assert_equal 'red', declarations['border-top-color']
     assert_equal 'rgb(2%,2%,2%)', declarations['border-bottom-color']
@@ -27,7 +27,7 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
     assert_nil declarations['border-left-color']
   end
 
-# ==== Dimensions shorthand
+  # Dimensions shorthand
   def test_getting_dimensions_from_shorthand
     # test various shorthand forms
     ['margin: 0px auto', 'margin: 0px auto 0px', 'margin: 0px auto 0px'].each do |shorthand|
@@ -39,19 +39,18 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
     ['em', 'ex', 'in', 'px', 'pt', 'pc', '%'].each do |unit|
       shorthand = "margin: 0% -0.123#{unit} 9px -.9pc"
       declarations = expand_declarations(shorthand)
-      assert_equal({"margin-right" => "-0.123#{unit}", "margin-bottom" => "9px", "margin-left" => "-.9pc", "margin-top" => "0%"}, declarations)    
+      assert_equal({"margin-right" => "-0.123#{unit}", "margin-bottom" => "9px", "margin-left" => "-.9pc", "margin-top" => "0%"}, declarations)
     end
   end
 
-
-# ==== Font shorthand
+  # Font shorthand
   def test_getting_font_size_from_shorthand
     ['em', 'ex', 'in', 'px', 'pt', 'pc', '%'].each do |unit|
       shorthand = "font: 300 italic 11.25#{unit}/14px verdana, helvetica, sans-serif;"
       declarations = expand_declarations(shorthand)
       assert_equal("11.25#{unit}", declarations['font-size'])
     end
-    
+
     ['smaller', 'small', 'medium', 'large', 'x-large', 'auto'].each do |unit|
       shorthand = "font: 300 italic #{unit}/14px verdana, helvetica, sans-serif;"
       declarations = expand_declarations(shorthand)
@@ -74,7 +73,7 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
 
     # ensure normal is the default state
     ['font: normal italic 12px sans-serif;', 'font: italic 12px sans-serif;',
-     'font: small-caps normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
+      'font: small-caps normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
       declarations = expand_declarations(shorthand)
       assert_equal('normal', declarations['font-weight'], shorthand)
     end
@@ -87,7 +86,7 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
 
     # ensure normal is the default state
     ['font: normal italic 12px sans-serif;', 'font: italic 12px sans-serif;',
-     'font: normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
+      'font: normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
       declarations = expand_declarations(shorthand)
       assert_equal('normal', declarations['font-variant'], shorthand)
     end
@@ -102,7 +101,7 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
 
     # ensure normal is the default state
     ['font: normal bold 12px sans-serif;', 'font: small-caps 12px sans-serif;',
-     'font: normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
+      'font: normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
       declarations = expand_declarations(shorthand)
       assert_equal('normal', declarations['font-style'], shorthand)
     end
@@ -117,17 +116,17 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
 
     # ensure normal is the default state
     ['font: normal bold 12px sans-serif;', 'font: small-caps 12px sans-serif;',
-     'font: normal 12px sans-serif;', 'font: 12px sans-serif;'].each do |shorthand|
+      'font: normal 12px sans-serif;', 'font: 12px sans-serif;'].each do |shorthand|
       declarations = expand_declarations(shorthand)
       assert_equal('normal', declarations['line-height'], shorthand)
     end
   end
 
 
-# ==== Background shorthand
+  # Background shorthand
   def test_getting_background_properties_from_shorthand
-    expected = {"background-image" => "url('chess.png')", "background-color" => "gray", "background-repeat" => "repeat", 
-              "background-attachment" => "fixed", "background-position" => "50%"}
+    expected = {"background-image" => "url('chess.png')", "background-color" => "gray", "background-repeat" => "repeat",
+      "background-attachment" => "fixed", "background-position" => "50%"}
 
     shorthand = "background: url('chess.png') gray 50% repeat fixed;"
     declarations = expand_declarations(shorthand)
@@ -173,10 +172,10 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
   end
 
   def test_getting_background_image_from_shorthand
-    ['url("chess.png")', 'url("https://example.org:80/~files/chess.png?123=abc&test#5")', 
-     'url(https://example.org:80/~files/chess.png?123=abc&test#5)',
-     "url('https://example.org:80/~files/chess.png?123=abc&test#5')", 'none', 'inherit'].each do |image|
-      
+    ['url("chess.png")', 'url("https://example.org:80/~files/chess.png?123=abc&test#5")',
+      'url(https://example.org:80/~files/chess.png?123=abc&test#5)',
+      "url('https://example.org:80/~files/chess.png?123=abc&test#5')", 'none', 'inherit'].each do |image|
+
       shorthand = "background: #0f0f0f #{image} ;"
       declarations = expand_declarations(shorthand)
       assert_equal(image, declarations['background-image'])
@@ -185,9 +184,9 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
 
   def test_getting_background_gradient_from_shorthand
     ['linear-gradient(top, hsla(0, 0%, 0%, 0.00) 0%, hsla(0, 0%, 0%, 0.20) 100%)',
-     '-webkit-gradient(linear, left top, left bottom, color-stop(0, hsla(0, 0%, 0%, 0.00)), color-stop(1, hsla(0, 0%, 0%, 0.20)))',
-     '-moz-linear-gradient(bottom, blue, red)'
-      ].each do |image|
+      '-webkit-gradient(linear, left top, left bottom, color-stop(0, hsla(0, 0%, 0%, 0.00)), color-stop(1, hsla(0, 0%, 0%, 0.20)))',
+      '-moz-linear-gradient(bottom, blue, red)'
+    ].each do |image|
 
       shorthand = "background: #0f0f0f #{image} repeat ;"
       declarations = expand_declarations(shorthand)
@@ -195,10 +194,10 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
     end
   end
 
-  # ==== List-style shorthand
+  # List-style shorthand
   def test_getting_list_style_properties_from_shorthand
     expected = {'list-style-image' => 'url(\'chess.png\')', 'list-style-type' => 'katakana',
-                  'list-style-position' => 'inside'}
+      'list-style-position' => 'inside'}
 
     shorthand = "list-style: katakana inside url(\'chess.png\');"
     declarations = expand_declarations(shorthand)
@@ -221,7 +220,8 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
     end
   end
 
-protected
+  protected
+
   def expand_declarations(declarations)
     ruleset = RuleSet.new(nil, declarations)
     ruleset.expand_shorthand!
@@ -230,6 +230,6 @@ protected
     ruleset.each_declaration do |prop, val, imp|
       collected[prop.to_s] = val.to_s
     end
-    collected  
+    collected
   end
 end

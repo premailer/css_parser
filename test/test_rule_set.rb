@@ -31,8 +31,8 @@ class RuleSetTests < Test::Unit::TestCase
 
   def test_each_selector
     expected = [
-       {:selector => "#content p", :declarations => "color: #fff;", :specificity => 101},
-       {:selector => "a", :declarations => "color: #fff;", :specificity => 1}
+      {:selector => "#content p", :declarations => "color: #fff;", :specificity => 101},
+      {:selector => "a", :declarations => "color: #fff;", :specificity => 1}
     ]
 
     actual = []
@@ -46,9 +46,9 @@ class RuleSetTests < Test::Unit::TestCase
 
   def test_each_declaration
     expected = Set.new([
-       {:property => 'margin', :value => '1px -0.25em', :is_important => false},
-       {:property => 'background', :value => 'white none no-repeat', :is_important => true},
-       {:property => 'color', :value => '#fff', :is_important => false}
+      {:property => 'margin', :value => '1px -0.25em', :is_important => false},
+      {:property => 'background', :value => 'white none no-repeat', :is_important => true},
+      {:property => 'color', :value => '#fff', :is_important => false}
     ])
 
     actual = Set.new
@@ -71,7 +71,7 @@ class RuleSetTests < Test::Unit::TestCase
 
   def test_each_declaration_containing_semicolons
     rs = RuleSet.new(nil, "background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAiCAMAAAB7);" +
-                          "background-repeat: no-repeat")
+      "background-repeat: no-repeat")
     assert_equal('url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAiCAMAAAB7);', rs['background-image'])
     assert_equal('no-repeat;', rs['background-repeat'])
   end

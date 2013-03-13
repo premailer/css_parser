@@ -124,7 +124,7 @@ class CssParserTests < Test::Unit::TestCase
     assert_equal 13,  CssParser.calculate_specificity('ul ol li.red')
     assert_equal 21,  CssParser.calculate_specificity('li.red.level')
     assert_equal 100, CssParser.calculate_specificity('#x34y')
-  
+
     # from http://www.hixie.ch/tests/adhoc/css/cascade/specificity/003.html
     assert_equal CssParser.calculate_specificity('div *'), CssParser.calculate_specificity('p')
     assert CssParser.calculate_specificity('body div *') > CssParser.calculate_specificity('div *')
@@ -135,17 +135,17 @@ class CssParserTests < Test::Unit::TestCase
 
   def test_converting_uris
     base_uri = 'http://www.example.org/style/basic.css'
-    ["body { background: url(yellow) };", "body { background: url('yellow') };", 
-     "body { background: url('/style/yellow') };", 
-     "body { background: url(\"../style/yellow\") };",
-     "body { background: url(\"lib/../../style/yellow\") };"].each do |css|
+    ["body { background: url(yellow) };", "body { background: url('yellow') };",
+      "body { background: url('/style/yellow') };",
+      "body { background: url(\"../style/yellow\") };",
+      "body { background: url(\"lib/../../style/yellow\") };"].each do |css|
       converted_css = CssParser.convert_uris(css, base_uri)
       assert_equal "body { background: url('http://www.example.org/style/yellow') };", converted_css
     end
 
     converted_css = CssParser.convert_uris("body { background: url(../style/yellow-dot_symbol$.png?abc=123&amp;def=456&ghi=789#1011) };", base_uri)
     assert_equal "body { background: url('http://www.example.org/style/yellow-dot_symbol$.png?abc=123&amp;def=456&ghi=789#1011') };", converted_css
-  
+
     # taken from error log: 2007-10-23 04:37:41#2399
     converted_css = CssParser.convert_uris('.specs {font-family:Helvetica;font-weight:bold;font-style:italic;color:#008CA8;font-size:1.4em;list-style-image:url("images/bullet.gif");}', 'http://www.example.org/directory/file.html')
     assert_equal ".specs {font-family:Helvetica;font-weight:bold;font-style:italic;color:#008CA8;font-size:1.4em;list-style-image:url('http://www.example.org/directory/images/bullet.gif');}", converted_css
@@ -172,5 +172,4 @@ class CssParserTests < Test::Unit::TestCase
 
     assert_equal 'div { background-color: black !important; }', new_rule.to_s
   end
-
 end
