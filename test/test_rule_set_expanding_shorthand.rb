@@ -183,6 +183,18 @@ class RuleSetExpandingShorthandTests < Test::Unit::TestCase
     end
   end
 
+  def test_getting_background_gradient_from_shorthand
+    ['linear-gradient(top, hsla(0, 0%, 0%, 0.00) 0%, hsla(0, 0%, 0%, 0.20) 100%)',
+     '-webkit-gradient(linear, left top, left bottom, color-stop(0, hsla(0, 0%, 0%, 0.00)), color-stop(1, hsla(0, 0%, 0%, 0.20)))',
+     '-moz-linear-gradient(bottom, blue, red)'
+      ].each do |image|
+
+      shorthand = "background: #0f0f0f #{image} repeat ;"
+      declarations = expand_declarations(shorthand)
+      assert_equal(image, declarations['background-image'])
+    end
+  end
+
   # ==== List-style shorthand
   def test_getting_list_style_properties_from_shorthand
     expected = {'list-style-image' => 'url(\'chess.png\')', 'list-style-type' => 'katakana',
