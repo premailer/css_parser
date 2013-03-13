@@ -8,6 +8,21 @@ class CssParserMediaTypesTests < Test::Unit::TestCase
     @cp = Parser.new
   end
 
+  def test_that_media_types_dont_include_all
+    css = <<-EOT
+      @media handheld {
+        body { color: blue; }
+        p { color: grey; }
+      }
+      @media screen {
+        body { color: red; }
+    }
+    EOT
+    @cp.add_block!(css)
+    rules = @cp.rules_by_media_query
+    assert !rules.include?(:all)
+  end
+
   def test_finding_by_media_type
     # from http://www.w3.org/TR/CSS21/media.html#at-media-rule
     css = <<-EOT
