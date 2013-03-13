@@ -7,12 +7,12 @@ require 'zlib'
 require 'stringio'
 require 'iconv' unless String.method_defined?(:encode)
 
+require 'css_parser/version'
 require 'css_parser/rule_set'
 require 'css_parser/regexps'
 require 'css_parser/parser'
 
 module CssParser
-  autoload :VERSION, "css_parser/version"
 
   # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules
   # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).
@@ -22,10 +22,10 @@ module CssParser
   # Returns a RuleSet.
   #
   # ==== Cascading
-  # If a RuleSet object has its +specificity+ defined, that specificity is 
-  # used in the cascade calculations.  
+  # If a RuleSet object has its +specificity+ defined, that specificity is
+  # used in the cascade calculations.
   #
-  # If no specificity is explicitly set and the RuleSet has *one* selector, 
+  # If no specificity is explicitly set and the RuleSet has *one* selector,
   # the specificity is calculated using that selector.
   #
   # If no selectors the specificity is treated as 0.
@@ -57,7 +57,7 @@ module CssParser
 
     # in case called like CssParser.merge([rule_set, rule_set])
     rule_sets.flatten! if rule_sets[0].kind_of?(Array)
-    
+
     unless rule_sets.all? {|rs| rs.kind_of?(CssParser::RuleSet)}
       raise ArgumentError, "all parameters must be CssParser::RuleSets."
     end
@@ -69,7 +69,7 @@ module CssParser
 
     rule_sets.each do |rule_set|
       rule_set.expand_shorthand!
-      
+
       specificity = rule_set.specificity
       unless specificity
         if rule_set.selectors.length == 0
@@ -85,11 +85,11 @@ module CssParser
           properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}
         elsif is_important
           if not properties[property][:is_important] or properties[property][:specificity] <= specificity
-            properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}      
+            properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}
           end
         elsif properties[property][:specificity] < specificity or properties[property][:specificity] == specificity
           unless properties[property][:is_important]
-            properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}            
+            properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}
           end
         end
      end
@@ -99,7 +99,7 @@ module CssParser
 
     properties.each do |property, details|
       if details[:is_important]
-        merged[property.strip] = details[:value].strip.gsub(/\;\Z/, '') + '!important' 
+        merged[property.strip] = details[:value].strip.gsub(/\;\Z/, '') + '!important'
       else
         merged[property.strip] = details[:value].strip
       end
@@ -141,7 +141,7 @@ module CssParser
   # Returns a string.
   #
   # ==== Example
-  #  CssParser.convert_uris("body { background: url('../style/yellow.png?abc=123') };", 
+  #  CssParser.convert_uris("body { background: url('../style/yellow.png?abc=123') };",
   #               "http://example.org/style/basic.css").inspect
   #  => "body { background: url('http://example.org/style/yellow.png?abc=123') };"
   def self.convert_uris(css, base_uri)
@@ -159,7 +159,7 @@ module CssParser
       "url('#{uri.to_s}')"
     end
   end
-  
+
   def self.sanitize_media_query(raw)
     mq = raw.to_s.gsub(/[\s]+/, ' ').strip
     mq = 'all' if mq.empty?
