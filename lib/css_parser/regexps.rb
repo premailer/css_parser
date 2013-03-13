@@ -26,13 +26,13 @@ module CssParser
 
   # Initial parsing
   RE_AT_IMPORT_RULE = /\@import[\s]+(url\()?["''"]?(.[^'"\s"']*)["''"]?\)?([\w\s\,^\])]*)\)?;?/
-  
+
   #--
   #RE_AT_MEDIA_RULE = Regexp.new('(\"(.[^\n\r\f\\"]*|\\\\' + RE_NL.to_s + '|' + RE_ESCAPE.to_s + ')*\")')
-  
+
   #RE_AT_IMPORT_RULE = Regexp.new('@import[\s]*(' + RE_STRING.to_s + ')([\w\s\,]*)[;]?', Regexp::IGNORECASE) -- should handle url() even though it is not allowed
   #++
-  IMPORTANT_IN_PROPERTY_RX = /[\s]*!important[\s]*/i
+  IMPORTANT_IN_PROPERTY_RX = /[\s]*!important\b[\s]*/i
 
   RE_INSIDE_OUTSIDE = regex_possible_values 'inside', 'outside'
   RE_SCROLL_FIXED = regex_possible_values 'scroll', 'fixed'
@@ -52,8 +52,8 @@ module CssParser
   FONT_UNITS_RX = /(([x]+\-)*small|medium|large[r]*|auto|inherit|([0-9]+|[0-9]*\.[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|\%)*)/i
   RE_BORDER_STYLE = /([\s]*^)?(none|hidden|dotted|dashed|solid|double|dot-dash|dot-dot-dash|wave|groove|ridge|inset|outset)([\s]*$)?/imx
   RE_BORDER_UNITS = Regexp.union(BOX_MODEL_UNITS_RX, /(thin|medium|thick)/i)
-  
- 
+
+
   # Patterns for specificity calculations
   NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX= /
     (\.[\w]+)                     # classes
@@ -75,7 +75,7 @@ module CssParser
   /ix
   ELEMENTS_AND_PSEUDO_ELEMENTS_RX = /
     ((^|[\s\+\>\~]+)[\w]+       # elements
-    |                   
+    |
     \:{1,2}(                    # pseudo-elements
       after|before
       |first-letter|first-line
