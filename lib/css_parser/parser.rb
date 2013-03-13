@@ -277,7 +277,7 @@ module CssParser
         elsif token =~ /@media/i
           # found '@media', reset current media_types
           in_at_media_rule = true
-          media_types = []
+          current_media_queries = []
         elsif in_at_media_rule
           if token =~ /\{/
             block_depth = block_depth + 1
