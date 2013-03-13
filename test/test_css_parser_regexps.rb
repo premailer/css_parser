@@ -45,9 +45,11 @@ class CssParserRegexpTests < Test::Unit::TestCase
 
   def test_gradients
     ['linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
+     'linear-gradient(top, hsla(0, 0%, 0%, 0.00) 0%, hsla(0, 0%, 0%, 0.20) 100%)',
      '-o-linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
      '-moz-linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
      '-webkit-linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)',
+     '-webkit-gradient(linear, left top, left bottom, color-stop(0, hsla(0, 0%, 0%, 0.00)), color-stop(1, hsla(0, 0%, 0%, 0.20)))',
      '-ms-linear-gradient(bottom, rgb(197,112,191) 7%, rgb(237,146,230) 54%, rgb(255,176,255) 77%)'].each do |grad|
        assert_match(CssParser::RE_GRADIENT, grad)
     end
