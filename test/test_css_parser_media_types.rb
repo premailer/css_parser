@@ -20,7 +20,7 @@ class CssParserMediaTypesTests < Test::Unit::TestCase
     EOT
     @cp.add_block!(css)
     rules = @cp.rules_by_media_query
-    assert !rules.include?(:all)
+    assert_equal [:handheld, :screen], rules.keys
   end
 
   def test_finding_by_media_type
