@@ -6,12 +6,12 @@ class CssParserBasicTests < Test::Unit::TestCase
 
   def setup
     @cp = CssParser::Parser.new
-    @css = <<-EOT
+    @css = <<-CSS
       html, body, p { margin: 0px; }
       p { padding: 0px; }
       #content { font: 12px/normal sans-serif; }
       .content { color: red; }
-    EOT
+    CSS
   end
 
   def test_finding_by_selector

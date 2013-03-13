@@ -10,13 +10,13 @@ class CssParserTests < Test::Unit::TestCase
 
   def test_at_page_rule
     # from http://www.w3.org/TR/CSS21/page.html#page-selectors
-    css = <<-EOT
+    css = <<-CSS
       @page { margin: 2cm }
 
       @page :first {
         margin-top: 10cm
       }
-    EOT
+    CSS
 
     @cp.add_block!(css)
 
@@ -26,7 +26,7 @@ class CssParserTests < Test::Unit::TestCase
 
   def test_should_ignore_comments
     # see http://www.w3.org/Style/CSS/Test/CSS2.1/current/html4/t040109-c17-comments-00-b.htm
-    css =<<-EOT
+    css =<<-CSS
       /* This is a CSS comment. */
       .one {color: green;} /* Another comment */
       /* The following should not be used:
@@ -41,7 +41,7 @@ class CssParserTests < Test::Unit::TestCase
       .five {color: green;}
       /* a comment **/
       .six {color: green;}
-    EOT
+    CSS
 
     @cp.add_block!(css)
     @cp.each_selector do |sel, decs, spec|
@@ -51,7 +51,7 @@ class CssParserTests < Test::Unit::TestCase
 
   def test_parsing_blocks
     # dervived from http://www.w3.org/TR/CSS21/syndata.html#rule-sets
-    css = <<-EOT
+    css = <<-CSS
       div[name='test'] {
       
       color:
@@ -73,7 +73,7 @@ class CssParserTests < Test::Unit::TestCase
       }"] { color: red }
       
       p { color:red}
-    EOT
+    CSS
 
     @cp.add_block!(css)
 
@@ -84,7 +84,7 @@ class CssParserTests < Test::Unit::TestCase
 
   def test_ignoring_malformed_declarations
     # dervived from http://www.w3.org/TR/CSS21/syndata.html#parsing-errors
-    css = <<-EOT
+    css = <<-CSS
       p { color:green }
       p { color:green; color }  /* malformed declaration missing ':', value */
       p { color:red;   color; color:green }  /* same with expected recovery */
@@ -92,7 +92,7 @@ class CssParserTests < Test::Unit::TestCase
       p { color:red;   color:; color:green } /* same with expected recovery */
       p { color:green; color{;color:maroon} } /* unexpected tokens { } */
       p { color:red;   color{;color:maroon}; color:green } /* same with recovery */
-    EOT
+    CSS
 
     @cp.add_block!(css)
 
@@ -102,11 +102,11 @@ class CssParserTests < Test::Unit::TestCase
   end
 
   def test_find_rule_sets
-    css = <<-EOT
+    css = <<-CSS
       h1, h2 { color: blue; }
       h1 { font-size: 10px; }
       h2 { font-size: 5px; }
-    EOT
+    CSS
 
     @cp.add_block!(css)
     assert_equal 2, @cp.find_rule_sets(["h2"]).size
