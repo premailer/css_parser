@@ -6,7 +6,7 @@ PATH
       rdoc
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     addressable (2.2.7)
     bouncy-castle-java (1.5.0146.1)
