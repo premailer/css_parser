@@ -1,4 +1,4 @@
-Gem::Specification.new "css_parser", "1.3.0" do |s|
+Gem::Specification.new "css_parser", "1.3.1" do |s|
   s.summary  = "Ruby CSS parser."
   s.description  = "A set of classes for parsing CSS in Ruby."
   s.email    = "code@dunae.ca"
