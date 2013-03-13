@@ -11,7 +11,7 @@ class RuleSetTests < Test::Unit::TestCase
 
   def test_setting_property_values
     rs = RuleSet.new(nil, nil)
-    
+
     rs['background-color'] = 'red'
     assert_equal('red;', rs['background-color'])
 
@@ -67,6 +67,13 @@ class RuleSetTests < Test::Unit::TestCase
     actual       = []
     rs.each_declaration { |prop, val, imp| actual << prop }
     assert_equal(expected, actual)
+  end
+
+  def test_each_declaration_containing_semicolons
+    rs = RuleSet.new(nil, "background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAiCAMAAAB7);" +
+                          "background-repeat: no-repeat")
+    assert_equal('url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAiCAMAAAB7);', rs['background-image'])
+    assert_equal('no-repeat;', rs['background-repeat'])
   end
 
   def test_selector_sanitization
