@@ -19,7 +19,7 @@ class CssParserMediaTypesTests < Test::Unit::TestCase
       }
     CSS
     rules = @cp.rules_by_media_query
-    assert_equal [:handheld, :screen].sort, rules.keys.sort
+    assert_equal [ "handheld", "screen" ], rules.keys.map { |k| k.to_s }.sort
   end
 
   def test_finding_by_media_type
