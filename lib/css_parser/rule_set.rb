@@ -366,8 +366,9 @@ module CssParser
        'border-style' => 'border-%s-style', 
        'border-width' => 'border-%s-width'}.each do |property, expanded|
 
-        foldable = @declarations.select do |dim, val| 
-          dim == expanded % 'top' or dim == expanded % 'right' or dim == expanded % 'bottom' or dim == expanded % 'left'
+        top, right, bottom, left = ['top', 'right', 'bottom', 'left'].map { |side| expanded % side }
+        foldable = @declarations.select do |dim, val|
+          dim == top or dim == right or dim == bottom or dim == left
         end
         # All four dimensions must be present
         if foldable.length == 4
