@@ -209,7 +209,7 @@ module CssParser
 
         media_styles.each do |media_style|
           if media_block
-            out += "  #{media_style[0]} {\n    #{media_style[1]}  \n  }\n"
+            out += "  #{media_style[0]} {\n    #{media_style[1]}\n  }\n"
           else
             out += "#{media_style[0]} {\n#{media_style[1]}\n}\n"
           end

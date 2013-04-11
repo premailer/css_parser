@@ -117,4 +117,9 @@ class CssParserMediaTypesTests < Test::Unit::TestCase
     @cp.add_rule!('body', 'color: black;', [:handheld,:tty])
     assert_equal 'color: black;', @cp.find_by_selector('body', :all).join(' ')
   end
+
+  def test_to_s_includes_media_queries
+    @cp.add_rule!('body', 'color: black;', 'aural and (device-aspect-ratio: 16/9)')
+    assert_equal "@media aural and (device-aspect-ratio: 16/9) {\n  body {\n    color: black;\n  }\n}\n", @cp.to_s
+  end
 end
