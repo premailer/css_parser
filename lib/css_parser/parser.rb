@@ -77,7 +77,7 @@ module CssParser
       rule_sets = []
 
       selectors.each do |selector|
-        each_rule_set(media_types) do |rule_set|
+        each_rule_set(media_types) do |rule_set, media_type|
           if !rule_sets.member?(rule_set) && rule_set.selectors.member?(selector)
             rule_sets << rule_set
           end
@@ -175,7 +175,7 @@ module CssParser
 
       @rules.each do |block|
         if media_types.include?(:all) or block[:media_types].any? { |mt| media_types.include?(mt) }
-          yield block[:rules], block[:media_types]
+          yield(block[:rules], block[:media_types])
         end
       end
     end
