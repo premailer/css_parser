@@ -459,7 +459,7 @@ module CssParser
             http = Net::HTTP.new(uri.host, uri.port)
           end
 
-          res = http.get(uri.path, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
+          res = http.get(uri.request_uri, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
           src = res.body
           charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
 
