@@ -15,6 +15,14 @@ class CssParserLoadingTests < Test::Unit::TestCase
 
     @server_thread = Thread.new do
       s = WEBrick::HTTPServer.new(:Port => 12000, :DocumentRoot => @www_root, :Logger => Log.new(nil, BasicLog::FATAL), :AccessLog => [])
+      s.mount_proc('/redirect301') do |request, response|
+        response['Location'] = '/simple.css'
+        raise WEBrick::HTTPStatus::MovedPermanently
+      end
+      s.mount_proc('/redirect302') do |request, response|
+        response['Location'] = '/simple.css'
+        raise WEBrick::HTTPStatus::TemporaryRedirect
+      end
       @port = s.config[:Port]
       begin
         s.start
@@ -32,6 +40,16 @@ class CssParserLoadingTests < Test::Unit::TestCase
     @server_thread = nil
   end
  
+  def test_loading_301_redirect
+    @cp.load_uri!("#{@uri_base}/redirect301")
+    assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
+  end
+
+  def test_loading_302_redirect
+    @cp.load_uri!("#{@uri_base}/redirect302")
+    assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
+  end
+
   def test_loading_a_local_file
     file_name = File.dirname(__FILE__) + '/fixtures/simple.css'
     @cp.load_file!(file_name)
