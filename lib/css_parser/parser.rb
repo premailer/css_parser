@@ -119,25 +119,27 @@ module CssParser
       end
 
       # Load @imported CSS
-      block.scan(RE_AT_IMPORT_RULE).each do |import_rule|
-        media_types = []
-        if media_string = import_rule[-1]
-          media_string.split(/[,]/).each do |t|
-            media_types << CssParser.sanitize_media_query(t) unless t.empty?
+      if @options[:import]
+        block.scan(RE_AT_IMPORT_RULE).each do |import_rule|
+          media_types = []
+          if media_string = import_rule[-1]
+            media_string.split(/[,]/).each do |t|
+              media_types << CssParser.sanitize_media_query(t) unless t.empty?
+            end
+          else
+            media_types = [:all]
           end
-        else
-          media_types = [:all]
-        end
 
-        next unless options[:only_media_types].include?(:all) or media_types.length < 1 or (media_types & options[:only_media_types]).length > 0
+          next unless options[:only_media_types].include?(:all) or media_types.length < 1 or (media_types & options[:only_media_types]).length > 0
 
-        import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
+          import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
 
-        if options[:base_uri]
-          import_uri = Addressable::URI.parse(options[:base_uri].to_s) + Addressable::URI.parse(import_path)
-          load_uri!(import_uri, options[:base_uri], media_types)
-        elsif options[:base_dir]
-          load_file!(import_path, options[:base_dir], media_types)
+          if options[:base_uri]
+            import_uri = Addressable::URI.parse(options[:base_uri].to_s) + Addressable::URI.parse(import_path)
+            load_uri!(import_uri, options[:base_uri], media_types)
+          elsif options[:base_dir]
+            load_file!(import_path, options[:base_dir], media_types)
+          end
         end
       end
 
