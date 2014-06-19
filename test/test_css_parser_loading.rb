@@ -88,6 +88,20 @@ class CssParserLoadingTests < Test::Unit::TestCase
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
   end
 
+  def test_imports_disabled
+    cp = Parser.new(:import => false)
+    cp.load_uri!("#{@uri_base}/import1.css")
+
+    # from '/import1.css'
+    assert_equal 'color: lime;', cp.find_by_selector('div').join(' ')
+
+    # from '/subdir/import2.css'
+    assert_equal '', cp.find_by_selector('a').join(' ')
+
+    # from '/subdir/../simple.css'
+    assert_equal '', cp.find_by_selector('p').join(' ')
+  end
+
   def test_following_badly_escaped_import_rules
     css_block = '@import "http://example.com/css?family=Droid+Sans:regular,bold|Droid+Serif:regular,italic,bold,bolditalic&subset=latin";'
 
