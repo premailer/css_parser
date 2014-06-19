@@ -58,7 +58,7 @@ bundle
 bundle exec rake
 ```
 
-Runs on Ruby 1.8.7, Ruby 1.9.2, Ruby 1.9.3, REE 1.8.7 and JRuby.
+Runs on Ruby/JRuby 1.9.2 or above.
 
 # Credits
 
