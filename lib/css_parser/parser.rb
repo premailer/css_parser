@@ -325,7 +325,7 @@ module CssParser
 
             # reset the current media query scope
             if in_media_block
-              current_media_queries = []
+              current_media_queries = [:all]
               in_media_block = false
             end
           else
