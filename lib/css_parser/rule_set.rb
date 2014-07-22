@@ -310,14 +310,19 @@ module CssParser
     # Combine several properties into a shorthand one
     def create_shorthand_properties! properties, shorthand_property # :nodoc:
       values = []
+      properties_to_delete = []
       properties.each do |property|
-         if @declarations.has_key?(property) and not @declarations[property][:is_important]
+        if @declarations.has_key?(property) and not @declarations[property][:is_important]
           values << @declarations[property][:value]
-           @declarations.delete(property)
-         end
-       end
+          properties_to_delete << property
+        end
+      end
 
-      unless values.empty?
+      if values.length > 1
+        properties_to_delete.each do |property|
+          @declarations.delete(property)
+        end
+
         @declarations[shorthand_property] = {:value => values.join(' ')}
       end
     end
