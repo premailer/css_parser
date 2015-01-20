@@ -154,6 +154,9 @@ module CssParser
     # +media_types+ can be a symbol or an array of symbols.
     def add_rule!(selectors, declarations, media_types = :all)
       rule_set = RuleSet.new(selectors, declarations)
+      if media_types.length == 0
+        media_types << :all
+      end
       add_rule_set!(rule_set, media_types)
     end
 
