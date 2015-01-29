@@ -1,4 +1,4 @@
-=== Ruby CSS Parser CHANGELOG
+== Ruby CSS Parser CHANGELOG
 
 === Version 1.3.6
  * Fix bug not setting general rules after media query @jievans.
@@ -92,25 +92,25 @@
  * added support for loading over SSL
  * added support for deflate
 
-==== Version 1.1.1
+=== Version 1.1.1
  * Ruby 1.9 compatibility
  * @import regexp updates
  * various bug fixes
 
-==== Version 1.1.0
+=== Version 1.1.0
  * Added support for local @import
  * Better remote @import handling
 
-==== Version 1.0.1
+=== Version 1.0.1
  * Fallback for declartions without sort order
 
-==== Version 1.0.0
+=== Version 1.0.0
  * Various test fixes and udpate for Ruby 1.9 (thanks to Tyler Cunnion)
  * Allow setting CSS declarations to nil
 
-==== Version 0.9
+=== Version 0.9
  * Initial version forked from Premailer project
 
-==== TODO: Future
+=== TODO: Future
  * re-implement caching on CssParser.merge
  * correctly parse http://www.webstandards.org/files/acid2/test.html
