@@ -69,6 +69,18 @@ class CssParserMediaTypesTests < Test::Unit::TestCase
     assert @cp.find_by_selector('body', :handheld).empty?
   end
 
+  def test_adding_block_with_media_types_followed_by_general_rule
+    @cp.add_block!(<<-CSS)
+      @media print {
+        body { font-size: 10pt }
+      }
+
+      body { color: black; }
+    CSS
+
+    assert_match 'color: black;', @cp.to_s
+  end
+
   def test_adding_block_and_limiting_media_types1
     css = <<-CSS
       @import "import1.css", print
