@@ -150,9 +150,12 @@ class CssParserLoadingTests < Test::Unit::TestCase
   def test_toggling_not_found_exceptions
     cp_with_exceptions = Parser.new(:io_exceptions => true)
 
-    assert_raise RemoteFileError do
+    err = assert_raise RemoteFileError do
       cp_with_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
     end
+
+    uri_regex = Regexp.new(Regexp.escape("#{@uri_base}/no-exist.xyz"))
+    assert_match uri_regex, err.message
 
     cp_without_exceptions = Parser.new(:io_exceptions => false)
 

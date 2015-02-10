@@ -489,7 +489,7 @@ module CssParser
           end
         end
       rescue
-        raise RemoteFileError if @options[:io_exceptions]
+        raise RemoteFileError.new(uri.to_s) if @options[:io_exceptions]
         return nil, nil
       end
 
