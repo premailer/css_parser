@@ -1,8 +1,14 @@
-sudo: false
+sudo: required
+language: ruby
 cache: bundler
-rvm:
-  - 1.9.3
-  - 2.0.0-p647
-  - 2.1.7
-  - 2.2.3
-  - jruby
+dist: trusty
+before_install:
+  - rvm get head
+  - rvm use $RUBY --latest --install
+  - ruby -v && echo $RUBY
+env:
+  - RUBY=1.9.3
+  - RUBY=2.0
+  - RUBY=2.1
+  - RUBY=2.2
+  - RUBY=jruby
