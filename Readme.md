@@ -66,9 +66,9 @@ By Alex Dunae (dunae.ca, e-mail 'code' at the same domain), 2007-11.
 
 License: MIT
 
-Thanks to [all the wonderful contributors](http://github.com/alexdunae/css_parser/contributors) for their updates.
+Thanks to [all the wonderful contributors](http://github.com/premailer/css_parser/contributors) for their updates.
 
 Made on Vancouver Island.
 
-[![Build Status](https://travis-ci.org/alexdunae/css_parser.png)](https://travis-ci.org/alexdunae/css_parser)
+[![Build Status](https://travis-ci.org/premailer/css_parser.png)](https://travis-ci.org/premailer/css_parser)
 
