@@ -1,8 +1,7 @@
-$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
 name = "css_parser"
-require "#{name}/version"
+require "./lib/#{name}/version"
 
-Gem::Specification.new name, CssParser::VERSION.dup do |s|
+Gem::Specification.new name, CssParser::VERSION do |s|
   s.summary  = "Ruby CSS parser."
   s.description  = "A set of classes for parsing CSS in Ruby."
   s.email    = "code@dunae.ca"
