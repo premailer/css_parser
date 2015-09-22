@@ -5,14 +5,6 @@ class CssParserLoadingTests < Minitest::Test
   include CssParser
   include WEBrick
 
-  def pending(reason=nil)
-    yield
-  rescue StandardError
-    skip reason
-  else
-    raise "Fixed"
-  end
-
   def pending_if(condition, reason, &block)
     if condition
       pending(reason, &block)
