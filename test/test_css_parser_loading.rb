@@ -102,10 +102,20 @@ class CssParserLoadingTests < Minitest::Test
     assert_equal '', cp.find_by_selector('p').join(' ')
   end
 
+  def test_following_remote_import_rules
+    css_block = '@import "http://example.com/css";'
+
+    assert_raises CssParser::RemoteFileError do
+      @cp.add_block!(css_block, :base_uri => "#{@uri_base}/subdir/")
+    end
+  end
+
   def test_following_badly_escaped_import_rules
     css_block = '@import "http://example.com/css?family=Droid+Sans:regular,bold|Droid+Serif:regular,italic,bold,bolditalic&subset=latin";'
 
-    @cp.add_block!(css_block, :base_uri => "#{@uri_base}/subdir/")
+    assert_raises CssParser::RemoteFileError do
+      @cp.add_block!(css_block, :base_uri => "#{@uri_base}/subdir/")
+    end
   end
 
   def test_following_at_import_rules_from_add_block
