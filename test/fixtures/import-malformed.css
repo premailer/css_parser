@@ -1,0 +1,35 @@
+.malformed.one:before {
+  content: "\\";
+  color: "red";
+}
+
+.wellformed.one {
+  color: "green";
+}
+
+.malformed.two:before {
+  content: "\"";
+  color: "red";
+}
+
+.wellformed.two {
+  color: "green";
+}
+
+.malformed.three:before {
+  content: "{";
+  color: "red";
+}
+
+.wellformed.three {
+  color: "green";
+}
+
+.malformed.four:before {
+  content: "}";
+  color: "red";
+}
+
+.wellformed.four {
+  color: "green";
+}
