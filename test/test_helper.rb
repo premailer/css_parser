@@ -1,6 +1,5 @@
-require 'rubygems'
 require 'bundler/setup'
-require 'test/unit'
+require 'maxitest/autorun'
 require 'net/http'
 require 'webrick'
-require File.dirname(__FILE__) + '/../lib/css_parser'
+require 'css_parser'

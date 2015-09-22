@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
-class RuleSetExpandingShorthandTests < Test::Unit::TestCase
+class RuleSetExpandingShorthandTests < Minitest::Test
   include CssParser
 
   def setup

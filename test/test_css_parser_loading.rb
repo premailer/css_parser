@@ -1,7 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
 # Test cases for the CssParser's loading functions.
-class CssParserLoadingTests < Test::Unit::TestCase
+class CssParserLoadingTests < Minitest::Test
   include CssParser
   include WEBrick
 
@@ -105,9 +105,7 @@ class CssParserLoadingTests < Test::Unit::TestCase
   def test_following_badly_escaped_import_rules
     css_block = '@import "http://example.com/css?family=Droid+Sans:regular,bold|Droid+Serif:regular,italic,bold,bolditalic&subset=latin";'
 
-    assert_nothing_raised do
-      @cp.add_block!(css_block, :base_uri => "#{@uri_base}/subdir/")
-    end
+    @cp.add_block!(css_block, :base_uri => "#{@uri_base}/subdir/")
   end
 
   def test_following_at_import_rules_from_add_block
@@ -128,13 +126,13 @@ class CssParserLoadingTests < Test::Unit::TestCase
   end
 
   def test_local_circular_reference_exception
-    assert_raise CircularReferenceError do
+    assert_raises CircularReferenceError do
       @cp.load_file!(File.dirname(__FILE__) + '/fixtures/import-circular-reference.css')
     end
   end
 
   def test_remote_circular_reference_exception
-    assert_raise CircularReferenceError do
+    assert_raises CircularReferenceError do
       @cp.load_uri!("#{@uri_base}/import-circular-reference.css")
     end
   end
@@ -142,22 +140,18 @@ class CssParserLoadingTests < Test::Unit::TestCase
   def test_suppressing_circular_reference_exceptions
     cp_without_exceptions = Parser.new(:io_exceptions => false)
 
-    assert_nothing_raised CircularReferenceError do
-      cp_without_exceptions.load_uri!("#{@uri_base}/import-circular-reference.css")
-    end
+    cp_without_exceptions.load_uri!("#{@uri_base}/import-circular-reference.css")
   end
 
   def test_toggling_not_found_exceptions
     cp_with_exceptions = Parser.new(:io_exceptions => true)
 
-    assert_raise RemoteFileError do
+    assert_raises RemoteFileError do
       cp_with_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
     end
 
     cp_without_exceptions = Parser.new(:io_exceptions => false)
 
-    assert_nothing_raised RemoteFileError do
-      cp_without_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
-    end
+    cp_without_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
   end
 end

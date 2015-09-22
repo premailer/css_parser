@@ -5,7 +5,7 @@ require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 #
 # see http://www.w3.org/TR/CSS21/syndata.html and
 # http://www.w3.org/TR/CSS21/grammar.html
-class CssParserRegexpTests < Test::Unit::TestCase
+class CssParserRegexpTests < Minitest::Test
   def test_strings
     # complete matches
     [
@@ -41,7 +41,7 @@ class CssParserRegexpTests < Test::Unit::TestCase
       'color: rgb 100, -10%, 300;', 'color: rgb 10,10,10', 'color:rgb(12px, -12%,0)',
       'color:fuscia;', 'color: thick'
     ].each do |colour|
-      assert_no_match(CssParser::RE_COLOUR, colour)
+      refute_match(CssParser::RE_COLOUR, colour)
     end
   end
 
@@ -74,7 +74,7 @@ class CssParserRegexpTests < Test::Unit::TestCase
 
   def test_important
     assert_match(CssParser::IMPORTANT_IN_PROPERTY_RX, "color: #f00 !important   ;")
-    assert_no_match(CssParser::IMPORTANT_IN_PROPERTY_RX, "color: #f00 !importantish;")
+    refute_match(CssParser::IMPORTANT_IN_PROPERTY_RX, "color: #f00 !importantish;")
   end
 
   protected

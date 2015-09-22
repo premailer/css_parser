@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
-class MergingTests < Test::Unit::TestCase
+class MergingTests < Minitest::Test
   include CssParser
 
   def setup
@@ -89,7 +89,7 @@ class MergingTests < Test::Unit::TestCase
   end
 
   def test_raising_error_on_bad_type
-    assert_raise ArgumentError do
+    assert_raises ArgumentError do
       CssParser.merge([1,2,3])
     end
   end

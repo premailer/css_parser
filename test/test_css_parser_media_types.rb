@@ -1,7 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
 # Test cases for the handling of media types
-class CssParserMediaTypesTests < Test::Unit::TestCase
+class CssParserMediaTypesTests < Minitest::Test
   include CssParser
 
   def setup

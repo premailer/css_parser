@@ -2,7 +2,7 @@ require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 require "set"
 
 # Test cases for parsing CSS blocks
-class RuleSetTests < Test::Unit::TestCase
+class RuleSetTests < Minitest::Test
   include CssParser
 
   def setup
