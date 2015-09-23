@@ -128,6 +128,25 @@ class CssParserLoadingTests < Minitest::Test
     end
   end
 
+  def test_loading_malformed_content_strings
+    file_name = File.dirname(__FILE__) + '/fixtures/import-malformed.css'
+    @cp.load_file!(file_name)
+    @cp.each_selector do |sel, dec, spec|
+      assert_nil dec =~ /wellformed/
+    end
+  end
+
+  def test_loading_malformed_css_brackets
+    file_name = File.dirname(__FILE__) + '/fixtures/import-malformed.css'
+    @cp.load_file!(file_name)
+    selector_count = 0
+    @cp.each_selector do |sel, dec, spec|
+      selector_count += 1
+    end
+
+    assert_equal 8, selector_count
+  end
+
   def test_following_at_import_rules_from_add_block
     css_block = '@import "../simple.css";'
 
