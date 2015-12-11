@@ -441,6 +441,9 @@ module CssParser
           end
 
           res = http.get(uri.path, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
+          if res.code == "301"
+            res = Net::HTTP.get_response(URI.parse(res.header['location']))
+          end
           src = res.body
           charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
 
