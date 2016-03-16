@@ -47,6 +47,7 @@ module CssParser
   BOX_MODEL_UNITS_RX = /(auto|inherit|0|([\-]*([0-9]+|[0-9]*\.[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|\%)))([\s;]|\Z)/imx
   RE_LENGTH_OR_PERCENTAGE = Regexp.new('([\-]*(([0-9]*\.[0-9]+)|[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|\%))', Regexp::IGNORECASE)
   RE_BACKGROUND_POSITION = Regexp.new("((((#{RE_LENGTH_OR_PERCENTAGE})|left|center|right|top|bottom)[\s]*){1,2})", Regexp::IGNORECASE | Regexp::EXTENDED)
+  RE_BACKGROUND_SIZE = Regexp.new("\\s*/\\s*((((#{RE_LENGTH_OR_PERCENTAGE})|auto|cover|contain|initial|inherit)[\\s]*){1,2})", Regexp::IGNORECASE | Regexp::EXTENDED)
   FONT_UNITS_RX = /(([x]+\-)*small|medium|large[r]*|auto|inherit|([0-9]+|[0-9]*\.[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|\%)*)/i
   RE_BORDER_STYLE = /([\s]*^)?(none|hidden|dotted|dashed|solid|double|dot-dash|dot-dot-dash|wave|groove|ridge|inset|outset)([\s]*$)?/imx
   RE_BORDER_UNITS = Regexp.union(BOX_MODEL_UNITS_RX, /(thin|medium|thick)/i)

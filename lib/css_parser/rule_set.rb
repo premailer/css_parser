@@ -4,7 +4,7 @@ module CssParser
     RE_ELEMENTS_AND_PSEUDO_ELEMENTS = /((^|[\s\+\>]+)[\w]+|\:(first\-line|first\-letter|before|after))/i
     RE_NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES = /(\.[\w]+)|(\[[\w]+)|(\:(link|first\-child|lang))/i
 
-    BACKGROUND_PROPERTIES = ['background-color', 'background-image', 'background-repeat', 'background-position', 'background-attachment']
+    BACKGROUND_PROPERTIES = ['background-color', 'background-image', 'background-repeat', 'background-position', 'background-size', 'background-attachment']
     LIST_STYLE_PROPERTIES = ['list-style-type', 'list-style-position', 'list-style-image']
 
     # Array of selector strings.
@@ -149,9 +149,16 @@ module CssParser
       split_declaration('background', 'background-attachment', value.slice!(CssParser::RE_SCROLL_FIXED))
       split_declaration('background', 'background-repeat', value.slice!(CssParser::RE_REPEAT))
       split_declaration('background', 'background-color', value.slice!(CssParser::RE_COLOUR))
+      split_declaration('background', 'background-size', extract_background_size_from(value))
       split_declaration('background', 'background-position', value.slice(CssParser::RE_BACKGROUND_POSITION))
 
       @declarations.delete('background')
+    end
+
+    def extract_background_size_from(value)
+      size = value.slice!(CssParser::RE_BACKGROUND_SIZE)
+
+      size.sub(/^\s*\/\s*/, '') if size
     end
 
     # Split shorthand border declarations (e.g. <tt>border: 1px red;</tt>)
@@ -327,6 +334,18 @@ module CssParser
     #
     # Leaves properties declared !important alone.
     def create_background_shorthand! # :nodoc:
+      # When we have a background-size property we must separate it and distinguish it from
+      # background-position by preceeding it with a backslash. In this case we also need to
+      # have a background-position property, so we set it if it's missing.
+      # http://www.w3schools.com/cssref/css3_pr_background.asp
+      if @declarations.has_key?('background-size') and not @declarations['background-size'][:is_important]
+        unless @declarations.has_key?('background-position')
+          @declarations['background-position'] = {value => 'initial'}
+        end
+
+        @declarations['background-size'][:value] = "/ #{@declarations['background-size'][:value]}"
+      end
+
       create_shorthand_properties! BACKGROUND_PROPERTIES, 'background'
     end
     

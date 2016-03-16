@@ -147,6 +147,20 @@ class RuleSetExpandingShorthandTests < Minitest::Test
     end
   end
 
+  def test_getting_background_size_from_shorthand
+    ['em', 'ex', 'in', 'px', 'pt', 'pc', '%'].each do |unit|
+      shorthand = "background: url('chess.png') gray 30% -0.20/-0.15#{unit} auto repeat fixed;"
+      declarations = expand_declarations(shorthand)
+      assert_equal("-0.15#{unit} auto", declarations['background-size'])
+    end
+
+    ['cover', 'contain', 'auto', 'initial', 'inherit'].each do |size|
+      shorthand = "background: url('chess.png') #000fff 0% 50% / #{size} no-repeat fixed;"
+      declarations = expand_declarations(shorthand)
+      assert_equal(size, declarations['background-size'])
+    end
+  end
+
   def test_getting_background_colour_from_shorthand
     ['blue', 'lime', 'rgb(10,10,10)', 'rgb (  -10%, 99, 300)', '#ffa0a0', '#03c', 'trAnsparEnt', 'inherit'].each do |colour|
       shorthand = "background:#{colour} url('chess.png') center repeat fixed ;"
