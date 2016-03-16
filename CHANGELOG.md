@@ -1,5 +1,9 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Version 1.4.0
+
+ * Add support for background-size in the shorthand property @mitio
+
 ### Version 1.3.6
 
  * Fix bug not setting general rules after media query @jievans.
