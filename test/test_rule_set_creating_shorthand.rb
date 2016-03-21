@@ -115,6 +115,18 @@ class RuleSetCreatingShorthandTests < Minitest::Test
     assert_properties_are_deleted(combined, properties)
   end
 
+  def test_combining_background_with_size_and_no_position_into_shorthand
+    properties = {'background-image' => 'url(\'chess.png\')', 'background-color' => 'gray',
+      'background-attachment' => 'fixed', 'background-repeat' => 'no-repeat',
+      'background-size' => '50% 100%'}
+
+    combined = create_shorthand(properties)
+
+    assert_equal('gray url(\'chess.png\') no-repeat initial / 50% 100% fixed;', combined['background'])
+
+    # after creating shorthand, all long-hand properties should be deleted
+    assert_properties_are_deleted(combined, properties)
+  end
 
   # List-style shorthand
   def test_combining_list_style_into_shorthand
