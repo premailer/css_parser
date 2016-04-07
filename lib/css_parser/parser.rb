@@ -373,7 +373,7 @@ module CssParser
 
       opts[:base_uri] = uri if opts[:base_uri].nil?
 
-      src, charset = read_remote_file(uri)
+      src = read_remote_file(uri)
       if src
         add_block!(src, opts)
       end
@@ -438,9 +438,9 @@ module CssParser
     # TODO: add option to fail silently or throw and exception on a 404
     #++
     def read_remote_file(uri) # :nodoc:
-      return nil, nil unless circular_reference_check(uri.to_s)
+      return nil unless circular_reference_check(uri.to_s)
 
-      src = '', charset = nil
+      src = ''
 
       begin
         uri = Addressable::URI.parse(uri.to_s)
@@ -463,11 +463,10 @@ module CssParser
 
           res = http.get(uri.request_uri, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
           src = res.body
-          charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
 
           if res.code.to_i >= 400
             raise RemoteFileError if @options[:io_exceptions]
-            return '', nil
+            return ''
           end
 
           case res['content-encoding']
@@ -480,20 +479,11 @@ module CssParser
           end
         end
 
-        if charset
-          if String.method_defined?(:encode)
-            src.encode!('UTF-8', charset)
-          else
-            ic = Iconv.new('UTF-8//IGNORE', charset)
-            src = ic.iconv(src)
-          end
-        end
+        return src.encode("UTF-8", :undef => :replace, :invalid => :replace)
       rescue
         raise RemoteFileError if @options[:io_exceptions]
-        return nil, nil
+        return nil
       end
-
-      return src, charset
     end
 
   private
