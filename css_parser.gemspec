@@ -8,6 +8,6 @@ Gem::Specification.new name, CssParser::VERSION do |s|
   s.homepage = "https://github.com/premailer/#{name}"
   s.author  = "Alex Dunae"
   s.add_runtime_dependency 'addressable'
-  s.files = Dir.glob("lib/**/*")
+  s.files = Dir.glob("lib/**/*") + ["MIT-LICENSE"]
   s.license = "MIT"
 end
