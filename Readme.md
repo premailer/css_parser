@@ -26,6 +26,10 @@ parser.load_uri!('../style.css', {:base_uri => 'http://example.com/styles/inc/',
 # load a local file, setting the base_dir and media_types
 parser.load_file!('print.css', '~/styles/', :print)
 
+# load a string
+parser = CssParser::Parser.new
+parser.load_string! 'a { color: hotpink; }'
+
 # lookup a rule by a selector
 parser.find_by_selector('#content')
 #=> 'font-size: 13px; line-height: 1.2;'
