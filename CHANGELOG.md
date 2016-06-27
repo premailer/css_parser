@@ -1,5 +1,9 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Version 1.4.4
+
+ * More robust redirection handling, refs #47.
+
 ### Version 1.4.3
 
  * Look for redirects, MAX_REDIRECTS set to 3, refs #36.
