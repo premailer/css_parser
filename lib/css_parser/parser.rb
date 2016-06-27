@@ -22,7 +22,9 @@ module CssParser
     # Initial parsing
     RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s\)]*)["']?\)?([\w\s\,^\]\(\))]*)\)?[;\n]?/
 
-     # Array of CSS files that have been loaded.
+    MAX_REDIRECTS = 3
+
+    # Array of CSS files that have been loaded.
     attr_reader   :loaded_uris
 
     #--
@@ -438,7 +440,21 @@ module CssParser
     # TODO: add option to fail silently or throw and exception on a 404
     #++
     def read_remote_file(uri) # :nodoc:
-      return nil, nil unless circular_reference_check(uri.to_s)
+      if @redirect_count.nil?
+        @redirect_count = 0
+      else
+        @redirect_count += 1
+      end
+
+      unless circular_reference_check(uri.to_s)
+        @redirect_count = nil
+        return nil, nil
+      end
+
+      if @redirect_count > MAX_REDIRECTS
+        @redirect_count = nil
+        return nil, nil
+      end
 
       src = '', charset = nil
 
@@ -466,6 +482,7 @@ module CssParser
           charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
 
           if res.code.to_i >= 400
+            @redirect_count = nil
             raise RemoteFileError if @options[:io_exceptions]
             return '', nil
           elsif res.code.to_i == 301 or res.code.to_i == 302
@@ -493,10 +510,12 @@ module CssParser
           end
         end
       rescue
+        @redirect_count = nil
         raise RemoteFileError if @options[:io_exceptions]
         return nil, nil
       end
 
+      @redirect_count = nil
       return src, charset
     end
 
