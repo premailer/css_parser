@@ -35,6 +35,10 @@ class RuleSetCreatingShorthandTests < Minitest::Test
     properties = {'border-top-style' => 'none', 'border-right-style' => 'none', 'border-bottom-style' => 'none', 'border-left-style' => 'none'}
     combined = create_shorthand(properties)
     assert_equal 'none;', combined['border']
+
+    properties = {'border-top-color' => '#bada55', 'border-right-color' => '#000000', 'border-bottom-color' => '#ffffff', 'border-left-color' => '#ff0000'}
+    combined = create_shorthand(properties)
+    assert_equal '#bada55 #000000 #ffffff #ff0000;', combined['border-color']
   end
 
   # Dimensions shorthand

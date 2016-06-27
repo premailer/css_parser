@@ -21,6 +21,27 @@ class RuleSetExpandingShorthandTests < Minitest::Test
     assert_equal 'rgb(2%,2%,2%)', declarations['border-bottom-color']
     assert_equal 'hsla(255,0,0,5)', declarations['border-left-color']
 
+    declarations = expand_declarations('border-color: #000000 #bada55 #ffffff #ff0000')
+
+    assert_equal '#000000', declarations['border-top-color']
+    assert_equal '#bada55', declarations['border-right-color']
+    assert_equal '#ffffff', declarations['border-bottom-color']
+    assert_equal '#ff0000', declarations['border-left-color']
+
+    declarations = expand_declarations('border-color: #000000 #bada55 #ffffff')
+
+    assert_equal '#000000', declarations['border-top-color']
+    assert_equal '#bada55', declarations['border-right-color']
+    assert_equal '#ffffff', declarations['border-bottom-color']
+    assert_equal '#bada55', declarations['border-left-color']
+
+    declarations = expand_declarations('border-color: #000000 #bada55')
+
+    assert_equal '#000000', declarations['border-top-color']
+    assert_equal '#bada55', declarations['border-right-color']
+    assert_equal '#000000', declarations['border-bottom-color']
+    assert_equal '#bada55', declarations['border-left-color']
+
     declarations = expand_declarations('border: thin dot-dot-dash')
     assert_equal 'dot-dot-dash', declarations['border-left-style']
     assert_equal 'thin', declarations['border-left-width']
