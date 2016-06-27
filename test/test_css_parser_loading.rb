@@ -47,7 +47,7 @@ class CssParserLoadingTests < Minitest::Test
     @server_thread.join(5)
     @server_thread = nil
   end
- 
+
   def test_loading_301_redirect
     @cp.load_uri!("#{@uri_base}/redirect301")
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
@@ -78,7 +78,7 @@ class CssParserLoadingTests < Minitest::Test
   # http://github.com/premailer/css_parser/issues#issue/4
   def test_loading_a_remote_file_over_ssl
     # TODO: test SSL locally
-    pending_if(RUBY_PLATFORM == 'java', "does not work on jruby")  do
+    pending_if(RUBY_PLATFORM =~ /java|jruby/, "does not work on jruby")  do
       @cp.load_uri!("https://dialect.ca/inc/screen.css")
       assert_match /margin\: 0\;/, @cp.find_by_selector('body').join(' ')
     end
