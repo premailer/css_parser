@@ -5,14 +5,6 @@ class CssParserLoadingTests < Minitest::Test
   include CssParser
   include WEBrick
 
-  def pending_if(condition, reason, &block)
-    if condition
-      pending(reason, &block)
-    else
-      yield
-    end
-  end
-
   def setup
     # from http://nullref.se/blog/2006/5/17/testing-with-webrick
     @cp = Parser.new
@@ -78,7 +70,9 @@ class CssParserLoadingTests < Minitest::Test
   # http://github.com/premailer/css_parser/issues#issue/4
   def test_loading_a_remote_file_over_ssl
     # TODO: test SSL locally
-    pending_if(RUBY_PLATFORM =~ /java|jruby/, "does not work on jruby")  do
+    if RUBY_PLATFORM == 'java'
+      skip "SSL: does not work on jruby"
+    else
       @cp.load_uri!("https://dialect.ca/inc/screen.css")
       assert_match( /margin\: 0\;/, @cp.find_by_selector('body').join(' ') )
     end

@@ -488,7 +488,7 @@ module CssParser
             return '', nil
           elsif res.code.to_i >= 300 and res.code.to_i < 400
             if res.response['Location'] != nil
-              return read_remote_file Addressable::URI.parse(URI::encode(res.response['Location']))
+              return read_remote_file Addressable::URI.parse(URI.escape(res.response['Location']))
             end
           end
 
