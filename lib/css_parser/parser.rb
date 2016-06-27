@@ -468,6 +468,10 @@ module CssParser
           if res.code.to_i >= 400
             raise RemoteFileError if @options[:io_exceptions]
             return '', nil
+          elsif res.code.to_i == 301 or res.code.to_i == 302
+            if res.response['Location'] != nil
+              return read_remote_file Addressable::URI.parse(URI::encode(res.response['Location']))
+            end
           end
 
           case res['content-encoding']
