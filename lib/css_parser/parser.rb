@@ -41,6 +41,7 @@ module CssParser
       # array of RuleSets
       @rules = []
 
+      @redirect_count = nil
 
       @loaded_uris = []
 
