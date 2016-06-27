@@ -1,5 +1,19 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Version 1.4.3
+
+ * Look for redirects, MAX_REDIRECTS set to 3, refs #36.
+ * Fix border style expanding, refs #58.
+ * load_string! described, refs #70.
+
+### Version 1.4.2
+
+ * Ship license with package, refs #69.
+
+### Version 1.4.1
+
+ * Fix background shorthands, refs #66.
+
 ### Version 1.4.0
 
  * Add support for background-size in the shorthand property @mitio
