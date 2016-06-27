@@ -80,7 +80,7 @@ class CssParserLoadingTests < Minitest::Test
     # TODO: test SSL locally
     pending_if(RUBY_PLATFORM =~ /java|jruby/, "does not work on jruby")  do
       @cp.load_uri!("https://dialect.ca/inc/screen.css")
-      assert_match /margin\: 0\;/, @cp.find_by_selector('body').join(' ')
+      assert_match( /margin\: 0\;/, @cp.find_by_selector('body').join(' ') )
     end
   end
 

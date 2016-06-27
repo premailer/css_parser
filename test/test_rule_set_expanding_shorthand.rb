@@ -104,10 +104,13 @@ class RuleSetExpandingShorthandTests < Minitest::Test
     shorthand = "font: small-caps italic 12px sans-serif;"
     declarations = expand_declarations(shorthand)
     assert_equal('small-caps', declarations['font-variant'])
+  end
 
-    # ensure normal is the default state
-    ['font: normal italic 12px sans-serif;', 'font: italic 12px sans-serif;',
-      'font: normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
+  def test_getting_font_variant_from_shorthand_ensure_normal_is_the_default_state
+    [
+      'font: normal italic 12px sans-serif;', 'font: italic 12px sans-serif;',
+      'font: normal 12px sans-serif;', 'font: 12px/16px sans-serif;'
+    ].each do |shorthand|
       declarations = expand_declarations(shorthand)
       assert_equal('normal', declarations['font-variant'], shorthand)
     end
