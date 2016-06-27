@@ -1,4 +1,5 @@
 sudo: false
+before_install: rm Gemfile.lock
 cache: bundler
 rvm:
   - 1.9.3
