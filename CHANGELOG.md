@@ -1,5 +1,9 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Version 1.4.5
+
+ * Maintenance release.
+
 ### Version 1.4.4
 
  * More robust redirection handling, refs #47.
