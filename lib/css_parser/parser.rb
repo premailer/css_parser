@@ -185,6 +185,27 @@ module CssParser
       end
     end
 
+    # Output all CSS rules as a Hash
+    def to_h(media_types = :all)
+      out = {}
+       styles_by_media_types = {}
+       each_selector(media_types) do |selectors, declarations, specificity, media_types|
+         media_types.each do |media_type|
+           styles_by_media_types[media_type] ||= []
+           styles_by_media_types[media_type] << [selectors, declarations]
+         end
+       end
+
+      styles_by_media_types.each_pair do |media_type, media_styles|
+        ms = {}
+        media_styles.each do |media_style|
+           ms = css_node_to_h(ms, media_style[0], media_style[1])
+        end
+        out[media_type.to_s] = ms
+      end
+      out
+    end
+
     # Iterate through CSS selectors.
     #
     # +media_types+ can be a symbol or an array of symbols.
@@ -422,16 +443,17 @@ module CssParser
     # Returns a string.
     def cleanup_block(block) # :nodoc:
       # Strip CSS comments
-      block.gsub!(STRIP_CSS_COMMENTS_RX, '')
+      utf8_block = block.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
+      utf8_block.gsub!(STRIP_CSS_COMMENTS_RX, '')
 
       # Strip HTML comments - they shouldn't really be in here but
       # some people are just crazy...
-      block.gsub!(STRIP_HTML_COMMENTS_RX, '')
+      utf8_block.gsub!(STRIP_HTML_COMMENTS_RX, '')
 
       # Strip lines containing just whitespace
-      block.gsub!(/^\s+$/, "")
+      utf8_block.gsub!(/^\s+$/, "")
 
-      block
+      utf8_block
     end
 
     # Download a file into a string.
@@ -536,6 +558,19 @@ module CssParser
       @css_source = ''
       @css_rules = []
       @css_warnings = []
+    end
+
+    # recurse through nested nodes and return them as Hashes nested in
+    # passed hash
+    def css_node_to_h(hash, key, val)
+      hash[key] = '' and return hash if val.nil?
+      lines = val.split(';')
+      lines.each do |line|
+        parts = line.split(':')
+        hash[key] = (parts.count == 2) ? {parts[0] =>parts[1].strip} :
+        css_node_to_h(hash, parts[0], parts[1])
+      end
+      hash
     end
   end
 end

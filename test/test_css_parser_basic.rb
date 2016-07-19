@@ -60,4 +60,11 @@ class CssParserBasicTests < Minitest::Test
     assert_equal "background: url('../style/yellow.png?abc=123');",
       cp_without_conversion['body'].join(' ')
   end
+
+  def test_converting_to_hash
+    rs = CssParser::RuleSet.new('div', 'color: blue;')
+    @cp.add_rule_set!(rs)
+    hash = @cp.to_h
+    assert_equal 'blue;', hash['all']['div']['color']
+  end
 end
