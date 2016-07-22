@@ -469,7 +469,7 @@ module CssParser
       if @declarations.has_key?(dest)
         #puts "dest #{dest} already exists"
 
-        if @declarations[dest][:order] > @declarations[src][:order]
+        if @declarations[src][:order].nil? || @declarations[dest][:order] > @declarations[src][:order]
           #puts "skipping #{dest}:#{v} due to order "
           return
         else
