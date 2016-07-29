@@ -65,6 +65,6 @@ class CssParserBasicTests < Minitest::Test
     rs = CssParser::RuleSet.new('div', 'color: blue;')
     @cp.add_rule_set!(rs)
     hash = @cp.to_h
-    assert_equal 'blue;', hash['all']['div']['color']
+    assert_equal 'blue', hash['all']['div']['color']
   end
 end

@@ -188,18 +188,18 @@ module CssParser
     # Output all CSS rules as a Hash
     def to_h(media_types = :all)
       out = {}
-       styles_by_media_types = {}
-       each_selector(media_types) do |selectors, declarations, specificity, media_types|
-         media_types.each do |media_type|
-           styles_by_media_types[media_type] ||= []
-           styles_by_media_types[media_type] << [selectors, declarations]
-         end
-       end
+      styles_by_media_types = {}
+      each_selector(media_types) do |selectors, declarations, specificity, media_types|
+        media_types.each do |media_type|
+          styles_by_media_types[media_type] ||= []
+          styles_by_media_types[media_type] << [selectors, declarations]
+        end
+      end
 
       styles_by_media_types.each_pair do |media_type, media_styles|
         ms = {}
         media_styles.each do |media_style|
-           ms = css_node_to_h(ms, media_style[0], media_style[1])
+          ms = css_node_to_h(ms, media_style[0], media_style[1])
         end
         out[media_type.to_s] = ms
       end
@@ -563,13 +563,18 @@ module CssParser
     # recurse through nested nodes and return them as Hashes nested in
     # passed hash
     def css_node_to_h(hash, key, val)
-      hash[key] = '' and return hash if val.nil?
+      hash[key.strip] = '' and return hash if val.nil?
       lines = val.split(';')
+      nodes = {}
       lines.each do |line|
-        parts = line.split(':')
-        hash[key] = (parts.count == 2) ? {parts[0] =>parts[1].strip} :
-        css_node_to_h(hash, parts[0], parts[1])
+        parts = line.split(':', 2)
+        if (parts[1] =~ /:/)
+          nodes[parts[0]] = css_node_to_h(hash, parts[0], parts[1])
+        else
+          nodes[parts[0].to_s.strip] =parts[1].to_s.strip
+        end
       end
+      hash[key.strip] = nodes
       hash
     end
   end
