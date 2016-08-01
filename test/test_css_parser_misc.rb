@@ -115,6 +115,7 @@ class CssParserTests < Minitest::Test
     assert_equal 2, @cp.find_rule_sets(["h2"]).size
     assert_equal 3, @cp.find_rule_sets(["h1", "h2"]).size
     assert_equal 2, @cp.find_rule_sets(["article h3"]).size
+    assert_equal 2, @cp.find_rule_sets(["  article \t  \n  h3 \n "]).size
   end
 
   def test_calculating_specificity
