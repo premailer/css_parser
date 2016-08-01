@@ -80,6 +80,8 @@ module CssParser
       rule_sets = []
 
       selectors.each do |selector|
+        selector.gsub!(/\s+/, ' ')
+        selector.strip!
         each_rule_set(media_types) do |rule_set, media_type|
           if !rule_sets.member?(rule_set) && rule_set.selectors.member?(selector)
             rule_sets << rule_set
