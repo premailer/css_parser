@@ -106,11 +106,15 @@ class CssParserTests < Minitest::Test
       h1, h2 { color: blue; }
       h1 { font-size: 10px; }
       h2 { font-size: 5px; }
+      article  h3  { color: black; }
+      article
+      h3 { background-color: white; }
     CSS
 
     @cp.add_block!(css)
     assert_equal 2, @cp.find_rule_sets(["h2"]).size
     assert_equal 3, @cp.find_rule_sets(["h1", "h2"]).size
+    assert_equal 2, @cp.find_rule_sets(["article h3"]).size
   end
 
   def test_calculating_specificity
