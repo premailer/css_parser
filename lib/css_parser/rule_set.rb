@@ -505,7 +505,7 @@ module CssParser
     # TODO: way too simplistic
     #++
     def parse_selectors!(selectors) # :nodoc:
-      @selectors = selectors.split(',').map { |s| s.strip }
+      @selectors = selectors.split(',').map { |s| s.gsub(/\s+/, ' ').strip }
     end
   end
 end
