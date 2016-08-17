@@ -21,6 +21,7 @@ module CssParser
 
     # Initial parsing
     RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s\)]*)["']?\)?([\w\s\,^\]\(\))]*)\)?[;\n]?/
+    RE_AT_FONTFACE_RULE = /\@font-face\s*/i
 
     MAX_REDIRECTS = 3
 
@@ -113,7 +114,7 @@ module CssParser
     #   parser = CssParser::Parser.new
     #   parser.add_block!(css)
     def add_block!(block, options = {})
-      options = {:base_uri => nil, :base_dir => nil, :charset => nil, :media_types => :all, :only_media_types => :all}.merge(options)
+      options = {:ignore_import => true, :allow_font_face => nil, :base_uri => nil, :base_dir => nil, :charset => nil, :media_types => :all, :only_media_types => :all}.merge(options)
       options[:media_types] = [options[:media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
       options[:only_media_types] = [options[:only_media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
 
@@ -148,8 +149,17 @@ module CssParser
         end
       end
 
+      if options[:ignore_import]
       # Remove @import declarations
-      block.gsub!(RE_AT_IMPORT_RULE, '')
+        block.gsub!(RE_AT_IMPORT_RULE, '')
+      end
+
+      # If font-face is allowed and the css block contains font-face
+      # then put all block in one line, the css parser cant handle otherwise.
+      # !(block !~ RE_AT_FONTFACE_RULE) will return true if font-face exists.
+      if options[:allow_font_face] && !(block !~ RE_AT_FONTFACE_RULE)
+        block.gsub!(/\n/, "")
+      end
 
       parse_block_into_rule_sets!(block, options)
     end
