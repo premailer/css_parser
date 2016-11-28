@@ -126,7 +126,7 @@ class RuleSetCreatingShorthandTests < Minitest::Test
 
     combined = create_shorthand(properties)
 
-    assert_equal('gray url(\'chess.png\') no-repeat initial / 50% 100% fixed;', combined['background'])
+    assert_equal('gray url(\'chess.png\') no-repeat 0% 0% / 50% 100% fixed;', combined['background'])
 
     # after creating shorthand, all long-hand properties should be deleted
     assert_properties_are_deleted(combined, properties)

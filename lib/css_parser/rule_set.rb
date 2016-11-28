@@ -340,7 +340,7 @@ module CssParser
       # http://www.w3schools.com/cssref/css3_pr_background.asp
       if @declarations.has_key?('background-size') and not @declarations['background-size'][:is_important]
         unless @declarations.has_key?('background-position')
-          @declarations['background-position'] = {:value => 'initial'}
+          @declarations['background-position'] = {:value => '0% 0%'}
         end
 
         @declarations['background-size'][:value] = "/ #{@declarations['background-size'][:value]}"
