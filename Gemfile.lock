@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    css_parser (1.4.6)
+    css_parser (1.4.7)
       addressable
 
 GEM
@@ -27,4 +27,4 @@ DEPENDENCIES
   rake
 
 BUNDLED WITH
-   1.12.5
+   1.13.6
