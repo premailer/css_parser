@@ -476,7 +476,12 @@ module CssParser
           @declarations[dest] = {}
         end
       end
-      @declarations[dest] = @declarations[src].merge({:value => v.to_s.strip})
+      @declarations[dest] =
+        @declarations[src].merge(
+          {
+            value: v.to_s.strip,
+            order: @declarations[src][:order] || @order += 1
+          })
     end
 
     def parse_declarations!(block) # :nodoc:
