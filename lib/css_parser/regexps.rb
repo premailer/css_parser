@@ -44,7 +44,7 @@ module CssParser
   STRIP_HTML_COMMENTS_RX = /\<\!\-\-|\-\-\>/m
 
   # Special units
-  BOX_MODEL_UNITS_RX = /(auto|inherit|0|([\-]*([0-9]+|[0-9]*\.[0-9]+)(rem|vw|vh|vmin|vmax|e[mx]+|px|[cm]+m|p[tc+]|in|\%)))([\s;]|\Z)/imx
+  BOX_MODEL_UNITS_RX = /(auto|inherit|0|([\-]*([0-9]+|[0-9]*\.[0-9]+)(rem|vw|vh|vm|vmin|vmax|e[mx]+|px|[cm]+m|p[tc+]|in|\%)))([\s;]|\Z)/imx
   RE_LENGTH_OR_PERCENTAGE = Regexp.new('([\-]*(([0-9]*\.[0-9]+)|[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|\%))', Regexp::IGNORECASE)
   RE_BACKGROUND_POSITION = Regexp.new("((((#{RE_LENGTH_OR_PERCENTAGE})|left|center|right|top|bottom)[\s]*){1,2})", Regexp::IGNORECASE | Regexp::EXTENDED)
   RE_BACKGROUND_SIZE = Regexp.new("\\s*/\\s*((((#{RE_LENGTH_OR_PERCENTAGE})|auto|cover|contain|initial|inherit)[\\s]*){1,2})", Regexp::IGNORECASE | Regexp::EXTENDED)
