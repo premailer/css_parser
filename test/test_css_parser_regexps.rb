@@ -22,11 +22,11 @@ class CssParserRegexpTests < Minitest::Test
   end
 
   def test_box_model_units
-    [ %w( auto inherit 80px 90pt 80pc 80rem 80vh 70vm 60vn 1vmin 2vmax 0 2em 3ex 1cm 100mm 2in 120% ) ].each do |str|
+    %w( auto inherit 80px 90pt 80pc 80rem 80vh 70vm 60vw 1vmin 2vmax 0 2em 3ex 1cm 100mm 2in 120% ).each do |str|
       assert_match(CssParser::BOX_MODEL_UNITS_RX, str)
     end
   end
-  
+
   def test_unicode
     ['back\67round', 'r\000065 ed', '\00006C'].each do |str|
       assert_match(Regexp.new(CssParser::RE_UNICODE), str)
