@@ -9,9 +9,9 @@ class CssParserRegexpTests < Minitest::Test
   def test_strings
     # complete matches
     [
-      '"abcd"', '" A sd sédrcv \'dsf\' asd rfg asd"', '"A\ d??ef 123!"',
+      '"abcd"', '" A sd sÃ©drcv \'dsf\' asd rfg asd"', '"A\ d??ef 123!"',
       "\"this is\\\n a test\"", '"back\67round"', '"r\000065 ed"',
-      "'abcd'", "' A sd sedrcv \"dsf\" asd rf—&23$%#%$g asd'", "'A\\\n def 123!'",
+      "'abcd'", "' A sd sedrcv \"dsf\" asd rfâ€”&23$%#%$g asd'", "'A\\\n def 123!'",
       "'this is\\\n a test'", "'back\\67round'", "'r\\000065 ed'"
     ].each do |str|
       assert_equal str, str.match(CssParser::RE_STRING).to_s
@@ -21,6 +21,11 @@ class CssParserRegexpTests < Minitest::Test
     assert_equal "\"url\\.'p'ng\"", test_string.match(CssParser::RE_STRING).to_s
   end
 
+  def test_box_model_units
+    [ %w( auto inherit 80px 90pt 80pc 80rem 80vh 70vm 60vn 1vmin 2vmax 0 2em 3ex 1cm 100mm 2in 120% ) ].each do |str|
+      assert_match(CssParser::BOX_MODEL_UNITS_RX, str)
+    end
+  
   def test_unicode
     ['back\67round', 'r\000065 ed', '\00006C'].each do |str|
       assert_match(Regexp.new(CssParser::RE_UNICODE), str)
