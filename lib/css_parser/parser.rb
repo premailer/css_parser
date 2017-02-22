@@ -20,7 +20,7 @@ module CssParser
     STRIP_HTML_COMMENTS_RX = /\<\!\-\-|\-\-\>/m
 
     # Initial parsing
-    RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s\)]*)["']?\)?([\w\s\,^\]\(\))]*)\)?[;\n]?/
+    RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s\)]*)["']?\)?([\w\s\,^\]\(\)]*)\)?[;\n]?/
 
     MAX_REDIRECTS = 3
 
@@ -188,10 +188,10 @@ module CssParser
     end
 
     # Output all CSS rules as a Hash
-    def to_h(media_types = :all)
+    def to_h(which_media = :all)
       out = {}
       styles_by_media_types = {}
-      each_selector(media_types) do |selectors, declarations, specificity, media_types|
+      each_selector(which_media) do |selectors, declarations, specificity, media_types|
         media_types.each do |media_type|
           styles_by_media_types[media_type] ||= []
           styles_by_media_types[media_type] << [selectors, declarations]
@@ -221,10 +221,10 @@ module CssParser
     end
 
     # Output all CSS rules as a single stylesheet.
-    def to_s(media_types = :all)
+    def to_s(which_media = :all)
       out = ''
       styles_by_media_types = {}
-      each_selector(media_types) do |selectors, declarations, specificity, media_types|
+      each_selector(which_media) do |selectors, declarations, specificity, media_types|
         media_types.each do |media_type|
           styles_by_media_types[media_type] ||= []
           styles_by_media_types[media_type] << [selectors, declarations]
