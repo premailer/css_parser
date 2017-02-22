@@ -1,4 +1,4 @@
-# Ruby CSS Parser
+# Ruby CSS Parser [![Build Status](https://travis-ci.org/premailer/css_parser.png?branch=master)](https://travis-ci.org/premailer/css_parser) [![Gem Version](https://badge.fury.io/rb/css_parser.svg)](https://badge.fury.io/rb/css_parser)
 
 Load, parse and cascade CSS rule sets in Ruby.
 
