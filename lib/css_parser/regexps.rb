@@ -23,7 +23,7 @@ module CssParser
   RE_GRADIENT = /[-a-z]*gradient\([-a-z0-9 .,#%()]*\)/im
 
   # Initial parsing
-  RE_AT_IMPORT_RULE = /\@import[\s]+(url\()?["''"]?(.[^'"\s"']*)["''"]?\)?([\w\s\,^\])]*)\)?;?/
+  RE_AT_IMPORT_RULE = /\@import\s+(url\()?["']?(.[^'"\s]*)["']?\)?([\w\s\,^\])]*)\)?;?/
 
   #--
   #RE_AT_MEDIA_RULE = Regexp.new('(\"(.[^\n\r\f\\"]*|\\\\' + RE_NL.to_s + '|' + RE_ESCAPE.to_s + ')*\")')
