@@ -1,5 +1,27 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Version 1.4.9
+
+ * Support for vrem, vh, vw, vmin, vmax and vm box model units.
+ * Replace obsolete calls with actual ones.
+ * Fix some Ruby warnings.
+
+### Version 1.4.8
+
+ * Allow to get CSS rules as Hash using `to_hash` method.
+ * Updates to support Ruby 1.9 and JRuby.
+ * utf-8 related update.
+
+### Version 1.4.7
+
+ * background-position shorthand fix.
+
+### Version 1.4.6
+
+ * Normalize whitespace in selectors and queries.
+ * Strip spaces from keys.
+ * More checks on ordering.
+
 ### Version 1.4.5
 
  * Maintenance release.
