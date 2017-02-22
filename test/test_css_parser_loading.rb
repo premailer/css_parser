@@ -132,6 +132,52 @@ class CssParserLoadingTests < Minitest::Test
     end
   end
 
+  def test_allowing_at_import_rules_from_add_block
+    css_block = "@import 'https://fonts.googleapis.com/css?family=Suez+One';"
+
+    parser = Parser.new
+    parser.add_block!(css_block, :ignore_import => false)
+
+    assert_equal true, css_block.include?("@import")
+  end
+
+  def test_ignoring_at_import_rules_from_add_block
+    css_block = "@import 'https://fonts.googleapis.com/css?family=Suez+One';"
+
+    parser = Parser.new
+    parser.add_block!(css_block, :ignore_import => true)
+
+    assert_equal false, css_block.include?("@import")
+  end
+
+  # in order for font-face to work we need to make sure new lines are
+  # removed after passing css_block to add_block!
+  def test_allowing_font_face_rule
+
+    css_block = "@font-face {
+      src: url('https://test.css.net/1') format('f1'),
+      url('https://test.css.net/2') format('f2');
+      }"
+
+    parser = Parser.new
+    parser.add_block!(css_block, :allow_font_face => true)
+
+    assert_equal false, css_block.include?("\n")
+  end
+
+  def test_not_allowing_font_face_rule
+
+    css_block = "@font-face {
+      src: url('https://test.css.net/1') format('f1'),
+      url('https://test.css.net/2') format('f2');
+      }"
+
+    parser = Parser.new
+    parser.add_block!(css_block, :allow_font_face => false)
+
+    assert_equal true, css_block.include?("\n")
+  end
+
   def test_following_badly_escaped_import_rules
     css_block = '@import "http://example.com/css?family=Droid+Sans:regular,bold|Droid+Serif:regular,italic,bold,bolditalic&subset=latin";'
 

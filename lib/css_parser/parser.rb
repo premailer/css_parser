@@ -21,11 +21,12 @@ module CssParser
 
     # Initial parsing
     RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s\)]*)["']?\)?([\w\s\,^\]\(\))]*)\)?[;\n]?/
+    RE_AT_FONTFACE_RULE = /\@font-face\s*/i
 
     MAX_REDIRECTS = 3
 
     # Array of CSS files that have been loaded.
-    attr_reader   :loaded_uris
+    attr_reader   :loaded_uris, :import_rule_sets
 
     #--
     # Class variable? see http://www.oreillynet.com/ruby/blog/2007/01/nubygems_dont_use_class_variab_1.html
@@ -40,6 +41,7 @@ module CssParser
 
       # array of RuleSets
       @rules = []
+      @import_rule_sets = []
 
       @redirect_count = nil
 
@@ -113,7 +115,7 @@ module CssParser
     #   parser = CssParser::Parser.new
     #   parser.add_block!(css)
     def add_block!(block, options = {})
-      options = {:base_uri => nil, :base_dir => nil, :charset => nil, :media_types => :all, :only_media_types => :all}.merge(options)
+      options = {:ignore_import => true, :allow_font_face => nil, :base_uri => nil, :base_dir => nil, :charset => nil, :media_types => :all, :only_media_types => :all}.merge(options)
       options[:media_types] = [options[:media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
       options[:only_media_types] = [options[:only_media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
 
@@ -148,8 +150,17 @@ module CssParser
         end
       end
 
+      if options[:ignore_import]
       # Remove @import declarations
-      block.gsub!(RE_AT_IMPORT_RULE, '')
+        block.gsub!(RE_AT_IMPORT_RULE, '')
+      end
+
+      # If font-face is allowed and the css block contains font-face
+      # then put all block in one line, the css parser cant handle otherwise.
+      # !(block !~ RE_AT_FONTFACE_RULE) will return true if font-face exists.
+      if options[:allow_font_face] && !(block !~ RE_AT_FONTFACE_RULE)
+        block.gsub!(/\n/, "")
+      end
 
       parse_block_into_rule_sets!(block, options)
     end
@@ -283,11 +294,15 @@ module CssParser
       in_charset = false # @charset is ignored for now
       in_string = false
       in_at_media_rule = false
+      in_at_import_rule = false
       in_media_block = false
 
       current_selectors = ''
       current_media_query = ''
       current_declarations = ''
+
+      import_selector = ''
+      import_rule_tokens = []
 
       block.scan(/(([\\]{2,})|([\\]?[{}\s"])|(.[^\s"{}\\]*))/).each do |matches|
         token = matches[0]
@@ -342,6 +357,24 @@ module CssParser
           else
             current_media_query += token.strip + ' '
           end
+
+        elsif token =~ /@import/i
+          in_at_import_rule = (token =~ /;/ ? false : true)
+          import_selector   = token
+
+        # @import rule can have different syntax other than @import url;
+        # for example @import url('landscape.css') screen and (orientation:landscape);
+        # So to construct a full import rule We want to save all the tokens until we hit ;
+        elsif in_at_import_rule
+          import_rule_tokens << token
+
+          if token =~ /;$/
+            in_at_import_rule = false
+            @import_rule_sets << "#{import_selector} #{import_rule_tokens.join('')}"
+            import_rule_tokens = []
+            import_selector = ''
+          end
+
         elsif in_charset or token =~ /@charset/i
           # iterate until we are out of the charset declaration
           in_charset = (token =~ /;/ ? false : true)
