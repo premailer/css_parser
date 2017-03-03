@@ -399,7 +399,7 @@ module CssParser
 
       opts[:base_uri] = uri if opts[:base_uri].nil?
 
-      src, charset = read_remote_file(uri)
+      src, = read_remote_file(uri) # skip charset
       if src
         add_block!(src, opts)
       end

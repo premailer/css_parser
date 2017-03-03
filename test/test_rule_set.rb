@@ -110,7 +110,7 @@ class RuleSetTests < Minitest::Test
   def test_not_raised_issue68
     ok = true
     begin
-      rs = RuleSet.new('td', 'border-top: 5px solid; border-color: #fffff0;')
+      RuleSet.new('td', 'border-top: 5px solid; border-color: #fffff0;')
     rescue
       ok = false
     end

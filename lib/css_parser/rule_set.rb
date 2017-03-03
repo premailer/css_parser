@@ -493,7 +493,7 @@ module CssParser
           continuation = decs + ';'
 
         elsif matches = decs.match(/(.[^:]*)\s*:\s*(.+)(;?\s*\Z)/i)
-          property, value, end_of_declaration = matches.captures
+          property, value, = matches.captures # skip end_of_declaration
 
           add_declaration!(property, value)
           continuation = ''
