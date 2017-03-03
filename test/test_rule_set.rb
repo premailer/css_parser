@@ -106,4 +106,14 @@ class RuleSetTests < Minitest::Test
       assert_equal 1000, spec
     end
   end
+
+  def test_not_raised_issue68
+    ok = true
+    begin
+      rs = RuleSet.new('td', 'border-top: 5px solid; border-color: #fffff0;')
+    rescue
+      ok = false
+    end
+    assert_equal true, ok
+  end
 end
