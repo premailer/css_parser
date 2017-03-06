@@ -154,6 +154,15 @@ class RuleSetCreatingShorthandTests < Minitest::Test
     assert_equal('url(http://example.com/1528/www/top-logo.jpg) no-repeat top right;', rs['background'])
   end
 
+
+  def test_a_single_property_is_not_shorted
+    properties = {'background-color' => 'gray'}
+    combined = create_shorthand(properties)
+
+    assert_equal('gray;', combined['background-color'])
+    assert_equal('', combined['background'])
+  end
+
   protected
 
   def assert_properties_are_deleted(ruleset, properties)
