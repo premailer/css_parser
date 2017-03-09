@@ -43,6 +43,14 @@ class CssParserLoadingTests < Minitest::Test
   def test_loading_301_redirect
     @cp.load_uri!("#{@uri_base}/redirect301")
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
+
+    # check rule offsets
+    i = 0
+    offsets = [(0..46), (50..68)]
+    @cp.each_rule_set do |rule_set, media_types|
+      assert_equal offsets[i], rule_set.offset
+      i += 1
+    end
   end
 
   def test_loading_302_redirect
@@ -75,6 +83,12 @@ class CssParserLoadingTests < Minitest::Test
     else
       @cp.load_uri!("https://dialect.ca/inc/screen.css")
       assert_match( /margin\: 0\;/, @cp.find_by_selector('body').join(' ') )
+
+      # there are a lot of rules in this file, but check some rule offsets
+      rules = @cp.find_rule_sets(['#container', '#name_case_converter textarea'])
+      assert_equal 2, rules.count
+      assert_equal (2172..2227), rules.first.offset
+      assert_equal (10703..10752), rules.last.offset
     end
   end
 

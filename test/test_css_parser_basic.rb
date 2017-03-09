@@ -67,4 +67,14 @@ class CssParserBasicTests < Minitest::Test
     hash = @cp.to_h
     assert_equal 'blue', hash['all']['div']['color']
   end
+
+  def test_accessing_file_offsets
+    @cp.add_block!(@css)
+    i = 0
+    offsets = [(6..36), (43..62), (69..111), (118..142)]
+    @cp.each_rule_set do |rule_set, media_types|
+      assert_equal offsets[i], rule_set.offset
+      i += 1
+    end
+  end
 end

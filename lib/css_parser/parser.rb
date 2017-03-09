@@ -149,7 +149,7 @@ module CssParser
       end
 
       # Remove @import declarations
-      block.gsub!(RE_AT_IMPORT_RULE, '')
+      block.gsub!(RE_AT_IMPORT_RULE) { |m| ' ' * m.length }
 
       parse_block_into_rule_sets!(block, options)
     end
@@ -157,8 +157,8 @@ module CssParser
     # Add a CSS rule by setting the +selectors+, +declarations+ and +media_types+.
     #
     # +media_types+ can be a symbol or an array of symbols.
-    def add_rule!(selectors, declarations, media_types = :all)
-      rule_set = RuleSet.new(selectors, declarations)
+    def add_rule!(selectors, declarations, media_types = :all, offset = nil)
+      rule_set = RuleSet.new(selectors, declarations, nil, offset)
       add_rule_set!(rule_set, media_types)
     end
 
@@ -289,8 +289,16 @@ module CssParser
       current_media_query = ''
       current_declarations = ''
 
-      block.scan(/(([\\]{2,})|([\\]?[{}\s"])|(.[^\s"{}\\]*))/).each do |matches|
-        token = matches[0]
+      # once we are in a rule, we will use this to store where we started
+      rule_start = nil
+      offset = nil
+
+      block.scan(/(([\\]{2,})|([\\]?[{}\s"])|(.[^\s"{}\\]*))/) do |matches|
+        # encode here because it can affect the length of the string
+        token = matches[0].encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
+
+        # save the regex offset so tat we know where in the file we are
+        offset = Regexp.last_match.offset(0)
 
         if token =~ /\A"/ # found un-escaped double quote
           in_string = !in_string
@@ -316,9 +324,11 @@ module CssParser
             in_declarations -= 1
 
             unless current_declarations.strip.empty?
-              add_rule!(current_selectors, current_declarations, current_media_queries)
+              add_rule!(current_selectors, current_declarations, current_media_queries, (rule_start..offset.last))
             end
 
+            # restart our search for selectors and declarations
+            rule_start = nil
             current_selectors = ''
             current_declarations = ''
           end
@@ -360,7 +370,11 @@ module CssParser
               current_selectors.gsub!(/[\s]*$/, '')
               in_declarations += 1
             else
+              # if we are in a selector, add the token to te current selectors
               current_selectors += token
+
+              # mark this as the beginning of the selector unless we have already marked it
+              rule_start = offset.first if rule_start.nil? && token =~ /^[^\s]+$/
             end
           end
         end
@@ -368,7 +382,7 @@ module CssParser
 
       # check for unclosed braces
       if in_declarations > 0
-        add_rule!(current_selectors, current_declarations, current_media_queries)
+        add_rule!(current_selectors, current_declarations, current_media_queries, (rule_start..offset.last))
       end
     end
 
@@ -444,18 +458,12 @@ module CssParser
     #
     # Returns a string.
     def cleanup_block(block) # :nodoc:
-      # Strip CSS comments
-      utf8_block = block.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
-      utf8_block.gsub!(STRIP_CSS_COMMENTS_RX, '')
+      # Strip CSS comments but make sure the string stays the same length so that we can retain byte offsets
+      block.gsub!(STRIP_CSS_COMMENTS_RX) { |m| ' ' * m.length }
 
       # Strip HTML comments - they shouldn't really be in here but
       # some people are just crazy...
-      utf8_block.gsub!(STRIP_HTML_COMMENTS_RX, '')
-
-      # Strip lines containing just whitespace
-      utf8_block.gsub!(/^\s+$/, "")
-
-      utf8_block
+      block.gsub(STRIP_HTML_COMMENTS_RX) { |m| ' ' * m.length }
     end
 
     # Download a file into a string.
@@ -487,7 +495,9 @@ module CssParser
       begin
         if uri.scheme == 'file'
           # local file
-          fh = open(uri.path, 'rb')
+          path = uri.path
+          path.gsub!(/^\//, '') if Gem.win_platform?
+          fh = open(path, 'rb')
           src = fh.read
           fh.close
         else

@@ -22,6 +22,12 @@ class CssParserTests < Minitest::Test
 
     assert_equal 'margin: 2cm;', @cp.find_by_selector('@page').join(' ')
     assert_equal 'margin-top: 10cm;', @cp.find_by_selector('@page :first').join(' ')
+
+    rules = @cp.find_rule_sets(['@page', '@page :first'])
+
+    assert_equal 2, rules.count
+    assert_equal (6..27), rules.first.offset
+    assert_equal (35..82), rules.last.offset
   end
 
   def test_should_ignore_comments
@@ -46,6 +52,14 @@ class CssParserTests < Minitest::Test
     @cp.add_block!(css)
     @cp.each_selector do |sel, decs, spec|
       assert_equal 'color: green;', decs
+    end
+
+    # check rule offsets
+    i = 0
+    offsets = [(41..61), (161..202), (249..271), (289..310), (335..356), (386..406)]
+    @cp.each_rule_set do |rule_set, media_types|
+      assert_equal offsets[i], rule_set.offset
+      i += 1
     end
   end
 
@@ -80,6 +94,14 @@ class CssParserTests < Minitest::Test
     @cp.each_selector do |sel, decs, spec|
       assert_equal 'color: red;', decs
     end
+
+    # check rule offsets
+    i = 0
+    offsets = [(6..59), (59..90), (90..149), (157..347), (355..369)]
+    @cp.each_rule_set do |rule_set, media_types|
+      assert_equal offsets[i], rule_set.offset
+      i += 1
+    end
   end
 
   def test_ignoring_malformed_declarations
@@ -98,6 +120,14 @@ class CssParserTests < Minitest::Test
 
     @cp.each_selector do |sel, decs, spec|
       assert_equal 'color: green;', decs
+    end
+
+    # check rule offsets
+    i = 0
+    offsets = [(6..23), (30..54), (109..146), (188..213), (262..300), (341..380), (415..467)]
+    @cp.each_rule_set do |rule_set, media_types|
+      assert_equal offsets[i], rule_set.offset
+      i += 1
     end
   end
 
