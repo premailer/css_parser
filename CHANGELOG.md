@@ -1,5 +1,11 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Version 1.4.10
+
+ * Include uri in RemoteFileError message.
+ * Prevent to convert single declarations to their respective shorthand.
+ * Fix Ruby warnings.
+
 ### Version 1.4.9
 
  * Support for vrem, vh, vw, vmin, vmax and vm box model units.
