@@ -10,14 +10,18 @@ module CssParser
     # Array of selector strings.
     attr_reader   :selectors
 
+    # File offset range
+    attr_reader   :offset
+
     # Integer with the specificity to use for this RuleSet.
     attr_accessor   :specificity
 
-    def initialize(selectors, block, specificity = nil)
+    def initialize(selectors, block, specificity = nil, offset = nil)
       @selectors = []
       @specificity = specificity
       @declarations = {}
       @order = 0
+      @offset = offset
       parse_selectors!(selectors) if selectors
       parse_declarations!(block)
     end
