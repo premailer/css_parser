@@ -483,9 +483,8 @@ module CssParser
 
       src = '', charset = nil
 
+      uri = Addressable::URI.parse(uri.to_s)
       begin
-        uri = Addressable::URI.parse(uri.to_s)
-
         if uri.scheme == 'file'
           # local file
           fh = open(uri.path, 'rb')
@@ -508,7 +507,7 @@ module CssParser
 
           if res.code.to_i >= 400
             @redirect_count = nil
-            raise RemoteFileError if @options[:io_exceptions]
+            raise RemoteFileError.new(uri.to_s) if @options[:io_exceptions]
             return '', nil
           elsif res.code.to_i >= 300 and res.code.to_i < 400
             if res['Location'] != nil
@@ -536,7 +535,7 @@ module CssParser
         end
       rescue
         @redirect_count = nil
-        raise RemoteFileError if @options[:io_exceptions]
+        raise RemoteFileError.new(uri.to_s)if @options[:io_exceptions]
         return nil, nil
       end
 
