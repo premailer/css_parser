@@ -46,7 +46,8 @@ class CssParserLoadingTests < Minitest::Test
 
     # check rule offsets
     i = 0
-    offsets = [(0..46), (50..68)]
+    # accommodate for different encodings between windows and unix
+    offsets = Gem.win_platform? ? [(0..46), (50..68)] : [(0..43), (45..63)]
     @cp.each_rule_set do |rule_set, media_types|
       assert_equal offsets[i], rule_set.offset
       i += 1
