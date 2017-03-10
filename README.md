@@ -73,6 +73,3 @@ License: MIT
 Thanks to [all the wonderful contributors](http://github.com/premailer/css_parser/contributors) for their updates.
 
 Made on Vancouver Island.
-
-[![Build Status](https://travis-ci.org/premailer/css_parser.png)](https://travis-ci.org/premailer/css_parser)
-
