@@ -516,7 +516,7 @@ module CssParser
     # Returns a string.
     def cleanup_block(block, options = {}) # :nodoc:
       # Strip CSS comments
-      utf8_block = block.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: ' '))
+      utf8_block = block.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: ' ')
       utf8_block = remove_all(utf8_block, STRIP_CSS_COMMENTS_RX, options)
 
       # Strip HTML comments - they shouldn't really be in here but
