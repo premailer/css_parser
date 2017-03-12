@@ -1,0 +1,505 @@
+/*
+Fonts:
+	font-family:'Caslon 540 LT W01 Italic';
+	font-family:'Caslon 540 LT W01 Roman';
+	font-family:'Univers LT W01 53 Extended';
+	font-family:'Univers LT W01 57 Condensed';
+	font-family:'Univers LT W01 65 Bold';
+*/
+
+
+/*!
+   http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline;}
+/* HTML5 display-role reset for older browsers */
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block;}
+body{line-height:1;}
+ol,ul{list-style:none;}
+blockquote,q{quotes:none;}
+blockquote:before,blockquote:after,
+q:before,q:after{content:'';content:none;}
+table{border-collapse:collapse;border-spacing:0;}
+
+/*!
+ * Copyright (c) 2008, Yahoo! Inc. All rights reserved.
+ * Code licensed under the BSD License:
+ * http://developer.yahoo.net/yui/license.txt
+ * version: 2.6.0
+*/
+body{font:13px/1.231 helvetica,arial,clean,sans-serif;*font-size:small;*font:x-small;}select,input,button,textarea{font:99% arial,helvetica,clean,sans-serif;}table{font-size:inherit;font:100%;}pre,code,kbd,samp,tt{font-family:monospace;*font-size:108%;line-height:100%;}
+
+body {
+	font: normal 11px/20px sans-serif;
+	color: #3C3C46;
+	background: #FFF none;
+
+}
+
+
+.debug #page {background-image:url("grid.png?1");}
+
+.debug img { opacity: .5;}
+.debug .cyclenav, .debug .cycleprev, .debug .services li { background-color: rgba(100,100,100,0.5);}
+
+/** Frame **/
+body:after, #page:after, .features:after, section:after, #study_viewer:after, #study:after,#study .gallerywrap:after, footer:after, #name_case_converter:after, footer div:after, form .field:after{clear:both;display:block;visibility:hidden;overflow:hidden;height:0;content:"\0020";}
+
+#container {
+	margin: 0 auto;
+	background: #FFF none;
+}
+
+#page {
+	width: 940px;
+	margin: 0 auto;
+}
+
+
+
+
+header{width:940px;margin:60px auto;background:#fff url("header_bg.png") 0 50% repeat-x;}
+header li{display:block;float:left;width:180px;height:10px;padding:50px 0;line-height: 10px;}
+#nav{width:590px;height:110px;margin:0 auto;font:normal 10px/10px "Univers LT W01 53 Extended",sans-serif;letter-spacing:4px;text-transform:uppercase;}
+#logo,#logo a{display:block;width:110px;height:110px;margin:0 auto;padding:0;}
+#logo{padding:0 55px;}
+#logo a{background:transparent url("sprites.png") -380px 0;text-indent:-9999em;}
+#logo a:hover,#logo a:focus{background-position:-380px -109px;}
+#logo a:active{background-position:-380px -220px;}
+#nav_work{text-align:right;}
+
+
+
+header, footer, nav, section{clear:both;zoom:1;}
+em, i { font-style: italic;}
+b, strong {font-weight: bold;}
+a { color: #000; text-decoration: none;}
+img {display: block;}
+pre {
+	margin: 20px;
+	line-height: 1.5;
+}
+
+h1 {
+	margin-top: 3px;
+	margin-bottom: 17px;
+	font: normal 70px/80px "Caslon 540 LT W01 Roman", Georgia, serif;
+	text-align: center;
+
+	text-shadow: -2px 2px 1px #FFFFFF, -3px 3px 1px #DCD7D2;
+
+	/*filter: dropshadow(color=#cccccc, offx=3, offy=2);*/
+	/*filter: Shadow(Color=#cccccc,Direction=135,Strenth=1);*/
+}
+
+h2 {
+	height: 20px;
+	margin: 50px 0 23px;
+	font: normal 9px/20px "Univers LT W01 53 Extended", sans-serif;
+	background: #FFF url("dashdots.png") 0 50% repeat-x;
+	text-align: center;
+	text-transform: uppercase;
+	letter-spacing: 5px;
+}
+
+h2 span { padding: 0 30px;background: #FFF none;}
+
+h3 {
+	margin-bottom: 12px;
+	font: normal 16px/20px "Univers LT W01 57 Condensed", sans-serif;
+}
+
+
+ol, ul { margin-bottom: 20px; list-style-position: inside; font: italic 11px/20px Arial, sans-serif;}
+
+blockquote {
+	margin: 20px;
+	font: italic 11px/20px Arial, sans-serif;
+}
+
+ul {
+	list-style-type: disc;
+}
+
+li {
+	margin: 0 0 20px;
+	
+}
+
+p {
+	margin-bottom: 20px;
+}
+
+
+.lede {
+	width: 820px;
+	margin: 0 auto 100px;
+	font: normal 18px/30px "Caslon 540 LT W01 Roman", Georgia, serif;
+	text-align: center;
+}
+
+.lede em, .lede i, .lede a {
+		font-family: "Garamond W01 Italic", serif;
+}
+
+a {
+	outline: none;
+	font-style: italic;
+}
+
+a:hover, a:focus {
+	text-decoration: underline;
+}
+
+#nav a, .features a, footer a { font-style: normal;}
+
+
+/* Feature boxes */
+.features {
+	clear: both;
+	display: block;
+	width: 900px;
+	margin-bottom: 50px;
+	padding: 0 20px;
+	list-style: none;
+	font-style: normal;
+	background-color: transparent !important;
+}
+
+.features a:hover, .features a:focus {
+	text-decoration: none;
+}
+
+.features li {
+	float: left;
+	width: 180px;
+	margin: 0 60px 50px 0;
+}
+
+#contact .features h3 {font-size: 16px;}
+
+#contact .features li {text-align: center;}
+
+#studies .features, #contact .features {
+	width: 940px;
+	padding: 0 60px;
+}
+#studies .features li, #contact .features li {
+	width: 220px;
+	margin-right: 80px;
+}
+#studies .lede {margin: 0 auto 50px;
+}
+
+#studies nav {
+	width: 940px;
+	margin: 0;
+}
+
+#studies .fade_l {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 40px;
+	height: 100%;
+	z-index: 1000;
+	background: transparent url("fade_l.png") repeat-y;
+}
+
+
+
+#studies .fade_r {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 40px;
+	height: 100%;
+	z-index: 1000;
+	background: transparent url("fade_r.png") repeat-y;
+}
+
+.features h3 { margin-bottom: 3px;}
+
+.services h3 {
+	margin-left: -5px;
+	margin-bottom: 12px;
+	padding-left: 40px;
+	background: #FFF url("sprites.png")  0 -250px no-repeat;
+}
+
+
+.services .strategy h3  {
+	background-position: 0 -297px;
+}
+
+.services .id h3  {
+	padding-left: 43px;
+	background-position: 0 -347px;
+}
+
+.services .review h3  {
+	padding-left: 45px;
+	background-position: 0 -397px;
+}
+
+.services p {
+	padding: 0 7px;
+}
+
+.features p { margin-bottom:0;}
+.features .img {
+	display: block;
+	width: 228px;
+	height: 168px;
+	margin: 0 -5px 15px;
+	border: 1px solid #e4e4e4;
+}
+.features .img:active {
+background-color: #e4e4e4;	
+}
+
+/*.features .img:hover img {opacity: 1;}*/
+
+.features img { margin: 4px; }
+.js .features img {opacity: 1;}
+.features .first { clear: both;}
+.features .last { margin-right: 0 !important;}
+
+.features .meta {
+	margin-bottom: 0;
+	font: italic 12px/30px "Caslon 540 LT W01 Italic", Georgia, sans-serif;
+}
+
+
+
+#contact .email { font-style: italic;}
+#content .tel a { font-style: normal;}
+#contact a:hover, #contact a:focus { text-decoration: underline;}
+
+
+footer {
+	width: 940px;
+	margin: 0 auto 0;
+	padding-bottom: 100px;
+}
+
+
+footer nav {
+	width: 100%;
+	height: 10px;
+	margin: 0 0 50px;
+	padding: 25px 0;
+	text-align: center;
+	font: normal 8px/10px "Univers LT W01 53 Extended", sans-serif;
+	letter-spacing: 3px;
+	text-transform: uppercase;
+	background: #fff url("header_bg.png") 0 50% repeat-x;
+}
+
+footer nav a {
+	display: inline;
+	padding: 0 32px;
+	text-align: center;
+	
+}
+
+footer div {
+	margin: 0 auto;
+	font-size: 10px;
+	text-align: center;
+
+	color: #B3B3B3;
+}
+
+footer a { font-style: normal;}
+
+footer img {
+	display: block;
+	margin: 20px auto;
+}
+
+
+
+
+#study h1, .code h1, .inside h1 {
+	font-size: 50px;
+	line-height: 60px;
+	text-shadow: none;
+}
+
+.focus h2 {
+	height: auto;
+	margin: 0 0 12px;
+	border: 0;
+	font: normal 15px/20px "Univers LT W01 57 Condensed", sans-serif;
+	text-transform: none;
+	text-align: left;
+	letter-spacing: 0;
+	background: none;
+}
+
+.focus ul { list-style: none;}
+
+.focus li {
+	margin: 5px 0 10px;
+	font: normal 12px/15px "Univers LT W01 65 Bold", sans-serif;
+}
+
+#study { 	margin-bottom: 80px;}
+#study .prose, #study .focus {
+	float: left;
+}
+
+#study .prose {
+	width: 460px;
+	margin: 0 40px 0 120px;
+	font: normal 15px/20px "Caslon 540 LT W01 Roman", Georgia, serif;
+}
+
+#study .prose em, #study .prose i {
+	font-family: "Garamond W01 Italic", serif;
+}
+
+#study .focus {
+	width: 200px;
+}
+
+#study .visit {
+	margin: 20px 0;
+	font: normal 15px/20px "Univers LT W01 57 Condensed", sans-serif;
+	text-transform: lowercase;
+}
+
+#study .visit a { text-decoration:none;font-style: normal;}
+
+
+.prose a { text-decoration: underline;}
+
+
+
+.gallerywrap .gallery,.cycleprev,.cyclenext{float:left;}
+.cycleprev,.cyclenext{display:block;width:26px;height:26px;text-indent:-9999em;cursor:pointer;background:#FFF url("sprites.png") no-repeat;}
+.cycleprev{margin-left:14px;margin-right:80px;background-position:-40px -60px;}
+.cycleprev:hover,.cycleprev:focus{background-position:-70px -60px;}
+.cyclenext{margin-right:14px;margin-left:80px;background-position:-100px -60px;}
+.cyclenext:hover,.cyclenext:focus{background-position:-130px -60px;}
+
+
+.cyclenav{width:700px;height:12px;margin:50px auto 50px;text-align:center;}
+.cyclenav a{display:inline-block;width:12px;height:12px;margin:0 5px;text-indent:-9999em;background:#fff url("sprites.png") 0 -60px no-repeat;}
+.cyclenav a:hover,.cyclenav a:focus,.cyclenav a.activeSlide{background-position:-15px -60px;}
+#study .cyclenav { margin-top: 40px;}
+#studies .studywrap .cycleprev { margin: 25px 40px 35px 34px;}
+#studies .studywrap .cyclenext { margin: 25px 34px 35px 40px;}
+#studies .studywrap .cyclenav { float: left; width: 740px;height: 26px;margin:30px auto 45px;}
+#studies nav ul.features { background-color: #FFF;}
+#studies nav { margin-bottom: 20px; background-color: #FFF;}
+
+#study .cycleprev,#study .cyclenext{margin-top:235px;}
+
+
+
+.gallerywrap {
+	width: 100%;
+}
+
+.gallery {
+	width: 700px;
+	margin: 0 auto 50px;
+}
+
+.js .gallery img {
+	display: none;
+}
+
+.js .gallery img:first-child {
+	display: block;
+}
+
+#study .gallery img {
+	width: 700px;
+	height: 500px;
+	margin: 0 auto;
+}
+
+
+
+
+/* Forms and code */
+form {
+	width: 700px;
+	margin: 45px auto;
+}
+
+form .field {
+	clear: left;
+	margin: 0 0 50px;
+}
+
+label {
+	display: block;
+	float: left;
+	width: 280px;
+	margin: 0 20px 5px 0;
+	font: normal 20px/20px "Univers LT W01 57 Condensed", sans-serif;
+}
+
+label .pull {
+	display: inline-block;
+	width: 25px;
+	margin-left: -30px;
+}
+
+form .sublabel {
+	display: block;
+	margin: 10px 0 5px;
+	font: normal 12px/15px sans-serif;
+}
+
+form .hint {
+	margin: 5px 0;
+	font: italic 11px/15px sans-serif;
+}
+
+
+input.text, textarea {
+	width: 378px;
+	padding: 0 10px;
+	border: 1px solid #E4E4E4;
+}
+
+input.text {
+		height: 38px;
+}
+
+textarea { padding: 10px; line-height: 20px; height: 218px;}
+
+form div.button {
+	padding-left: 300px;
+}
+
+button.submit {
+	display: block;
+	width: 85px;
+	height: 85px;
+	border: 0;
+	text-align: left;
+	text-indent: -9999em;
+	background: #FFF url("sprites.png") 0 -150px;
+	cursor: pointer;
+}
+
+button.submit:hover, button.submit:focus {
+	background-position: -100px -150px;
+}
+
+button.submit:active {
+	background-position: -200px -150px;
+}
+
+
+#name_case_converter textarea {
+	height: 400px;
+}
