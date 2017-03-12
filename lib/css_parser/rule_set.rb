@@ -10,18 +10,14 @@ module CssParser
     # Array of selector strings.
     attr_reader   :selectors
 
-    # File offset range
-    attr_reader   :offset
-
     # Integer with the specificity to use for this RuleSet.
     attr_accessor   :specificity
 
-    def initialize(selectors, block, specificity = nil, offset = nil)
+    def initialize(selectors, block, specificity = nil)
       @selectors = []
       @specificity = specificity
       @declarations = {}
       @order = 0
-      @offset = offset
       parse_selectors!(selectors) if selectors
       parse_declarations!(block)
     end
@@ -515,6 +511,21 @@ module CssParser
     #++
     def parse_selectors!(selectors) # :nodoc:
       @selectors = selectors.split(',').map { |s| s.gsub(/\s+/, ' ').strip }
+    end
+  end
+
+  class FileRuleSet < RuleSet
+
+    # File offset range
+    attr_reader :offset
+
+    # the local or remote location
+    attr_accessor :filename
+
+    def initialize(filename, offset, selectors, block, specificity = nil)
+      super(selectors, block, specificity)
+      @offset = offset
+      @filename = filename
     end
   end
 end
