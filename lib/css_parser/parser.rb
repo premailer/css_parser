@@ -36,7 +36,8 @@ module CssParser
     def initialize(options = {})
       @options = {:absolute_paths => false,
                   :import => true,
-                  :io_exceptions => true}.merge(options)
+                  :io_exceptions => true,
+                  :capture_offsets => false}.merge(options)
 
       # array of RuleSets
       @rules = []
@@ -117,7 +118,7 @@ module CssParser
       options[:media_types] = [options[:media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
       options[:only_media_types] = [options[:only_media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
 
-      block = cleanup_block(block)
+      block = cleanup_block(block, options)
 
       if options[:base_uri] and @options[:absolute_paths]
         block = CssParser.convert_uris(block, options[:base_uri])
@@ -139,17 +140,22 @@ module CssParser
 
           import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
 
+          import_options = { :media_types => media_types }
+          import_options[:capture_offsets] = true if options[:capture_offsets]
+
           if options[:base_uri]
             import_uri = Addressable::URI.parse(options[:base_uri].to_s) + Addressable::URI.parse(import_path)
-            load_uri!(import_uri, options[:base_uri], media_types)
+            import_options[:base_uri] = options[:base_uri]
+            load_uri!(import_uri, import_options)
           elsif options[:base_dir]
-            load_file!(import_path, options[:base_dir], media_types)
+            import_options[:base_dir] = options[:base_dir]
+            load_file!(import_path, import_options)
           end
         end
       end
 
       # Remove @import declarations
-      block.gsub!(RE_AT_IMPORT_RULE) { |m| ' ' * m.length }
+      block = remove_all(block, RE_AT_IMPORT_RULE, options)
 
       parse_block_into_rule_sets!(block, options)
     end
@@ -157,8 +163,18 @@ module CssParser
     # Add a CSS rule by setting the +selectors+, +declarations+ and +media_types+.
     #
     # +media_types+ can be a symbol or an array of symbols.
-    def add_rule!(selectors, declarations, media_types = :all, offset = nil)
-      rule_set = RuleSet.new(selectors, declarations, nil, offset)
+    def add_rule!(selectors, declarations, media_types = :all)
+      rule_set = RuleSet.new(selectors, declarations)
+      add_rule_set!(rule_set, media_types)
+    end
+
+    # Add a CSS rule by setting the +selectors+, +declarations+, +uri+, +offset+ and +media_types+.
+    #
+    # +uri+ can be a string or uri pointing to the file or url location.
+    # +offset+ should be Range object representing the start and end byte locations where the rule was found in the file.
+    # +media_types+ can be a symbol or an array of symbols.
+    def add_file_rule!(selectors, declarations, uri, offset, media_types = :all)
+      rule_set = FileRuleSet.new(uri, offset, selectors, declarations)
       add_rule_set!(rule_set, media_types)
     end
 
@@ -289,16 +305,15 @@ module CssParser
       current_media_query = ''
       current_declarations = ''
 
-      # once we are in a rule, we will use this to store where we started
+      # once we are in a rule, we will use this to store where we started if we are capturing offsets
       rule_start = nil
       offset = nil
 
       block.scan(/(([\\]{2,})|([\\]?[{}\s"])|(.[^\s"{}\\]*))/) do |matches|
-        # encode here because it can affect the length of the string
-        token = matches[0].encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
+        token = matches[0]
 
-        # save the regex offset so tat we know where in the file we are
-        offset = Regexp.last_match.offset(0)
+        # save the regex offset so that we know where in the file we are
+        offset = Regexp.last_match.offset(0) if options[:capture_offsets]
 
         if token =~ /\A"/ # found un-escaped double quote
           in_string = !in_string
@@ -324,13 +339,18 @@ module CssParser
             in_declarations -= 1
 
             unless current_declarations.strip.empty?
-              add_rule!(current_selectors, current_declarations, current_media_queries, (rule_start..offset.last))
+              if options[:capture_offsets]
+                add_file_rule!(current_selectors, current_declarations, options[:filename], (rule_start..offset.last), current_media_queries)
+              else
+                add_rule!(current_selectors, current_declarations, current_media_queries)
+              end
             end
 
-            # restart our search for selectors and declarations
-            rule_start = nil
             current_selectors = ''
             current_declarations = ''
+
+            # restart our search for selectors and declarations
+            rule_start = nil if options[:capture_offsets]
           end
         elsif token =~ /@media/i
           # found '@media', reset current media_types
@@ -366,15 +386,14 @@ module CssParser
             end
           else
             if token =~ /\{/ and not in_string
-              current_selectors.gsub!(/^[\s]*/, '')
-              current_selectors.gsub!(/[\s]*$/, '')
+              current_selectors.strip!
               in_declarations += 1
             else
-              # if we are in a selector, add the token to te current selectors
+              # if we are in a selector, add the token to the current selectors
               current_selectors += token
 
               # mark this as the beginning of the selector unless we have already marked it
-              rule_start = offset.first if rule_start.nil? && token =~ /^[^\s]+$/
+              rule_start = offset.first if options[:capture_offsets] && rule_start.nil? && token =~ /^[^\s]+$/
             end
           end
         end
@@ -382,7 +401,11 @@ module CssParser
 
       # check for unclosed braces
       if in_declarations > 0
-        add_rule!(current_selectors, current_declarations, current_media_queries, (rule_start..offset.last))
+        if options[:capture_offsets]
+          add_file_rule!(current_selectors, current_declarations, options[:filename], (rule_start..offset.last), current_media_queries)
+        else
+          add_rule!(current_selectors, current_declarations, current_media_queries)
+        end
       end
     end
 
@@ -395,7 +418,6 @@ module CssParser
     # Deprecated: originally accepted three params: `uri`, `base_uri` and `media_types`
     def load_uri!(uri, options = {}, deprecated = nil)
       uri = Addressable::URI.parse(uri) unless uri.respond_to? :scheme
-      #base_uri = nil, media_types = :all, options = {}
 
       opts = {:base_uri => nil, :media_types => :all}
 
@@ -413,6 +435,9 @@ module CssParser
 
       opts[:base_uri] = uri if opts[:base_uri].nil?
 
+      # pass on the uri if we are capturing file offsets
+      opts[:filename] = uri.to_s if opts[:capture_offsets]
+
       src, = read_remote_file(uri) # skip charset
       if src
         add_block!(src, opts)
@@ -420,15 +445,36 @@ module CssParser
     end
 
     # Load a local CSS file.
-    def load_file!(file_name, base_dir = nil, media_types = :all)
-      file_name = File.expand_path(file_name, base_dir)
+    def load_file!(file_name, options = {}, deprecated = nil)
+      opts = {:base_dir => nil, :media_types => :all}
+
+      if options.is_a? Hash
+        opts.merge!(options)
+      else
+        opts[:base_dir] = options if options.is_a? String
+        opts[:media_types] = deprecated if deprecated
+      end
+
+      file_name = File.expand_path(file_name, opts[:base_dir])
       return unless File.readable?(file_name)
       return unless circular_reference_check(file_name)
 
-      src = IO.read(file_name)
-      base_dir = File.dirname(file_name)
+      # using open takes a little longer than IO.read but retains line-breaks consistently
+      # across platforms which is important when capturing offsets
+      if opts[:capture_offsets]
+        fh = open(file_name, 'rb')
+        src = fh.read
+        fh.close
 
-      add_block!(src, {:media_types => media_types, :base_dir => base_dir})
+        # pass on the file name if we are capturing file offsets
+        opts[:filename] = file_name
+      else
+        src = IO.read(file_name)
+      end
+
+      opts[:base_dir] = File.dirname(file_name)
+
+      add_block!(src, opts)
     end
 
     # Load a local CSS string.
@@ -454,16 +500,33 @@ module CssParser
       end
     end
 
+    # Remove a pattern from a given string
+    #
+    # Returns a string.
+    def remove_all(css, regex, options)
+      # if we are capturing file offsets, replace the characters with spaces to retail the original positions
+      return css.gsub(regex) { |m| ' ' * m.length } if options[:capture_offsets]
+
+      # otherwise just strip it out
+      css.gsub(regex, '')
+    end
+
     # Strip comments and clean up blank lines from a block of CSS.
     #
     # Returns a string.
-    def cleanup_block(block) # :nodoc:
-      # Strip CSS comments but make sure the string stays the same length so that we can retain byte offsets
-      block.gsub!(STRIP_CSS_COMMENTS_RX) { |m| ' ' * m.length }
+    def cleanup_block(block, options = {}) # :nodoc:
+      # Strip CSS comments
+      utf8_block = block.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: ' '))
+      utf8_block = remove_all(utf8_block, STRIP_CSS_COMMENTS_RX, options)
 
       # Strip HTML comments - they shouldn't really be in here but
       # some people are just crazy...
-      block.gsub(STRIP_HTML_COMMENTS_RX) { |m| ' ' * m.length }
+      utf8_block = remove_all(utf8_block, STRIP_HTML_COMMENTS_RX, options)
+
+      # Strip lines containing just whitespace
+      utf8_block.gsub!(/^\s+$/, "") unless options[:capture_offsets]
+
+      utf8_block
     end
 
     # Download a file into a string.
@@ -491,8 +554,9 @@ module CssParser
 
       src = '', charset = nil
 
-      uri = Addressable::URI.parse(uri.to_s)
       begin
+        uri = Addressable::URI.parse(uri.to_s)
+
         if uri.scheme == 'file'
           # local file
           path = uri.path

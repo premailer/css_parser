@@ -20,14 +20,6 @@ class CssParserMediaTypesTests < Minitest::Test
     CSS
     rules = @cp.rules_by_media_query
     assert_equal [ "handheld", "screen" ], rules.keys.map { |k| k.to_s }.sort
-
-    # check rule offsets
-    i = 0
-    offsets = [(32..53), (62..80), (119..139)]
-    @cp.each_rule_set do |rule_set, media_types|
-      assert_equal offsets[i], rule_set.offset
-      i += 1
-    end
   end
 
   def test_finding_by_media_type
@@ -50,14 +42,6 @@ class CssParserMediaTypesTests < Minitest::Test
     assert_equal 'font-size: 10pt; line-height: 1.2;', @cp.find_by_selector('body', :print).join(' ')
     assert_equal 'font-size: 13px; line-height: 1.2; color: blue;', @cp.find_by_selector('body', :screen).join(' ')
     assert_equal 'color: blue;', @cp.find_by_selector('body', 'print and resolution > 90dpi'.to_sym).join(' ')
-
-    # check rule offsets
-    i = 0
-    offsets = [(29..53), (92..116), (162..187), (268..289)]
-    @cp.each_rule_set do |rule_set, media_types|
-      assert_equal offsets[i], rule_set.offset
-      i += 1
-    end
   end
 
   def test_finding_by_multiple_media_types
@@ -74,14 +58,6 @@ class CssParserMediaTypesTests < Minitest::Test
     CSS
 
     assert_equal 'font-size: 13px; line-height: 1.2;', @cp.find_by_selector('body', [:screen,:handheld]).join(' ')
-
-    # check rule offsets
-    i = 0
-    offsets = [(29..53), (94..118), (164..189)]
-    @cp.each_rule_set do |rule_set, media_types|
-      assert_equal offsets[i], rule_set.offset
-      i += 1
-    end
   end
 
   def test_adding_block_with_media_types
