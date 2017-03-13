@@ -1,5 +1,9 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Versio 1.5.0.pre
+
+ * capture_offsets feature.
+
 ### Version 1.4.10
 
  * Include uri in RemoteFileError message.
