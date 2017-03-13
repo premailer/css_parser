@@ -459,19 +459,9 @@ module CssParser
       return unless File.readable?(file_name)
       return unless circular_reference_check(file_name)
 
-      # using open takes a little longer than IO.read but retains line-breaks consistently
-      # across platforms which is important when capturing offsets
-      if opts[:capture_offsets]
-        fh = open(file_name, 'rb')
-        src = fh.read
-        fh.close
+      src = IO.read(file_name)
 
-        # pass on the file name if we are capturing file offsets
-        opts[:filename] = file_name
-      else
-        src = IO.read(file_name)
-      end
-
+      opts[:filename] = file_name if opts[:capture_offsets]
       opts[:base_dir] = File.dirname(file_name)
 
       add_block!(src, opts)
@@ -564,7 +554,6 @@ module CssParser
       src = '', charset = nil
 
       begin
-        old_uri = uri
         uri = Addressable::URI.parse(uri.to_s)
 
         if uri.scheme == 'file'
@@ -573,6 +562,7 @@ module CssParser
           path.gsub!(/^\//, '') if Gem.win_platform?
           fh = open(path, 'rb')
           src = fh.read
+          charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
           fh.close
         else
           # remote file
@@ -587,6 +577,7 @@ module CssParser
 
           res = http.get(uri.request_uri, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
           src = res.body
+          charset = res.respond_to?(:charset) ? res.encoding : 'utf-8'
 
           if res.code.to_i >= 400
             @redirect_count = nil

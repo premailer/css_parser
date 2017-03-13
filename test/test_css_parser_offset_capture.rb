@@ -16,12 +16,12 @@ class CssParserOffsetCaptureTests < Minitest::Test
 
     # check that we found the body rule where we expected
     assert_equal 0, rules[0].offset.first
-    assert_equal 46, rules[0].offset.last
+    assert_equal 43, rules[0].offset.last
     assert_equal file_name, rules[0].filename
 
     # and the p rule
-    assert_equal 50, rules[1].offset.first
-    assert_equal 68, rules[1].offset.last
+    assert_equal 45, rules[1].offset.first
+    assert_equal 63, rules[1].offset.last
     assert_equal file_name, rules[1].filename
   end
 
@@ -84,26 +84,26 @@ class CssParserOffsetCaptureTests < Minitest::Test
 
     # check that we found the div rule where we expected in the primary file
     assert_equal 'div', rules[0].selectors.join
-    assert_equal 33, rules[0].offset.first
-    assert_equal 53, rules[0].offset.last
+    assert_equal 31, rules[0].offset.first
+    assert_equal 51, rules[0].offset.last
     assert_equal base_dir + '/import1.css', rules[0].filename
 
     # check that the a rule in the first import is where we expect
     assert_equal 'a', rules[1].selectors.join
-    assert_equal 28, rules[1].offset.first
-    assert_equal 56, rules[1].offset.last
+    assert_equal 26, rules[1].offset.first
+    assert_equal 54, rules[1].offset.last
     assert_equal base_dir + '/subdir/import2.css', rules[1].filename
 
     # and the body rule in the second import
     assert_equal 'body', rules[2].selectors.join
     assert_equal 0, rules[2].offset.first
-    assert_equal 46, rules[2].offset.last
+    assert_equal 43, rules[2].offset.last
     assert_equal base_dir + '/simple.css', rules[2].filename
 
     # as well as the p rule in the second import
     assert_equal 'p', rules[3].selectors.join
-    assert_equal 50, rules[3].offset.first
-    assert_equal 68, rules[3].offset.last
+    assert_equal 45, rules[3].offset.first
+    assert_equal 63, rules[3].offset.last
     assert_equal base_dir + '/simple.css', rules[3].filename
   end
 end
