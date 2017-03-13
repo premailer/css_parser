@@ -564,6 +564,7 @@ module CssParser
       src = '', charset = nil
 
       begin
+        old_uri = uri
         uri = Addressable::URI.parse(uri.to_s)
 
         if uri.scheme == 'file'

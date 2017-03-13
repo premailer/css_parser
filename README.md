@@ -53,7 +53,6 @@ parser.add_block!(css)
 parser.to_s
 => #content { font-size: 13px; line-height: 1.2; }
    body { margin: 0 1em; }
-```
 
 # capturing byte offsets within a file
 parser.load_uri!('../style.css', {:base_uri => 'http://example.com/styles/inc/', :capture_offsets => true)
@@ -70,6 +69,7 @@ content_rule.filename
 #=> 'index.html'
 content_rule.offset
 #=> 0..21
+```
 
 # Testing
 
