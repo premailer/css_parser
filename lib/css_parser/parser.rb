@@ -189,6 +189,19 @@ module CssParser
       @rules << {:media_types => media_types, :rules => ruleset}
     end
 
+    # Remove a CssParser RuleSet object.
+    #
+    # +media_types+ can be a symbol or an array of symbols.
+    def remove_rule_set!(ruleset, media_types = :all)
+      raise ArgumentError unless ruleset.kind_of?(CssParser::RuleSet)
+
+      media_types = [media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
+
+      @rules.reject! do |rule|
+        rule[:media_types] == media_types && rule[:rules].to_s == ruleset.to_s
+      end
+    end
+
     # Iterate through RuleSet objects.
     #
     # +media_types+ can be a symbol or an array of symbols.

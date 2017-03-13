@@ -43,6 +43,14 @@ class CssParserBasicTests < Minitest::Test
     assert_equal 'color: blue;', @cp.find_by_selector('div').join(' ')
   end
 
+  def test_removing_a_rule_set
+    rs = CssParser::RuleSet.new('div', 'color: blue;')
+    @cp.add_rule_set!(rs)
+    rs2 = CssParser::RuleSet.new('div', 'color: blue;')
+    @cp.remove_rule_set!(rs2)
+    assert_equal '', @cp.find_by_selector('div').join(' ')
+  end
+
   def test_toggling_uri_conversion
     # with conversion
     cp_with_conversion = Parser.new(:absolute_paths => true)
