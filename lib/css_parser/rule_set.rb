@@ -514,7 +514,7 @@ module CssParser
     end
   end
 
-  class FileRuleSet < RuleSet
+  class OffsetAwareRuleSet < RuleSet
 
     # File offset range
     attr_reader :offset

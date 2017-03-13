@@ -155,7 +155,7 @@ module CssParser
       end
 
       # Remove @import declarations
-      block = remove_all(block, RE_AT_IMPORT_RULE, options)
+      block = ignore_pattern(block, RE_AT_IMPORT_RULE, options)
 
       parse_block_into_rule_sets!(block, options)
     end
@@ -168,13 +168,13 @@ module CssParser
       add_rule_set!(rule_set, media_types)
     end
 
-    # Add a CSS rule by setting the +selectors+, +declarations+, +uri+, +offset+ and +media_types+.
+    # Add a CSS rule by setting the +selectors+, +declarations+, +filename+, +offset+ and +media_types+.
     #
-    # +uri+ can be a string or uri pointing to the file or url location.
+    # +filename+ can be a string or uri pointing to the file or url location.
     # +offset+ should be Range object representing the start and end byte locations where the rule was found in the file.
     # +media_types+ can be a symbol or an array of symbols.
-    def add_file_rule!(selectors, declarations, uri, offset, media_types = :all)
-      rule_set = FileRuleSet.new(uri, offset, selectors, declarations)
+    def add_rule_with_offsets!(selectors, declarations, filename, offset, media_types = :all)
+      rule_set = OffsetAwareRuleSet.new(filename, offset, selectors, declarations)
       add_rule_set!(rule_set, media_types)
     end
 
@@ -340,7 +340,7 @@ module CssParser
 
             unless current_declarations.strip.empty?
               if options[:capture_offsets]
-                add_file_rule!(current_selectors, current_declarations, options[:filename], (rule_start..offset.last), current_media_queries)
+                add_rule_with_offsets!(current_selectors, current_declarations, options[:filename], (rule_start..offset.last), current_media_queries)
               else
                 add_rule!(current_selectors, current_declarations, current_media_queries)
               end
@@ -402,7 +402,7 @@ module CssParser
       # check for unclosed braces
       if in_declarations > 0
         if options[:capture_offsets]
-          add_file_rule!(current_selectors, current_declarations, options[:filename], (rule_start..offset.last), current_media_queries)
+          add_rule_with_offsets!(current_selectors, current_declarations, options[:filename], (rule_start..offset.last), current_media_queries)
         else
           add_rule!(current_selectors, current_declarations, current_media_queries)
         end
@@ -478,8 +478,17 @@ module CssParser
     end
 
     # Load a local CSS string.
-    def load_string!(src, base_dir = nil, media_types = :all)
-      add_block!(src, {:media_types => media_types, :base_dir => base_dir})
+    def load_string!(src, options = {}, deprecated = nil)
+      opts = {:base_dir => nil, :media_types => :all}
+
+      if options.is_a? Hash
+        opts.merge!(options)
+      else
+        opts[:base_dir] = options if options.is_a? String
+        opts[:media_types] = deprecated if deprecated
+      end
+
+      add_block!(src, opts)
     end
 
 
@@ -503,7 +512,7 @@ module CssParser
     # Remove a pattern from a given string
     #
     # Returns a string.
-    def remove_all(css, regex, options)
+    def ignore_pattern(css, regex, options)
       # if we are capturing file offsets, replace the characters with spaces to retail the original positions
       return css.gsub(regex) { |m| ' ' * m.length } if options[:capture_offsets]
 
@@ -517,11 +526,11 @@ module CssParser
     def cleanup_block(block, options = {}) # :nodoc:
       # Strip CSS comments
       utf8_block = block.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: ' ')
-      utf8_block = remove_all(utf8_block, STRIP_CSS_COMMENTS_RX, options)
+      utf8_block = ignore_pattern(utf8_block, STRIP_CSS_COMMENTS_RX, options)
 
       # Strip HTML comments - they shouldn't really be in here but
       # some people are just crazy...
-      utf8_block = remove_all(utf8_block, STRIP_HTML_COMMENTS_RX, options)
+      utf8_block = ignore_pattern(utf8_block, STRIP_HTML_COMMENTS_RX, options)
 
       # Strip lines containing just whitespace
       utf8_block.gsub!(/^\s+$/, "") unless options[:capture_offsets]
@@ -577,7 +586,6 @@ module CssParser
 
           res = http.get(uri.request_uri, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
           src = res.body
-          charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
 
           if res.code.to_i >= 400
             @redirect_count = nil

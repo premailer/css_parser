@@ -61,7 +61,15 @@ content_rule = parser.find_rule_sets(['#content']).first
 content_rule.filename
 #=> 'http://example.com/styles/styles.css'
 content_rule.offset
-#=> (10703..10752)
+#=> 10703..10752
+
+# capturing byte offsets within a string
+parser.load_string!('a { color: hotpink; }', {:filename => 'index.html', :capture_offsets => true)
+content_rule = parser.find_rule_sets(['a']).first
+content_rule.filename
+#=> 'index.html'
+content_rule.offset
+#=> 0..21
 
 # Testing
 
