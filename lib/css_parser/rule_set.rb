@@ -513,4 +513,19 @@ module CssParser
       @selectors = selectors.split(',').map { |s| s.gsub(/\s+/, ' ').strip }
     end
   end
+
+  class OffsetAwareRuleSet < RuleSet
+
+    # File offset range
+    attr_reader :offset
+
+    # the local or remote location
+    attr_accessor :filename
+
+    def initialize(filename, offset, selectors, block, specificity = nil)
+      super(selectors, block, specificity)
+      @offset = offset
+      @filename = filename
+    end
+  end
 end
