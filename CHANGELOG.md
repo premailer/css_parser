@@ -1,6 +1,11 @@
 ## Ruby CSS Parser CHANGELOG
 
-### Versio 1.5.0.pre
+## Version 1.5.0.pre2
+
+ * Extended color keywords support (https://www.w3.org/TR/css3-color/).
+ * remove_rule_set! method.
+
+### Version 1.5.0.pre
 
  * capture_offsets feature.
 
