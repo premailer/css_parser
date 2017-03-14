@@ -21,7 +21,7 @@ parser = CssParser::Parser.new
 parser.load_uri!('file://home/user/styles/style.css')
 
 # load a remote file, setting the base_uri and media_types
-parser.load_uri!('../style.css', {:base_uri => 'http://example.com/styles/inc/', :media_types => [:screen, :handheld])
+parser.load_uri!('../style.css', {base_uri: 'http://example.com/styles/inc/', media_types: [:screen, :handheld]})
 
 # load a local file, setting the base_dir and media_types
 parser.load_file!('print.css', '~/styles/', :print)
@@ -55,7 +55,7 @@ parser.to_s
    body { margin: 0 1em; }
 
 # capturing byte offsets within a file
-parser.load_uri!('../style.css', {:base_uri => 'http://example.com/styles/inc/', :capture_offsets => true)
+parser.load_uri!('../style.css', {base_uri: 'http://example.com/styles/inc/', capture_offsets: true)
 content_rule = parser.find_rule_sets(['#content']).first
 content_rule.filename
 #=> 'http://example.com/styles/styles.css'
@@ -63,7 +63,7 @@ content_rule.offset
 #=> 10703..10752
 
 # capturing byte offsets within a string
-parser.load_string!('a { color: hotpink; }', {:filename => 'index.html', :capture_offsets => true)
+parser.load_string!('a { color: hotpink; }', {filename: 'index.html', capture_offsets: true)
 content_rule = parser.find_rule_sets(['a']).first
 content_rule.filename
 #=> 'index.html'
