@@ -78,7 +78,7 @@ class CssParserMediaTypesTests < Minitest::Test
       body { color: black; }
     CSS
 
-    assert_match 'color: black;', @cp.to_s
+    assert_includes @cp.to_s, 'color: black;'
   end
 
   def test_adding_block_and_limiting_media_types1
@@ -100,7 +100,7 @@ class CssParserMediaTypesTests < Minitest::Test
     base_dir = File.dirname(__FILE__)  + '/fixtures/'
 
     @cp.add_block!(css, :only_media_types => 'print and (color)', :base_dir => base_dir)
-    assert_match 'color: lime', @cp.find_by_selector('div').join(' ')
+    assert_includes @cp.find_by_selector('div').join(' '), 'color: lime'
   end
 
   def test_adding_block_and_limiting_media_types
@@ -110,7 +110,7 @@ class CssParserMediaTypesTests < Minitest::Test
 
     base_dir = File.dirname(__FILE__)  + '/fixtures/'
     @cp.add_block!(css, :only_media_types => :print, :base_dir => base_dir)
-    assert_match '', @cp.find_by_selector('div').join(' ')
+    assert_equal '', @cp.find_by_selector('div').join(' ')
   end
 
   def test_adding_rule_set_with_media_type

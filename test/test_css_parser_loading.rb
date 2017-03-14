@@ -74,7 +74,7 @@ class CssParserLoadingTests < Minitest::Test
       skip "SSL: does not work on jruby"
     else
       @cp.load_uri!("https://dialect.ca/inc/screen.css")
-      assert_match( /margin\: 0\;/, @cp.find_by_selector('body').join(' ') )
+      assert_includes( @cp.find_by_selector('body').join(' '), "margin: 0;" )
     end
   end
 
@@ -201,7 +201,7 @@ class CssParserLoadingTests < Minitest::Test
       cp_with_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
     end
 
-    assert_includes "#{@uri_base}/no-exist.xyz", err.message
+    assert_includes err.message, "#{@uri_base}/no-exist.xyz"
 
     cp_without_exceptions = Parser.new(:io_exceptions => false)
 
