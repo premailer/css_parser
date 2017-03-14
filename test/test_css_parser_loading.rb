@@ -201,8 +201,7 @@ class CssParserLoadingTests < Minitest::Test
       cp_with_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
     end
 
-    uri_regex = Regexp.new(Regexp.escape("#{@uri_base}/no-exist.xyz"))
-    assert_match uri_regex, err.message
+    assert_includes "#{@uri_base}/no-exist.xyz", err.message
 
     cp_without_exceptions = Parser.new(:io_exceptions => false)
 

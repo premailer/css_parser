@@ -180,6 +180,6 @@ class CssParserTests < Minitest::Test
 
   def test_content_with_data
     rule = RuleSet.new('div', '{content: url(data:image/png;base64,LOTSOFSTUFF)}')
-    assert_match (/image\/png;base64,LOTSOFSTUFF/), rule.to_s
+    assert_includes rule.to_s, "image/png;base64,LOTSOFSTUFF"
   end
 end
