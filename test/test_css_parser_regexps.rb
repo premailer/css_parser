@@ -37,7 +37,9 @@ class CssParserRegexpTests < Minitest::Test
     [
       'color: #fff', 'color:#f0a09c;', 'color: #04A', 'color: #04a9CE',
       'color: rgb(100, -10%, 300);', 'color: rgb(10,10,10)', 'color:rgb(12.7253%, -12%,0)',
-      'color: black', 'color:Red;', 'color: AqUa;', 'color: blue   ', 'color: transparent'
+      'color: hsla(-15, -77%, 19%, 5%);',
+      'color: black', 'color:Red;', 'color: AqUa;', 'color: blue   ', 'color: transparent',
+      'color: darkslategray'
     ].each do |colour|
       assert_match(CssParser::RE_COLOUR, colour)
     end
@@ -45,7 +47,8 @@ class CssParserRegexpTests < Minitest::Test
     [
       'color: #fa', 'color:#f009c;', 'color: #04G', 'color: #04a9Cq',
       'color: rgb 100, -10%, 300;', 'color: rgb 10,10,10', 'color:rgb(12px, -12%,0)',
-      'color:fuscia;', 'color: thick'
+      'color:fuscia;', 'color: thick',
+      'color:  alice_blue'
     ].each do |colour|
       refute_match(CssParser::RE_COLOUR, colour)
     end
