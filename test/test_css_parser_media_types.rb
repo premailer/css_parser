@@ -134,4 +134,18 @@ class CssParserMediaTypesTests < Minitest::Test
     @cp.add_rule!('body', 'color: black;', 'aural and (device-aspect-ratio: 16/9)')
     assert_equal "@media aural and (device-aspect-ratio: 16/9) {\n  body {\n    color: black;\n  }\n}\n", @cp.to_s
   end
+
+  def test_all_block_after_media_query_block
+    @cp.load_string!('
+      @media (max-width: 1000px) {
+        body {
+          color: black;
+        }
+      }
+      p {
+        color: red;
+      }
+    ')
+    assert_equal "@media (max-width: 1000px) {\n  body {\n    color: black;\n  }\n}\np {\ncolor: red;\n}\n", @cp.to_s
+  end
 end
