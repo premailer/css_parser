@@ -340,7 +340,7 @@ module CssParser
     # Leaves properties declared !important alone.
     def create_background_shorthand! # :nodoc:
       # When we have a background-size property we must separate it and distinguish it from
-      # background-position by preceeding it with a backslash. In this case we also need to
+      # background-position by preceding it with a backslash. In this case we also need to
       # have a background-position property, so we set it if it's missing.
       # http://www.w3schools.com/cssref/css3_pr_background.asp
       if @declarations.has_key?('background-size') and not @declarations['background-size'][:is_important]
