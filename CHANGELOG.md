@@ -1,5 +1,8 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Version 1.6.0
+ * Handles font-size/ line-height shorthand with spaces
+
 ### Version 1.5.0
 
  * Extended color keywords support (https://www.w3.org/TR/css3-color/).
