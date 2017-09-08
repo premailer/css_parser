@@ -241,6 +241,7 @@ module CssParser
        end
 
       value = @declarations['font'][:value]
+      value.gsub!(/\/\s+/, '/') # handle spaces between font size and height shorthand (e.g. 14px/ 16px)
       is_important = @declarations['font'][:is_important]
       order = @declarations['font'][:order]
 
