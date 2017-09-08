@@ -146,6 +146,13 @@ class RuleSetExpandingShorthandTests < Minitest::Test
     end
   end
 
+  def test_getting_line_height_from_shorthand_with_spaces
+    ['em', 'ex', 'in', 'px', 'pt', 'pc', '%'].each do |unit|
+      shorthand = "font: 300 italic 12px/ 0.25#{unit} verdana, helvetica, sans-serif;"
+      declarations = expand_declarations(shorthand)
+      assert_equal("0.25#{unit}", declarations['line-height'])
+    end
+  end
 
   # Background shorthand
   def test_getting_background_properties_from_shorthand
