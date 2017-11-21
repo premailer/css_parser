@@ -242,6 +242,8 @@ module CssParser
     # +media_types+ can be a symbol or an array of symbols.
     # See RuleSet#each_selector for +options+.
     def each_selector(all_media_types = :all, options = {}) # :yields: selectors, declarations, specificity, media_types
+      return to_enum(:each_selector) unless block_given?
+
       each_rule_set(all_media_types) do |rule_set, media_types|
         rule_set.each_selector(options) do |selectors, declarations, specificity|
           yield selectors, declarations, specificity, media_types

@@ -182,4 +182,20 @@ class CssParserTests < Minitest::Test
     rule = RuleSet.new('div', '{content: url(data:image/png;base64,LOTSOFSTUFF)}')
     assert_includes rule.to_s, "image/png;base64,LOTSOFSTUFF"
   end
+
+  def test_enumerator_empty
+    assert_kind_of Enumerator, @cp.each_selector
+  end
+
+  def test_enumerator_nonempty
+    @cp.add_block! 'body {color: black;}'
+
+    assert_kind_of Enumerator, @cp.each_selector
+
+    enumerator = @cp.each_selector
+    @cp.each_selector.each do |sel, desc, spec|
+      assert_equal 'body', sel
+      assert_equal 'color: black;', desc
+    end
+  end
 end
