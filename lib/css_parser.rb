@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'addressable/uri'
 require 'uri'
 require 'net/https'
@@ -122,10 +123,10 @@ module CssParser
   def self.calculate_specificity(selector)
     a = 0
     b = selector.scan(/\#/).length
-    c = selector.scan(NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX).length
-    d = selector.scan(ELEMENTS_AND_PSEUDO_ELEMENTS_RX).length
+    c = selector.scan(NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX_NC).length
+    d = selector.scan(ELEMENTS_AND_PSEUDO_ELEMENTS_RX_NC).length
 
-    (a.to_s + b.to_s + c.to_s + d.to_s).to_i
+    "#{a}#{b}#{c}#{d}".to_i
   rescue
     return 0
   end
@@ -160,7 +161,8 @@ module CssParser
   end
 
   def self.sanitize_media_query(raw)
-    mq = raw.to_s.gsub(/[\s]+/, ' ').strip
+    mq = raw.to_s.gsub(/[\s]+/, ' ')
+    mq.strip!
     mq = 'all' if mq.empty?
     mq.to_sym
   end

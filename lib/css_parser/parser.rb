@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module CssParser
   # Exception class used for any errors encountered while downloading remote files.
   class RemoteFileError < IOError; end
@@ -184,7 +185,8 @@ module CssParser
     def add_rule_set!(ruleset, media_types = :all)
       raise ArgumentError unless ruleset.kind_of?(CssParser::RuleSet)
 
-      media_types = [media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
+      media_types = [media_types] unless Array === media_types
+      media_types = media_types.flat_map { |mt| CssParser.sanitize_media_query(mt)}
 
       @rules << {:media_types => media_types, :rules => ruleset}
     end
@@ -253,7 +255,7 @@ module CssParser
 
     # Output all CSS rules as a single stylesheet.
     def to_s(which_media = :all)
-      out = ''
+      out = String.new
       styles_by_media_types = {}
       each_selector(which_media) do |selectors, declarations, specificity, media_types|
         media_types.each do |media_type|
@@ -264,17 +266,17 @@ module CssParser
 
       styles_by_media_types.each_pair do |media_type, media_styles|
         media_block = (media_type != :all)
-        out += "@media #{media_type} {\n" if media_block
+        out << "@media #{media_type} {\n" if media_block
 
         media_styles.each do |media_style|
           if media_block
-            out += "  #{media_style[0]} {\n    #{media_style[1]}\n  }\n"
+            out << "  #{media_style[0]} {\n    #{media_style[1]}\n  }\n"
           else
-            out += "#{media_style[0]} {\n#{media_style[1]}\n}\n"
+            out << "#{media_style[0]} {\n#{media_style[1]}\n}\n"
           end
         end
 
-        out += "}\n" if media_block
+        out << "}\n" if media_block
       end
 
       out
@@ -316,44 +318,43 @@ module CssParser
       in_at_media_rule = false
       in_media_block = false
 
-      current_selectors = ''
-      current_media_query = ''
-      current_declarations = ''
+      current_selectors = String.new
+      current_media_query = String.new
+      current_declarations = String.new
 
       # once we are in a rule, we will use this to store where we started if we are capturing offsets
       rule_start = nil
       offset = nil
 
-      block.scan(/(([\\]{2,})|([\\]?[{}\s"])|(.[^\s"{}\\]*))/) do |matches|
-        token = matches[0]
-
+      block.scan(/\s+|[\\]{2,}|[\\]?[{}\s"]|.[^\s"{}\\]*/) do |token|
         # save the regex offset so that we know where in the file we are
         offset = Regexp.last_match.offset(0) if options[:capture_offsets]
 
-        if token =~ /\A"/ # found un-escaped double quote
+        if token.start_with?('"') # found un-escaped double quote
           in_string = !in_string
         end
 
         if in_declarations > 0
           # too deep, malformed declaration block
           if in_declarations > 1
-            in_declarations -= 1 if token =~ /\}/
+            in_declarations -= 1 if token.include?('}')
             next
           end
 
-          if token =~ /\{/ and not in_string
+          if !in_string && token.include?('{')
             in_declarations += 1
             next
           end
 
-          current_declarations += token
+          current_declarations << token
 
-          if token =~ /\}/ and not in_string
+          if !in_string && token.include?('}')
             current_declarations.gsub!(/\}[\s]*$/, '')
 
             in_declarations -= 1
+            current_declarations.strip!
 
-            unless current_declarations.strip.empty?
+            unless current_declarations.empty?
               if options[:capture_offsets]
                 add_rule_with_offsets!(current_selectors, current_declarations, options[:filename], (rule_start..offset.last), current_media_queries)
               else
@@ -361,8 +362,8 @@ module CssParser
               end
             end
 
-            current_selectors = ''
-            current_declarations = ''
+            current_selectors = String.new
+            current_declarations = String.new
 
             # restart our search for selectors and declarations
             rule_start = nil if options[:capture_offsets]
@@ -372,26 +373,28 @@ module CssParser
           in_at_media_rule = true
           current_media_queries = []
         elsif in_at_media_rule
-          if token =~ /\{/
+          if token.include?('{')
             block_depth = block_depth + 1
             in_at_media_rule = false
             in_media_block = true
             current_media_queries << CssParser.sanitize_media_query(current_media_query)
-            current_media_query = ''
-          elsif token =~ /[,]/
+            current_media_query = String.new
+          elsif token.include?(',')
             # new media query begins
-            token.gsub!(/[,]/, ' ')
-            current_media_query += token.strip + ' '
+            token.tr!(',', ' ')
+            token.strip!
+            current_media_query << token << ' '
             current_media_queries << CssParser.sanitize_media_query(current_media_query)
-            current_media_query = ''
+            current_media_query = String.new
           else
-            current_media_query += token.strip + ' '
+            token.strip!
+            current_media_query << token << ' '
           end
         elsif in_charset or token =~ /@charset/i
           # iterate until we are out of the charset declaration
-          in_charset = (token =~ /;/ ? false : true)
+          in_charset = !token.include?(';')
         else
-          if token =~ /\}/ and not in_string
+          if !in_string && token.include?('}')
             block_depth = block_depth - 1
 
             # reset the current media query scope
@@ -400,12 +403,12 @@ module CssParser
               in_media_block = false
             end
           else
-            if token =~ /\{/ and not in_string
+            if !in_string && token.include?('{')
               current_selectors.strip!
               in_declarations += 1
             else
               # if we are in a selector, add the token to the current selectors
-              current_selectors += token
+              current_selectors << token
 
               # mark this as the beginning of the selector unless we have already marked it
               rule_start = offset.first if options[:capture_offsets] && rule_start.nil? && token =~ /^[^\s]+$/
