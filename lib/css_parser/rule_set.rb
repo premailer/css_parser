@@ -60,6 +60,9 @@ module CssParser
       is_important = !value.gsub!(CssParser::IMPORTANT_IN_PROPERTY_RX, '').nil?
       property = property.downcase.strip
       #puts "SAVING #{property}  #{value} #{is_important.inspect}"
+      return if @declarations.has_key?(property) &&
+                @declarations[property][:is_important] &&
+                !is_important
       @declarations[property] = {
         :value => value, :is_important => is_important, :order => @order += 1
       }

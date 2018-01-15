@@ -76,6 +76,36 @@ class RuleSetTests < Minitest::Test
     assert_equal('no-repeat;', rs['background-repeat'])
   end
 
+  def test_rule_set_only_has_latest_when_declaration_defined_twice
+    css_fragment = "margin: 0; padding: 20px; margin-bottom: 28px; padding: 40px;"
+    rs           = RuleSet.new(nil, css_fragment)
+    expected     = %w(margin margin-bottom padding)
+    actual       = []
+    rs.each_declaration { |prop, val, imp| actual << prop }
+    assert_equal(expected, actual)
+    assert_equal('40px;', rs['padding'])
+  end
+
+  def test_rule_set_respects_first_important_declaration_when_defined_twice
+    css_fragment = "margin: 0; padding: 20px !important; margin-bottom: 28px; padding: 40px;"
+    rs           = RuleSet.new(nil, css_fragment)
+    expected     = %w(margin padding margin-bottom)
+    actual       = []
+    rs.each_declaration { |prop, val, imp| actual << prop }
+    assert_equal(expected, actual)
+    assert_equal('20px !important;', rs['padding'])
+  end
+
+  def test_rule_set_respects_second_important_declaration_when_defined_twice_and_both_important
+    css_fragment = "margin: 0; padding: 20px !important; margin-bottom: 28px; padding: 40px !important;"
+    rs           = RuleSet.new(nil, css_fragment)
+    expected     = %w(margin margin-bottom padding)
+    actual       = []
+    rs.each_declaration { |prop, val, imp| actual << prop }
+    assert_equal(expected, actual)
+    assert_equal('40px !important;', rs['padding'])
+  end
+
   def test_selector_sanitization
     selectors = "h1, h2,\nh3 "
     rs = RuleSet.new(selectors, "color: #fff;")
