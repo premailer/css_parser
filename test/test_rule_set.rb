@@ -119,6 +119,9 @@ class RuleSetTests < Minitest::Test
 
   def test_ensure_six_digit_hex_value
     rs = RuleSet.new(nil, nil)
+    # Test a non-hex value
+    value = '12px'
+    assert_equal value, rs.ensure_six_digit_hex_value(value)
     # Test a 2-digit hex (not valid)
     value = '#ab'
     assert_equal value, rs.ensure_six_digit_hex_value(value)

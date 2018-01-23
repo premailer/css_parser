@@ -468,7 +468,7 @@ module CssParser
     end
 
     # For a 3-digit hex code (like '#abc'),
-    # return the 6-digit equivalent ('#abcabc')
+    # return the 6-digit equivalent ('#aabbcc')
     def ensure_six_digit_hex_value(value)
     if value.match(RE_COLOUR_HEX_3_DIGIT)
       return '#' + value.split('')[1..-1].map{|char| char + char}.join
