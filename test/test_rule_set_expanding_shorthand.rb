@@ -193,7 +193,7 @@ class RuleSetExpandingShorthandTests < Minitest::Test
   end
 
   def test_getting_background_colour_from_shorthand
-    ['blue', 'lime', 'rgb(10,10,10)', 'rgb (  -10%, 99, 300)', '#ffa0a0', '#03c', 'trAnsparEnt', 'inherit'].each do |colour|
+    ['blue', 'lime', 'rgb(10,10,10)', 'rgb (  -10%, 99, 300)', '#ffa0a0', '#0033cc', 'trAnsparEnt', 'inherit'].each do |colour|
       shorthand = "background:#{colour} url('chess.png') center repeat fixed ;"
       declarations = expand_declarations(shorthand)
       assert_equal(colour, declarations['background-color'])

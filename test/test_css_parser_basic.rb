@@ -11,6 +11,7 @@ class CssParserBasicTests < Minitest::Test
       p { padding: 0px; }
       #content { font: 12px/normal sans-serif; }
       .content { color: red; }
+      .content-with-3-digit-hex { color: #123; }
     CSS
   end
 
@@ -20,6 +21,7 @@ class CssParserBasicTests < Minitest::Test
     assert_equal 'margin: 0px; padding: 0px;', @cp.find_by_selector('p').join(' ')
     assert_equal 'font: 12px/normal sans-serif;', @cp.find_by_selector('#content').join(' ')
     assert_equal 'color: red;', @cp.find_by_selector('.content').join(' ')
+    assert_equal 'color: #112233;', @cp.find_by_selector('.content-with-3-digit-hex').join(' ')
   end
 
   def test_adding_block

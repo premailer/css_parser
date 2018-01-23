@@ -21,22 +21,22 @@ class RuleSetTests < Minitest::Test
 
   def test_getting_property_values
     rs = RuleSet.new('#content p, a', 'color: #fff;')
-    assert_equal('#fff;', rs['color'])
+    assert_equal('#ffffff;', rs['color'])
   end
 
   def test_getting_property_value_ignoring_case
     rs = RuleSet.new('#content p, a', 'color: #fff;')
-    assert_equal('#fff;', rs['  ColoR '])
+    assert_equal('#ffffff;', rs['  ColoR '])
   end
 
   def test_each_selector
     expected = [
-      {:selector => "#content p", :declarations => "color: #fff;", :specificity => 101},
-      {:selector => "a", :declarations => "color: #fff;", :specificity => 1}
+      {:selector => "#content p", :declarations => "color: #ffffff;", :specificity => 101},
+      {:selector => "a", :declarations => "color: #ffffff;", :specificity => 1}
     ]
 
     actual = []
-    rs = RuleSet.new('#content p, a', 'color: #fff;')
+    rs = RuleSet.new('#content p, a', 'color: #ffffff;')
     rs.each_selector do |sel, decs, spec|
       actual << {:selector => sel, :declarations => decs, :specificity => spec}
     end
@@ -48,11 +48,11 @@ class RuleSetTests < Minitest::Test
     expected = Set.new([
       {:property => 'margin', :value => '1px -0.25em', :is_important => false},
       {:property => 'background', :value => 'white none no-repeat', :is_important => true},
-      {:property => 'color', :value => '#fff', :is_important => false}
+      {:property => 'color', :value => '#ffffff', :is_important => false}
     ])
 
     actual = Set.new
-    rs = RuleSet.new(nil, 'color: #fff; Background: white none no-repeat !important; margin: 1px -0.25em;')
+    rs = RuleSet.new(nil, 'color: #ffffff; Background: white none no-repeat !important; margin: 1px -0.25em;')
     rs.each_declaration do |prop, val, imp|
       actual << {:property => prop, :value => val, :is_important => imp}
     end
@@ -89,13 +89,13 @@ class RuleSetTests < Minitest::Test
   end
 
   def test_declarations_to_s
-    declarations = 'color: #fff; font-weight: bold;'
+    declarations = 'color: #ffffff; font-weight: bold;'
     rs = RuleSet.new('#content p, a', declarations)
     assert_equal(declarations.split(' ').sort, rs.declarations_to_s.split(' ').sort)
   end
 
   def test_important_declarations_to_s
-    declarations = 'color: #fff; font-weight: bold !important;'
+    declarations = 'color: #ffffff; font-weight: bold !important;'
     rs = RuleSet.new('#content p, a', declarations)
     assert_equal(declarations.split(' ').sort, rs.declarations_to_s.split(' ').sort)
   end
@@ -115,5 +115,18 @@ class RuleSetTests < Minitest::Test
       ok = false
     end
     assert_equal true, ok
+  end
+
+  def test_ensure_six_digit_hex_value
+    rs = RuleSet.new(nil, nil)
+    # Test a 2-digit hex (not valid)
+    value = '#ab'
+    assert_equal value, rs.ensure_six_digit_hex_value(value)
+    # Test a 3-digit hex
+    value = '#abc'
+    assert_equal '#aabbcc', rs.ensure_six_digit_hex_value(value)
+    # Test a 6-digit hex
+    value = '#abcdef'
+    assert_equal value, rs.ensure_six_digit_hex_value(value)
   end
 end

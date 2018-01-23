@@ -59,6 +59,7 @@ module CssParser
       value.gsub!(/;\Z/, '')
       is_important = !value.gsub!(CssParser::IMPORTANT_IN_PROPERTY_RX, '').nil?
       property = property.downcase.strip
+      value = ensure_six_digit_hex_value(value)
       #puts "SAVING #{property}  #{value} #{is_important.inspect}"
       @declarations[property] = {
         :value => value, :is_important => is_important, :order => @order += 1
@@ -465,6 +466,16 @@ module CssParser
     def create_list_style_shorthand! # :nodoc:
       create_shorthand_properties! LIST_STYLE_PROPERTIES, 'list-style'
     end
+
+    # For a 3-digit hex code (like '#abc'),
+    # return the 6-digit equivalent ('#abcabc')
+    def ensure_six_digit_hex_value(value)
+    if value.match(RE_COLOUR_HEX_3_DIGIT)
+      return '#' + value.split('')[1..-1].map{|char| char + char}.join
+    end
+
+    return value
+  end
 
   private
 

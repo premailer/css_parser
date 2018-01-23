@@ -238,7 +238,9 @@ module CssParser
   ]
   RE_COLOUR_NUMERIC = /\b(hsl|rgb)\s*\(-?\s*-?\d+(\.\d+)?%?\s*%?,-?\s*-?\d+(\.\d+)?%?\s*%?,-?\s*-?\d+(\.\d+)?%?\s*%?\)/i
   RE_COLOUR_NUMERIC_ALPHA = /\b(hsla|rgba)\s*\(-?\s*-?\d+(\.\d+)?%?\s*%?,-?\s*-?\d+(\.\d+)?%?\s*%?,-?\s*-?\d+(\.\d+)?%?\s*%?,-?\s*-?\d+(\.\d+)?%?\s*%?\)/i
-  RE_COLOUR_HEX = /\s*#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/
+  RE_COLOUR_HEX_3_DIGIT = /\s*#([0-9a-fA-F]{3})\b/
+  RE_COLOUR_HEX_6_DIGIT = /\s*#([0-9a-fA-F]{6})\b/
+  RE_COLOUR_HEX = Regexp.union(RE_COLOUR_HEX_3_DIGIT, RE_COLOUR_HEX_6_DIGIT)
   RE_COLOUR_NAMED = /\s*\b(#{NAMED_COLOURS.join('|')})\b/i
   RE_COLOUR = Regexp.union(RE_COLOUR_NUMERIC, RE_COLOUR_NUMERIC_ALPHA, RE_COLOUR_HEX, RE_COLOUR_NAMED)
   # :startdoc:
