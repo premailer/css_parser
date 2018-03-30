@@ -207,4 +207,18 @@ class CssParserLoadingTests < Minitest::Test
 
     cp_without_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
   end
+
+  def test_invalid_content_type
+    cp_with_exceptions = Parser.new(:io_exceptions => true)
+
+    err = assert_raises RemoteFileError do
+      cp_with_exceptions.load_uri!("#{@uri_base}/LadylikeBB.otf")
+    end
+
+    assert_includes err.message, "#{@uri_base}/LadylikeBB.otf"
+
+    cp_without_exceptions = Parser.new(:io_exceptions => false)
+
+    cp_without_exceptions.load_uri!("#{@uri_base}/LadylikeBB.otf")
+  end
 end
