@@ -616,7 +616,7 @@ module CssParser
         decs = (continuation ? continuation + decs : decs)
         if decs =~ /\([^)]*\Z/ # if it has an unmatched parenthesis
           continuation = "#{decs};"
-        elsif (matches = decs.match(/\s*(.[^:]*)\s*:\s*(.+?)(?:;?\s*\Z)/i))
+        elsif (matches = decs.match(/\s*(.[^:]*)\s*:\s*(?m:(.+))(?:;?\s*\Z)/i))
           # skip end_of_declaration
           property = matches[1]
           value = matches[2]
