@@ -8,6 +8,25 @@ class CssParserMediaTypesTests < Minitest::Test
     @cp = Parser.new
   end
 
+  def test_that_duplicate_media_queries_do_not_duplicate_rules
+    query_to_duplicate = ["only screen and (max-width: 480px)"]*100
+    @cp.add_block!(<<-CSS)
+      @media only screen and (max-width: 480px), #{query_to_duplicate.join(', ')} {
+        body { color: red; }
+      }
+    CSS
+
+    expected = <<-CSS
+@media only screen and (max-width: 480px) {
+  body {
+    color: red;
+  }
+}
+    CSS
+
+    assert_equal expected, @cp.to_s
+  end
+
   def test_that_media_types_dont_include_all
     @cp.add_block!(<<-CSS)
       @media handheld {
