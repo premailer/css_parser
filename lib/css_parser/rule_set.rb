@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module CssParser
   class RuleSet
     # Patterns for specificity calculations
@@ -27,7 +28,7 @@ module CssParser
       return '' unless property and not property.empty?
 
       property = property.downcase.strip
-      properties = @declarations.inject('') do |val, (key, data)|
+      properties = @declarations.inject(String.new) do |val, (key, data)|
         #puts "COMPARING #{key} #{key.inspect} against #{property} #{property.inspect}"
         importance = data[:is_important] ? ' !important' : ''
         val << "#{data[:value]}#{importance}; " if key.downcase.strip == property
@@ -58,7 +59,8 @@ module CssParser
 
       value.gsub!(/;\Z/, '')
       is_important = !value.gsub!(CssParser::IMPORTANT_IN_PROPERTY_RX, '').nil?
-      property = property.downcase.strip
+      property = property.downcase
+      property.strip!
       #puts "SAVING #{property}  #{value} #{is_important.inspect}"
       @declarations[property] = {
         :value => value, :is_important => is_important, :order => @order += 1
@@ -106,12 +108,14 @@ module CssParser
     #++
     def declarations_to_s(options = {})
      options = {:force_important => false}.merge(options)
-     str = ''
+     str = String.new
      each_declaration do |prop, val, is_important|
        importance = (options[:force_important] || is_important) ? ' !important' : ''
-       str += "#{prop}: #{val}#{importance}; "
+       str << "#{prop}: #{val}#{importance}; "
      end
-     str.gsub(/^[\s^(\{)]+|[\n\r\f\t]*|[\s]+$/mx, '').strip
+     str.gsub!(/^[\s^(\{)]+|[\n\r\f\t]*|[\s]+$/mx, '')
+     str.strip!
+     str
     end
 
     # Return the CSS rule set as a string.
@@ -434,20 +438,20 @@ module CssParser
         return unless @declarations.has_key?(prop)
       end
 
-      new_value = ''
+      new_value = String.new
       ['font-style', 'font-variant', 'font-weight'].each do |property|
         unless @declarations[property][:value] == 'normal'
-          new_value += @declarations[property][:value] + ' '
+          new_value << @declarations[property][:value] << ' '
         end
       end
 
-      new_value += @declarations['font-size'][:value]
+      new_value << @declarations['font-size'][:value]
 
       unless @declarations['line-height'][:value] == 'normal'
-        new_value += '/' + @declarations['line-height'][:value]
+        new_value << '/' << @declarations['line-height'][:value]
       end
 
-      new_value += ' ' + @declarations['font-family'][:value]
+      new_value << ' ' << @declarations['font-family'][:value]
 
       @declarations['font'] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
 
@@ -490,19 +494,18 @@ module CssParser
 
       return unless block
 
-      block.gsub!(/(^[\s]*)|([\s]*$)/, '')
-
-      continuation = ''
+      continuation = nil
       block.split(/[\;$]+/m).each do |decs|
-        decs = continuation + decs
+        decs = continuation ? continuation + decs : decs
         if decs =~ /\([^)]*\Z/ # if it has an unmatched parenthesis
           continuation = decs + ';'
 
-        elsif matches = decs.match(/(.[^:]*)\s*:\s*(.+)(;?\s*\Z)/i)
-          property, value, = matches.captures # skip end_of_declaration
-
+        elsif matches = decs.match(/\s*(.[^:]*)\s*:\s*(.+?)(;?\s*\Z)/i)
+          # skip end_of_declaration
+          property = matches[1]
+          value = matches[2]
           add_declaration!(property, value)
-          continuation = ''
+          continuation = nil
         end
       end
     end
@@ -511,7 +514,11 @@ module CssParser
     # TODO: way too simplistic
     #++
     def parse_selectors!(selectors) # :nodoc:
-      @selectors = selectors.split(',').map { |s| s.gsub(/\s+/, ' ').strip }
+      @selectors = selectors.split(',').map do |s|
+        s.gsub!(/\s+/, ' ')
+        s.strip!
+        s
+      end
     end
   end
 
