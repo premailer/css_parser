@@ -192,7 +192,6 @@ class CssParserTests < Minitest::Test
 
     assert_kind_of Enumerator, @cp.each_selector
 
-    enumerator = @cp.each_selector
     @cp.each_selector.each do |sel, desc, spec|
       assert_equal 'body', sel
       assert_equal 'color: black;', desc
