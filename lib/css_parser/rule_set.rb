@@ -107,7 +107,7 @@ module CssParser
     # TODO: Clean-up regexp doesn't seem to work
     #++
     def declarations_to_s(options = {})
-     options = {:force_important => false}.merge(options)
+     options[:force_important] ||= false
      str = String.new
      each_declaration do |prop, val, is_important|
        importance = (options[:force_important] || is_important) ? ' !important' : ''
@@ -491,7 +491,9 @@ module CssParser
           @declarations[dest] = {}
         end
       end
-      @declarations[dest] = @declarations[src].merge({:value => v.to_s.strip})
+
+      @declarations[dest] = @declarations[src].dup
+      @declarations[dest][:value] = v.to_s.strip
     end
 
     def parse_declarations!(block) # :nodoc:
