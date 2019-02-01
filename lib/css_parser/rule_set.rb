@@ -384,26 +384,31 @@ module CssParser
       end
     end
 
+    DIMENSIONS = [
+      ['margin', %w(margin-top margin-right margin-bottom margin-left)].freeze,
+      ['padding', %w(padding-top padding-right padding-bottom padding-left)],
+      ['border-color', %w(border-top-color border-right-color border-bottom-color border-left-color)],
+      ['border-style', %w(border-top-style border-right-style border-bottom-style border-left-style)],
+      ['border-width', %w(border-top-width border-right-width border-bottom-width border-left-width)],
+    ]
+
     # Looks for long format CSS dimensional properties (margin, padding, border-color, border-style and border-width)
     # and converts them into shorthand CSS properties.
     def create_dimensions_shorthand! # :nodoc:
-      directions = ['top', 'right', 'bottom', 'left']
+      return if @declarations.size < 4
 
-      {'margin'       => 'margin-%s',
-       'padding'      => 'padding-%s',
-       'border-color' => 'border-%s-color',
-       'border-style' => 'border-%s-style',
-       'border-width' => 'border-%s-width'}.each do |property, expanded|
-
-        top, right, bottom, left = ['top', 'right', 'bottom', 'left'].map { |side| expanded % side }
-        foldable = @declarations.select do |dim, val|
-          dim == top or dim == right or dim == bottom or dim == left
-        end
+      DIMENSIONS.each do |property, dimensions|
+        (top, right, bottom, left) = dimensions
         # All four dimensions must be present
-        if foldable.length == 4
+        if dimensions.inject(0) { |c, d| c += 1 if @declarations[d]; c } == 4
           values = {}
 
-          directions.each { |d| values[d.to_sym] = @declarations[expanded % d][:value].downcase.strip }
+          [
+            [:top, top],
+            [:right, right],
+            [:bottom, bottom],
+            [:left, left],
+          ].each { |d, key| values[d] = @declarations[key][:value].downcase.strip }
 
           if values[:left] == values[:right]
             if values[:top] == values[:bottom]
@@ -423,7 +428,7 @@ module CssParser
           @declarations[property] = {:value => new_value.strip} unless new_value.empty?
 
           # Delete the longhand values
-          directions.each { |d| @declarations.delete(expanded % d) }
+          [top, right, bottom, left].each { |d| @declarations.delete(d) }
         end
       end
     end
