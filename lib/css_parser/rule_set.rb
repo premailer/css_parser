@@ -7,6 +7,9 @@ module CssParser
 
     BACKGROUND_PROPERTIES = ['background-color', 'background-image', 'background-repeat', 'background-position', 'background-size', 'background-attachment']
     LIST_STYLE_PROPERTIES = ['list-style-type', 'list-style-position', 'list-style-image']
+    FONT_STYLE_PROPERTIES = ['font-style', 'font-variant', 'font-weight', 'font-size', 'line-height', 'font-family']
+    BORDER_STYLE_PROPERTIES = ['border-width', 'border-style', 'border-color']
+    BORDER_PROPERTIES = ['border', 'border-left', 'border-right', 'border-top', 'border-bottom']
 
     # Array of selector strings.
     attr_reader   :selectors
@@ -168,7 +171,7 @@ module CssParser
     # Split shorthand border declarations (e.g. <tt>border: 1px red;</tt>)
     # Additional splitting happens in expand_dimensions_shorthand!
     def expand_border_shorthand! # :nodoc:
-      ['border', 'border-left', 'border-right', 'border-top', 'border-bottom'].each do |k|
+      BORDER_PROPERTIES.each do |k|
         next unless @declarations.has_key?(k)
 
         value = @declarations[k][:value]
@@ -366,7 +369,7 @@ module CssParser
     def create_border_shorthand! # :nodoc:
       values = []
 
-      ['border-width', 'border-style', 'border-color'].each do |property|
+      BORDER_STYLE_PROPERTIES.each do |property|
         if @declarations.has_key?(property) and not @declarations[property][:is_important]
           # can't merge if any value contains a space (i.e. has multiple values)
           # we temporarily remove any spaces after commas for the check (inside rgba, etc...)
@@ -375,9 +378,7 @@ module CssParser
         end
       end
 
-      @declarations.delete('border-width')
-      @declarations.delete('border-style')
-      @declarations.delete('border-color')
+      BORDER_STYLE_PROPERTIES.each { |prop| @declarations.delete(prop)}
 
       unless values.empty?
         @declarations['border'] = {:value => values.join(' ')}
@@ -438,8 +439,7 @@ module CssParser
     # tries to convert them into a shorthand CSS <tt>font</tt> property.  All
     # font properties must be present in order to create a shorthand declaration.
     def create_font_shorthand! # :nodoc:
-      ['font-style', 'font-variant', 'font-weight', 'font-size',
-       'line-height', 'font-family'].each do |prop|
+     FONT_STYLE_PROPERTIES.each do |prop|
         return unless @declarations.has_key?(prop)
       end
 
@@ -460,11 +460,7 @@ module CssParser
 
       @declarations['font'] = {:value => new_value.gsub(/[\s]+/, ' ').strip}
 
-      ['font-style', 'font-variant', 'font-weight', 'font-size',
-       'line-height', 'font-family'].each do |prop|
-       @declarations.delete(prop)
-      end
-
+      FONT_STYLE_PROPERTIES.each { |prop| @declarations.delete(prop) }
     end
 
     # Looks for long format CSS list-style properties (e.g. <tt>list-style-type</tt>) and
