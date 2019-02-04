@@ -111,15 +111,16 @@ module CssParser
     # TODO: Clean-up regexp doesn't seem to work
     #++
     def declarations_to_s(options = {})
-     options[:force_important] ||= false
-     str = String.new
-     each_declaration do |prop, val, is_important|
-       importance = (options[:force_important] || is_important) ? ' !important' : ''
-       str << "#{prop}: #{val}#{importance}; "
-     end
-     str.gsub!(/^[\s^(\{)]+|[\n\r\f\t]*|[\s]+$/mx, '')
-     str.strip!
-     str
+      options = options.dup
+      options[:force_important] ||= false
+      str = String.new
+      each_declaration do |prop, val, is_important|
+        importance = (options[:force_important] || is_important) ? ' !important' : ''
+        str << "#{prop}: #{val}#{importance}; "
+      end
+      str.gsub!(/^[\s^(\{)]+|[\n\r\f\t]*|[\s]+$/mx, '')
+      str.strip!
+      str
     end
 
     # Return the CSS rule set as a string.
