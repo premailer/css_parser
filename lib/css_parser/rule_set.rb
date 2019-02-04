@@ -401,7 +401,7 @@ module CssParser
       DIMENSIONS.each do |property, dimensions|
         (top, right, bottom, left) = dimensions
         # All four dimensions must be present
-        if dimensions.inject(0) { |c, d| c += 1 if @declarations[d]; c } == 4
+        if dimensions.count { |d| @declarations[d] } == 4
           values = {}
 
           [
