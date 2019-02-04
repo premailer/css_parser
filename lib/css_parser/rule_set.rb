@@ -11,6 +11,7 @@ module CssParser
     BORDER_STYLE_PROPERTIES = ['border-width', 'border-style', 'border-color']
     BORDER_PROPERTIES = ['border', 'border-left', 'border-right', 'border-top', 'border-bottom']
 
+    NUMBER_OF_DIMENSIONS = 4
     # Array of selector strings.
     attr_reader   :selectors
 
@@ -396,12 +397,12 @@ module CssParser
     # Looks for long format CSS dimensional properties (margin, padding, border-color, border-style and border-width)
     # and converts them into shorthand CSS properties.
     def create_dimensions_shorthand! # :nodoc:
-      return if @declarations.size < 4
+      return if @declarations.size < NUMBER_OF_DIMENSIONS
 
       DIMENSIONS.each do |property, dimensions|
         (top, right, bottom, left) = dimensions
         # All four dimensions must be present
-        if dimensions.count { |d| @declarations[d] } == 4
+        if dimensions.count { |d| @declarations[d] } == NUMBER_OF_DIMENSIONS
           values = {}
 
           [
