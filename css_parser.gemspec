@@ -11,9 +11,7 @@ Gem::Specification.new name, CssParser::VERSION do |s|
   s.files = Dir.glob("lib/**/*") + ["MIT-LICENSE"]
   s.license = "MIT"
   
-  if s.respond_to?(:metadata)
-    s.metadata['changelog_uri'] = "https://github.com/premailer/css_parser/blob/master/CHANGELOG.md"
-    s.metadata['source_code_uri'] = "https://github.com/premailer/css_parser"
-    s.metadata['bug_tracker_uri'] = "https://github.com/premailer/css_parser/issues"
-  end
+  s.metadata['changelog_uri'] = "https://github.com/premailer/css_parser/blob/master/CHANGELOG.md"
+  s.metadata['source_code_uri'] = "https://github.com/premailer/css_parser"
+  s.metadata['bug_tracker_uri'] = "https://github.com/premailer/css_parser/issues"
 end
