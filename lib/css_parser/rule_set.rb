@@ -120,8 +120,6 @@ module CssParser
     # TODO: Clean-up regexp doesn't seem to work
     #++
     def declarations_to_s(options = {})
-      options = options.dup
-      options[:force_important] ||= false
       str = String.new
       each_declaration do |prop, val, is_important|
         importance = (options[:force_important] || is_important) ? ' !important' : ''
@@ -431,7 +429,7 @@ module CssParser
     # tries to convert them into a shorthand CSS <tt>font</tt> property.  All
     # font properties must be present in order to create a shorthand declaration.
     def create_font_shorthand! # :nodoc:
-     FONT_STYLE_PROPERTIES.each do |prop|
+      FONT_STYLE_PROPERTIES.each do |prop|
         return unless @declarations.has_key?(prop)
       end
 
