@@ -1,5 +1,9 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Version 1.7.0
+ * No longer support ruby versions 1.9 2.0 2.1
+ * Memory allocation improvements 
+
 ### Version 1.6.0
  * Handles font-size/ line-height shorthand with spaces
 
