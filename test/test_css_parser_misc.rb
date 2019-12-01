@@ -8,6 +8,16 @@ class CssParserTests < Minitest::Test
     @cp = Parser.new
   end
 
+  def test_utf8
+    css = <<-CSS
+      .chinese { font-family: "Microsoft YaHei","微软雅黑"; }
+    CSS
+
+    @cp.add_block!(css)
+
+    assert_equal 'font-family: "Microsoft YaHei","微软雅黑";', @cp.find_by_selector('.chinese').join(' ')
+  end
+
   def test_at_page_rule
     # from http://www.w3.org/TR/CSS21/page.html#page-selectors
     css = <<-CSS
