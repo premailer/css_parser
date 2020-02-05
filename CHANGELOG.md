@@ -1,10 +1,16 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Version 1.7.1
+
+ * Force UTF-8 encoding; do not strip out UTF-8 chars. [#106](https://github.com/premailer/css_parser/pull/106)
+
 ### Version 1.7.0
+
  * No longer support ruby versions 1.9 2.0 2.1
  * Memory allocation improvements 
 
 ### Version 1.6.0
+
  * Handles font-size/ line-height shorthand with spaces
 
 ### Version 1.5.0
