@@ -1,4 +1,6 @@
-require File.expand_path(File.dirname(__FILE__) + '/test_helper')
+# frozen_string_literal: true
+
+require_relative 'test_helper'
 
 # Test cases for the handling of media types
 class CssParserMediaTypesTests < Minitest::Test
@@ -19,7 +21,7 @@ class CssParserMediaTypesTests < Minitest::Test
       }
     CSS
     rules = @cp.rules_by_media_query
-    assert_equal [ "handheld", "screen" ], rules.keys.map { |k| k.to_s }.sort
+    assert_equal ["handheld", "screen"], rules.keys.map(&:to_s).sort
   end
 
   def test_finding_by_media_type
@@ -57,11 +59,11 @@ class CssParserMediaTypesTests < Minitest::Test
       }
     CSS
 
-    assert_equal 'font-size: 13px; line-height: 1.2;', @cp.find_by_selector('body', [:screen,:handheld]).join(' ')
+    assert_equal 'font-size: 13px; line-height: 1.2;', @cp.find_by_selector('body', %i[screen handheld]).join(' ')
   end
 
   def test_adding_block_with_media_types
-    @cp.add_block!(<<-CSS, :media_types => [:screen])
+    @cp.add_block!(<<-CSS, media_types: [:screen])
       body { font-size: 10pt }
     CSS
 
@@ -86,9 +88,9 @@ class CssParserMediaTypesTests < Minitest::Test
       @import "import1.css", print
     CSS
 
-    base_dir = File.dirname(__FILE__)  + '/fixtures/'
+    base_dir = Pathname.new(__dir__).join('fixtures')
 
-    @cp.add_block!(css, :only_media_types => :screen, :base_dir => base_dir)
+    @cp.add_block!(css, only_media_types: :screen, base_dir: base_dir)
     assert @cp.find_by_selector('div').empty?
   end
 
@@ -97,9 +99,9 @@ class CssParserMediaTypesTests < Minitest::Test
       @import "import1.css", print and (color)
     CSS
 
-    base_dir = File.dirname(__FILE__)  + '/fixtures/'
+    base_dir = Pathname.new(__dir__).join('fixtures')
 
-    @cp.add_block!(css, :only_media_types => 'print and (color)', :base_dir => base_dir)
+    @cp.add_block!(css, only_media_types: 'print and (color)', base_dir: base_dir)
     assert_includes @cp.find_by_selector('div').join(' '), 'color: lime'
   end
 
@@ -108,13 +110,13 @@ class CssParserMediaTypesTests < Minitest::Test
       @import "import1.css"
     CSS
 
-    base_dir = File.dirname(__FILE__)  + '/fixtures/'
-    @cp.add_block!(css, :only_media_types => :print, :base_dir => base_dir)
+    base_dir = Pathname.new(__dir__).join('fixtures')
+    @cp.add_block!(css, only_media_types: :print, base_dir: base_dir)
     assert_equal '', @cp.find_by_selector('div').join(' ')
   end
 
   def test_adding_rule_set_with_media_type
-    @cp.add_rule!('body', 'color: black;', [:handheld,:tty])
+    @cp.add_rule!('body', 'color: black;', %i[handheld tty])
     @cp.add_rule!('body', 'color: blue;', :screen)
     assert_equal 'color: black;', @cp.find_by_selector('body', :handheld).join(' ')
   end
@@ -126,7 +128,7 @@ class CssParserMediaTypesTests < Minitest::Test
   end
 
   def test_selecting_with_all_media_types
-    @cp.add_rule!('body', 'color: black;', [:handheld,:tty])
+    @cp.add_rule!('body', 'color: black;', %i[handheld tty])
     assert_equal 'color: black;', @cp.find_by_selector('body', :all).join(' ')
   end
 

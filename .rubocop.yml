@@ -1,4 +1,70 @@
 AllCops:
   TargetRubyVersion: 2.4
   NewCops: enable
-  DisabledByDefault: true
+
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/AccessModifierIndentation:
+  EnforcedStyle: outdent
+
+Layout/LineLength:
+  Enabled: false
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/BlockNesting:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Style/AndOr:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/Not:
+  Enabled: false
+
+Style/NumericPredicate:
+  Enabled: false
+
+Style/RedundantFreeze:
+  Enabled: false
+
+Style/RescueStandardError:
+  EnforcedStyle: implicit
+
+Style/SafeNavigation:
+  Enabled: false
+
+Style/StringLiterals:
+  Exclude:
+    - 'test/**/*'
+
+Style/WordArray:
+  Enabled: false

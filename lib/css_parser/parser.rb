@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CssParser
   # Exception class used for any errors encountered while downloading remote files.
   class RemoteFileError < IOError; end
@@ -15,13 +16,13 @@ module CssParser
   # [<tt>import</tt>] Follow <tt>@import</tt> rules. Boolean, default is <tt>true</tt>.
   # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
   class Parser
-    USER_AGENT   = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)"
+    USER_AGENT = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)"
 
-    STRIP_CSS_COMMENTS_RX = /\/\*.*?\*\//m
-    STRIP_HTML_COMMENTS_RX = /\<\!\-\-|\-\-\>/m
+    STRIP_CSS_COMMENTS_RX = %r{/\*.*?\*/}m.freeze
+    STRIP_HTML_COMMENTS_RX = /<!--|-->/m.freeze
 
     # Initial parsing
-    RE_AT_IMPORT_RULE = /\@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s\)]*)["']?\)?([\w\s\,^\]\(\)]*)\)?[;\n]?/
+    RE_AT_IMPORT_RULE = /@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s)]*)["']?\)?([\w\s,^\]()]*)\)?[;\n]?/.freeze
 
     MAX_REDIRECTS = 3
 
@@ -35,10 +36,10 @@ module CssParser
     class << self; attr_reader :folded_declaration_cache; end
 
     def initialize(options = {})
-      @options = {:absolute_paths => false,
-                  :import => true,
-                  :io_exceptions => true,
-                  :capture_offsets => false}.merge(options)
+      @options = {absolute_paths: false,
+                  import: true,
+                  io_exceptions: true,
+                  capture_offsets: false}.merge(options)
 
       # array of RuleSets
       @rules = []
@@ -70,21 +71,20 @@ module CssParser
     # Returns an array of declarations.
     def find_by_selector(selector, media_types = :all)
       out = []
-      each_selector(media_types) do |sel, dec, spec|
+      each_selector(media_types) do |sel, dec, _spec|
         out << dec if sel.strip == selector.strip
       end
       out
     end
-    alias_method :[], :find_by_selector
+    alias [] find_by_selector
 
     # Finds the rule sets that match the given selectors
     def find_rule_sets(selectors, media_types = :all)
       rule_sets = []
 
       selectors.each do |selector|
-        selector.gsub!(/\s+/, ' ')
-        selector.strip!
-        each_rule_set(media_types) do |rule_set, media_type|
+        selector = selector.gsub(/\s+/, ' ').strip
+        each_rule_set(media_types) do |rule_set, _media_type|
           if !rule_sets.member?(rule_set) && rule_set.selectors.member?(selector)
             rule_sets << rule_set
           end
@@ -115,9 +115,9 @@ module CssParser
     #   parser = CssParser::Parser.new
     #   parser.add_block!(css)
     def add_block!(block, options = {})
-      options = {:base_uri => nil, :base_dir => nil, :charset => nil, :media_types => :all, :only_media_types => :all}.merge(options)
-      options[:media_types] = [options[:media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
-      options[:only_media_types] = [options[:only_media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
+      options = {base_uri: nil, base_dir: nil, charset: nil, media_types: :all, only_media_types: :all}.merge(options)
+      options[:media_types] = [options[:media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt) }
+      options[:only_media_types] = [options[:only_media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt) }
 
       block = cleanup_block(block, options)
 
@@ -129,19 +129,19 @@ module CssParser
       if @options[:import]
         block.scan(RE_AT_IMPORT_RULE).each do |import_rule|
           media_types = []
-          if media_string = import_rule[-1]
-            media_string.split(/[,]/).each do |t|
+          if (media_string = import_rule[-1])
+            media_string.split(/,/).each do |t|
               media_types << CssParser.sanitize_media_query(t) unless t.empty?
             end
           else
             media_types = [:all]
           end
 
-          next unless options[:only_media_types].include?(:all) or media_types.length < 1 or (media_types & options[:only_media_types]).length > 0
+          next unless options[:only_media_types].include?(:all) or media_types.empty? or !(media_types & options[:only_media_types]).empty?
 
           import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
 
-          import_options = { :media_types => media_types }
+          import_options = {media_types: media_types}
           import_options[:capture_offsets] = true if options[:capture_offsets]
 
           if options[:base_uri]
@@ -183,21 +183,21 @@ module CssParser
     #
     # +media_types+ can be a symbol or an array of symbols.
     def add_rule_set!(ruleset, media_types = :all)
-      raise ArgumentError unless ruleset.kind_of?(CssParser::RuleSet)
+      raise ArgumentError unless ruleset.is_a?(CssParser::RuleSet)
 
-      media_types = [media_types] unless Array === media_types
-      media_types = media_types.flat_map { |mt| CssParser.sanitize_media_query(mt)}
+      media_types = [media_types] unless media_types.is_a?(Array)
+      media_types = media_types.flat_map { |mt| CssParser.sanitize_media_query(mt) }
 
-      @rules << {:media_types => media_types, :rules => ruleset}
+      @rules << {media_types: media_types, rules: ruleset}
     end
 
     # Remove a CssParser RuleSet object.
     #
     # +media_types+ can be a symbol or an array of symbols.
     def remove_rule_set!(ruleset, media_types = :all)
-      raise ArgumentError unless ruleset.kind_of?(CssParser::RuleSet)
+      raise ArgumentError unless ruleset.is_a?(CssParser::RuleSet)
 
-      media_types = [media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
+      media_types = [media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt) }
 
       @rules.reject! do |rule|
         rule[:media_types] == media_types && rule[:rules].to_s == ruleset.to_s
@@ -209,7 +209,7 @@ module CssParser
     # +media_types+ can be a symbol or an array of symbols.
     def each_rule_set(media_types = :all) # :yields: rule_set, media_types
       media_types = [:all] if media_types.nil?
-      media_types = [media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
+      media_types = [media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt) }
 
       @rules.each do |block|
         if media_types.include?(:all) or block[:media_types].any? { |mt| media_types.include?(mt) }
@@ -222,7 +222,7 @@ module CssParser
     def to_h(which_media = :all)
       out = {}
       styles_by_media_types = {}
-      each_selector(which_media) do |selectors, declarations, specificity, media_types|
+      each_selector(which_media) do |selectors, declarations, _specificity, media_types|
         media_types.each do |media_type|
           styles_by_media_types[media_type] ||= []
           styles_by_media_types[media_type] << [selectors, declarations]
@@ -244,7 +244,7 @@ module CssParser
     # +media_types+ can be a symbol or an array of symbols.
     # See RuleSet#each_selector for +options+.
     def each_selector(all_media_types = :all, options = {}) # :yields: selectors, declarations, specificity, media_types
-      return to_enum(:each_selector) unless block_given?
+      return to_enum(__method__, all_media_types, options) unless block_given?
 
       each_rule_set(all_media_types) do |rule_set, media_types|
         rule_set.each_selector(options) do |selectors, declarations, specificity|
@@ -255,9 +255,10 @@ module CssParser
 
     # Output all CSS rules as a single stylesheet.
     def to_s(which_media = :all)
-      out = String.new
+      out = []
       styles_by_media_types = {}
-      each_selector(which_media) do |selectors, declarations, specificity, media_types|
+
+      each_selector(which_media) do |selectors, declarations, _specificity, media_types|
         media_types.each do |media_type|
           styles_by_media_types[media_type] ||= []
           styles_by_media_types[media_type] << [selectors, declarations]
@@ -266,20 +267,21 @@ module CssParser
 
       styles_by_media_types.each_pair do |media_type, media_styles|
         media_block = (media_type != :all)
-        out << "@media #{media_type} {\n" if media_block
+        out << "@media #{media_type} {" if media_block
 
         media_styles.each do |media_style|
           if media_block
-            out << "  #{media_style[0]} {\n    #{media_style[1]}\n  }\n"
+            out.push("  #{media_style[0]} {\n    #{media_style[1]}\n  }")
           else
-            out << "#{media_style[0]} {\n#{media_style[1]}\n}\n"
+            out.push("#{media_style[0]} {\n#{media_style[1]}\n}")
           end
         end
 
-        out << "}\n" if media_block
+        out << '}' if media_block
       end
 
-      out
+      out << ''
+      out.join("\n")
     end
 
     # A hash of { :media_query => rule_sets }
@@ -287,7 +289,7 @@ module CssParser
       rules_by_media = {}
       @rules.each do |block|
         block[:media_types].each do |mt|
-          unless rules_by_media.has_key?(mt)
+          unless rules_by_media.key?(mt)
             rules_by_media[mt] = []
           end
           rules_by_media[mt] << block[:rules]
@@ -299,15 +301,13 @@ module CssParser
 
     # Merge declarations with the same selector.
     def compact! # :nodoc:
-      compacted = []
-
-      compacted
+      []
     end
 
     def parse_block_into_rule_sets!(block, options = {}) # :nodoc:
       current_media_queries = [:all]
       if options[:media_types]
-        current_media_queries = options[:media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt)}
+        current_media_queries = options[:media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt) }
       end
 
       in_declarations = 0
@@ -326,7 +326,7 @@ module CssParser
       rule_start = nil
       offset = nil
 
-      block.scan(/\s+|[\\]{2,}|[\\]?[{}\s"]|.[^\s"{}\\]*/) do |token|
+      block.scan(/\s+|\\{2,}|\\?[{}\s"]|.[^\s"{}\\]*/) do |token|
         # save the regex offset so that we know where in the file we are
         offset = Regexp.last_match.offset(0) if options[:capture_offsets]
 
@@ -349,7 +349,7 @@ module CssParser
           current_declarations << token
 
           if !in_string && token.include?('}')
-            current_declarations.gsub!(/\}[\s]*$/, '')
+            current_declarations.gsub!(/\}\s*$/, '')
 
             in_declarations -= 1
             current_declarations.strip!
@@ -374,7 +374,7 @@ module CssParser
           current_media_queries = []
         elsif in_at_media_rule
           if token.include?('{')
-            block_depth = block_depth + 1
+            block_depth += 1
             in_at_media_rule = false
             in_media_block = true
             current_media_queries << CssParser.sanitize_media_query(current_media_query)
@@ -393,38 +393,34 @@ module CssParser
         elsif in_charset or token =~ /@charset/i
           # iterate until we are out of the charset declaration
           in_charset = !token.include?(';')
-        else
-          if !in_string && token.include?('}')
-            block_depth = block_depth - 1
+        elsif !in_string && token.include?('}')
+          block_depth -= 1
 
-            # reset the current media query scope
-            if in_media_block
-              current_media_queries = [:all]
-              in_media_block = false
-            end
-          else
-            if !in_string && token.include?('{')
-              current_selectors.strip!
-              in_declarations += 1
-            else
-              # if we are in a selector, add the token to the current selectors
-              current_selectors << token
-
-              # mark this as the beginning of the selector unless we have already marked it
-              rule_start = offset.first if options[:capture_offsets] && rule_start.nil? && token =~ /^[^\s]+$/
-            end
+          # reset the current media query scope
+          if in_media_block
+            current_media_queries = [:all]
+            in_media_block = false
           end
+        elsif !in_string && token.include?('{')
+          current_selectors.strip!
+          in_declarations += 1
+        else
+          # if we are in a selector, add the token to the current selectors
+          current_selectors << token
+
+          # mark this as the beginning of the selector unless we have already marked it
+          rule_start = offset.first if options[:capture_offsets] && rule_start.nil? && token =~ /^[^\s]+$/
         end
       end
 
       # check for unclosed braces
-      if in_declarations > 0
-        if options[:capture_offsets]
-          add_rule_with_offsets!(current_selectors, current_declarations, options[:filename], (rule_start..offset.last), current_media_queries)
-        else
-          add_rule!(current_selectors, current_declarations, current_media_queries)
-        end
+      return unless in_declarations > 0
+
+      unless options[:capture_offsets]
+        return add_rule!(current_selectors, current_declarations, current_media_queries)
       end
+
+      add_rule_with_offsets!(current_selectors, current_declarations, options[:filename], (rule_start..offset.last), current_media_queries)
     end
 
     # Load a remote CSS file.
@@ -437,7 +433,7 @@ module CssParser
     def load_uri!(uri, options = {}, deprecated = nil)
       uri = Addressable::URI.parse(uri) unless uri.respond_to? :scheme
 
-      opts = {:base_uri => nil, :media_types => :all}
+      opts = {base_uri: nil, media_types: :all}
 
       if options.is_a? Hash
         opts.merge!(options)
@@ -457,14 +453,13 @@ module CssParser
       opts[:filename] = uri.to_s if opts[:capture_offsets]
 
       src, = read_remote_file(uri) # skip charset
-      if src
-        add_block!(src, opts)
-      end
+
+      add_block!(src, opts) if src
     end
 
     # Load a local CSS file.
     def load_file!(file_name, options = {}, deprecated = nil)
-      opts = {:base_dir => nil, :media_types => :all}
+      opts = {base_dir: nil, media_types: :all}
 
       if options.is_a? Hash
         opts.merge!(options)
@@ -487,7 +482,7 @@ module CssParser
 
     # Load a local CSS string.
     def load_string!(src, options = {}, deprecated = nil)
-      opts = {:base_dir => nil, :media_types => :all}
+      opts = {base_dir: nil, media_types: :all}
 
       if options.is_a? Hash
         opts.merge!(options)
@@ -499,9 +494,8 @@ module CssParser
       add_block!(src, opts)
     end
 
-
-
   protected
+
     # Check that a path hasn't been loaded already
     #
     # Raises a CircularReferenceError exception if io_exceptions are on,
@@ -510,10 +504,11 @@ module CssParser
       path = path.to_s
       if @loaded_uris.include?(path)
         raise CircularReferenceError, "can't load #{path} more than once" if @options[:io_exceptions]
-        return false
+
+        false
       else
         @loaded_uris << path
-        return true
+        true
       end
     end
 
@@ -541,7 +536,7 @@ module CssParser
       utf8_block = ignore_pattern(utf8_block, STRIP_HTML_COMMENTS_RX, options)
 
       # Strip lines containing just whitespace
-      utf8_block.gsub!(/^\s+$/, "") unless options[:capture_offsets]
+      utf8_block.gsub!(/^\s+$/, '') unless options[:capture_offsets]
 
       utf8_block
     end
@@ -577,11 +572,8 @@ module CssParser
         if uri.scheme == 'file'
           # local file
           path = uri.path
-          path.gsub!(/^\//, '') if Gem.win_platform?
-          fh = open(path, 'rb')
-          src = fh.read
-          charset = fh.respond_to?(:charset) ? fh.charset : 'utf-8'
-          fh.close
+          path.gsub!(%r{^/}, '') if Gem.win_platform?
+          src = File.read(path, mode: 'rb')
         else
           # remote file
           if uri.scheme == 'https'
@@ -599,21 +591,22 @@ module CssParser
 
           if res.code.to_i >= 400
             @redirect_count = nil
-            raise RemoteFileError.new(uri.to_s) if @options[:io_exceptions]
+            raise RemoteFileError, uri.to_s if @options[:io_exceptions]
+
             return '', nil
           elsif res.code.to_i >= 300 and res.code.to_i < 400
-            if res['Location'] != nil
+            unless res['Location'].nil?
               return read_remote_file Addressable::URI.parse(Addressable::URI.escape(res['Location']))
             end
           end
 
           case res['content-encoding']
-            when 'gzip'
-              io = Zlib::GzipReader.new(StringIO.new(res.body))
-              src = io.read
-            when 'deflate'
-              io = Zlib::Inflate.new
-              src = io.inflate(res.body)
+          when 'gzip'
+            io = Zlib::GzipReader.new(StringIO.new(res.body))
+            src = io.read
+          when 'deflate'
+            io = Zlib::Inflate.new
+            src = io.inflate(res.body)
           end
         end
 
@@ -627,15 +620,17 @@ module CssParser
         end
       rescue
         @redirect_count = nil
-        raise RemoteFileError.new(uri.to_s)if @options[:io_exceptions]
+        raise RemoteFileError, uri.to_s if @options[:io_exceptions]
+
         return nil, nil
       end
 
       @redirect_count = nil
-      return src, charset
+      [src, charset]
     end
 
   private
+
     # Save a folded declaration block to the internal cache.
     def save_folded_declaration(block_hash, folded_declaration) # :nodoc:
       @folded_declaration_cache[block_hash] = folded_declaration
@@ -643,7 +638,7 @@ module CssParser
 
     # Retrieve a folded declaration block from the internal cache.
     def get_folded_declaration(block_hash) # :nodoc:
-      return @folded_declaration_cache[block_hash] ||= nil
+      @folded_declaration_cache[block_hash] ||= nil
     end
 
     def reset! # :nodoc:
@@ -657,14 +652,15 @@ module CssParser
     # passed hash
     def css_node_to_h(hash, key, val)
       hash[key.strip] = '' and return hash if val.nil?
+
       lines = val.split(';')
       nodes = {}
       lines.each do |line|
         parts = line.split(':', 2)
-        if (parts[1] =~ /:/)
+        if parts[1] =~ /:/
           nodes[parts[0]] = css_node_to_h(hash, parts[0], parts[1])
         else
-          nodes[parts[0].to_s.strip] =parts[1].to_s.strip
+          nodes[parts[0].to_s.strip] = parts[1].to_s.strip
         end
       end
       hash[key.strip] = nodes

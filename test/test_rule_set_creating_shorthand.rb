@@ -1,4 +1,6 @@
-require File.expand_path(File.dirname(__FILE__) + '/test_helper')
+# frozen_string_literal: true
+
+require_relative 'test_helper'
 
 # Test cases for reading and generating CSS shorthand properties
 class RuleSetCreatingShorthandTests < Minitest::Test
@@ -10,7 +12,10 @@ class RuleSetCreatingShorthandTests < Minitest::Test
 
   # Border shorthand
   def test_combining_borders_into_shorthand
-    properties = {'border-top-width' => 'auto', 'border-right-width' => 'thin', 'border-bottom-width' => 'auto', 'border-left-width' => '0px'}
+    properties = {
+      'border-top-width' => 'auto', 'border-right-width' => 'thin', 'border-bottom-width' => 'auto',
+      'border-left-width' => '0px'
+    }
 
     combined = create_shorthand(properties)
 
@@ -32,19 +37,27 @@ class RuleSetCreatingShorthandTests < Minitest::Test
     assert_equal '22% rgba(255, 0, 0);', combined['border']
     assert_equal '', combined['border-width']
 
-    properties = {'border-top-style' => 'none', 'border-right-style' => 'none', 'border-bottom-style' => 'none', 'border-left-style' => 'none'}
+    properties = {
+      'border-top-style' => 'none', 'border-right-style' => 'none', 'border-bottom-style' => 'none',
+      'border-left-style' => 'none'
+    }
     combined = create_shorthand(properties)
     assert_equal 'none;', combined['border']
 
-    properties = {'border-top-color' => '#bada55', 'border-right-color' => '#000000', 'border-bottom-color' => '#ffffff', 'border-left-color' => '#ff0000'}
+    properties = {
+      'border-top-color' => '#bada55', 'border-right-color' => '#000000', 'border-bottom-color' => '#ffffff',
+      'border-left-color' => '#ff0000'
+    }
     combined = create_shorthand(properties)
     assert_equal '#bada55 #000000 #ffffff #ff0000;', combined['border-color']
   end
 
   # Dimensions shorthand
   def test_combining_dimensions_into_shorthand
-    properties = {'margin-right' => 'auto', 'margin-bottom' => '0px', 'margin-left' => 'auto', 'margin-top' => '0px',
-      'padding-right' => '1.25em', 'padding-bottom' => '11%', 'padding-left' => '3pc', 'padding-top' => '11.25ex'}
+    properties = {
+      'margin-right' => 'auto', 'margin-bottom' => '0px', 'margin-left' => 'auto', 'margin-top' => '0px',
+      'padding-right' => '1.25em', 'padding-bottom' => '11%', 'padding-left' => '3pc', 'padding-top' => '11.25ex'
+    }
 
     combined = create_shorthand(properties)
 
@@ -76,9 +89,11 @@ class RuleSetCreatingShorthandTests < Minitest::Test
   # Font shorthand
   def test_combining_font_into_shorthand
     # should combine if all font properties are present
-    properties = {"font-weight" => "300", "font-size" => "12pt",
+    properties = {
+      "font-weight" => "300", "font-size" => "12pt",
       "font-family" => "sans-serif", "line-height" => "18px",
-      "font-style" => "oblique", "font-variant" => "small-caps"}
+      "font-style" => "oblique", "font-variant" => "small-caps"
+    }
 
     combined = create_shorthand(properties)
     assert_equal('oblique small-caps 300 12pt/18px sans-serif;', combined['font'])
@@ -94,9 +109,11 @@ class RuleSetCreatingShorthandTests < Minitest::Test
 
   # Background shorthand
   def test_combining_background_into_shorthand
-    properties = {'background-image' => 'url(\'chess.png\')', 'background-color' => 'gray',
+    properties = {
+      'background-image' => 'url(\'chess.png\')', 'background-color' => 'gray',
       'background-position' => 'center -10.2%', 'background-attachment' => 'fixed',
-      'background-repeat' => 'no-repeat'}
+      'background-repeat' => 'no-repeat'
+    }
 
     combined = create_shorthand(properties)
 
@@ -107,9 +124,11 @@ class RuleSetCreatingShorthandTests < Minitest::Test
   end
 
   def test_combining_background_with_size_into_shorthand
-    properties = {'background-image' => 'url(\'chess.png\')', 'background-color' => 'gray',
+    properties = {
+      'background-image' => 'url(\'chess.png\')', 'background-color' => 'gray',
       'background-position' => 'center -10.2%', 'background-attachment' => 'fixed',
-      'background-repeat' => 'no-repeat', 'background-size' => '50% 100%'}
+      'background-repeat' => 'no-repeat', 'background-size' => '50% 100%'
+    }
 
     combined = create_shorthand(properties)
 
@@ -120,9 +139,11 @@ class RuleSetCreatingShorthandTests < Minitest::Test
   end
 
   def test_combining_background_with_size_and_no_position_into_shorthand
-    properties = {'background-image' => 'url(\'chess.png\')', 'background-color' => 'gray',
+    properties = {
+      'background-image' => 'url(\'chess.png\')', 'background-color' => 'gray',
       'background-attachment' => 'fixed', 'background-repeat' => 'no-repeat',
-      'background-size' => '50% 100%'}
+      'background-size' => '50% 100%'
+    }
 
     combined = create_shorthand(properties)
 
@@ -134,8 +155,10 @@ class RuleSetCreatingShorthandTests < Minitest::Test
 
   # List-style shorthand
   def test_combining_list_style_into_shorthand
-    properties = {'list-style-image' => 'url(\'chess.png\')', 'list-style-type' => 'katakana',
-      'list-style-position' => 'inside'}
+    properties = {
+      'list-style-image' => 'url(\'chess.png\')', 'list-style-type' => 'katakana',
+      'list-style-position' => 'inside'
+    }
 
     combined = create_shorthand(properties)
 
@@ -145,7 +168,6 @@ class RuleSetCreatingShorthandTests < Minitest::Test
     assert_properties_are_deleted(combined, properties)
   end
 
-
   def test_property_values_in_url
     rs = RuleSet.new('#header', "background:url(http://example.com/1528/www/top-logo.jpg) no-repeat top right; padding: 79px 0 10px 0;  text-align:left;")
     rs.expand_shorthand!
@@ -153,7 +175,6 @@ class RuleSetCreatingShorthandTests < Minitest::Test
     rs.create_shorthand!
     assert_equal('url(http://example.com/1528/www/top-logo.jpg) no-repeat top right;', rs['background'])
   end
-
 
   def test_a_single_property_is_not_shorted
     properties = {'background-color' => 'gray'}
@@ -163,10 +184,10 @@ class RuleSetCreatingShorthandTests < Minitest::Test
     assert_equal('', combined['background'])
   end
 
-  protected
+protected
 
   def assert_properties_are_deleted(ruleset, properties)
-    properties.each do |property, value|
+    properties.each do |property, _value|
       assert_equal '', ruleset[property]
     end
   end

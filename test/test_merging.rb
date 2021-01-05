@@ -1,4 +1,6 @@
-require File.expand_path(File.dirname(__FILE__) + '/test_helper')
+# frozen_string_literal: true
+
+require_relative 'test_helper'
 
 class MergingTests < Minitest::Test
   include CssParser
@@ -27,14 +29,14 @@ class MergingTests < Minitest::Test
     @cp.add_block! "body { margin: 0; }"
     @cp.add_block! "h2   { margin: 5px; }"
 
-    rules = @cp.find_rule_sets([ "body", "h2" ])
+    rules = @cp.find_rule_sets(["body", "h2"])
     assert_equal "margin: 5px;", CssParser.merge(rules).declarations_to_s
 
     @cp = CssParser::Parser.new
     @cp.add_block! "body { margin: 0; }"
     @cp.add_block! "h2,h1 { margin: 5px; }"
 
-    rules = @cp.find_rule_sets([ "body", "h2" ])
+    rules = @cp.find_rule_sets(["body", "h2"])
     assert_equal "margin: 5px;", CssParser.merge(rules).declarations_to_s
   end
 
@@ -90,7 +92,7 @@ class MergingTests < Minitest::Test
 
   def test_raising_error_on_bad_type
     assert_raises ArgumentError do
-      CssParser.merge([1,2,3])
+      CssParser.merge([1, 2, 3])
     end
   end
 

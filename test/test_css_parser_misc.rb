@@ -1,4 +1,6 @@
-require File.expand_path(File.dirname(__FILE__) + '/test_helper')
+# frozen_string_literal: true
+
+require_relative 'test_helper'
 
 # Test cases for the CssParser.
 class CssParserTests < Minitest::Test
@@ -36,7 +38,7 @@ class CssParserTests < Minitest::Test
 
   def test_should_ignore_comments
     # see http://www.w3.org/Style/CSS/Test/CSS2.1/current/html4/t040109-c17-comments-00-b.htm
-    css =<<-CSS
+    css = <<-CSS
       /* This is a CSS comment. */
       .one {color: green;} /* Another comment */
       /* The following should not be used:
@@ -54,7 +56,7 @@ class CssParserTests < Minitest::Test
     CSS
 
     @cp.add_block!(css)
-    @cp.each_selector do |sel, decs, spec|
+    @cp.each_selector do |_sel, decs, _spec|
       assert_equal 'color: green;', decs
     end
   end
@@ -87,7 +89,7 @@ class CssParserTests < Minitest::Test
 
     @cp.add_block!(css)
 
-    @cp.each_selector do |sel, decs, spec|
+    @cp.each_selector do |_sel, decs, _spec|
       assert_equal 'color: red;', decs
     end
   end
@@ -106,7 +108,7 @@ class CssParserTests < Minitest::Test
 
     @cp.add_block!(css)
 
-    @cp.each_selector do |sel, decs, spec|
+    @cp.each_selector do |_sel, decs, _spec|
       assert_equal 'color: green;', decs
     end
   end
@@ -151,9 +153,9 @@ class CssParserTests < Minitest::Test
   def test_converting_uris
     base_uri = 'http://www.example.org/style/basic.css'
     ["body { background: url(yellow) };", "body { background: url('yellow') };",
-      "body { background: url('/style/yellow') };",
-      "body { background: url(\"../style/yellow\") };",
-      "body { background: url(\"lib/../../style/yellow\") };"].each do |css|
+     "body { background: url('/style/yellow') };",
+     "body { background: url(\"../style/yellow\") };",
+     "body { background: url(\"lib/../../style/yellow\") };"].each do |css|
       converted_css = CssParser.convert_uris(css, base_uri)
       assert_equal "body { background: url('http://www.example.org/style/yellow') };", converted_css
     end
@@ -167,21 +169,19 @@ class CssParserTests < Minitest::Test
   end
 
   def test_ruleset_with_braces
-=begin
-    parser = Parser.new
-    parser.add_block!("div { background-color: black !important; }")
-    parser.add_block!("div { background-color: red; }")
-
-    rulesets = []
-
-    parser['div'].each do |declaration|
-      rulesets << RuleSet.new('div', declaration)
-    end
-
-    merged = CssParser.merge(rulesets)
-
-    result: # merged.to_s => "{ background-color: black !important; }"
-=end
+    # parser = Parser.new
+    # parser.add_block!("div { background-color: black !important; }")
+    # parser.add_block!("div { background-color: red; }")
+    #
+    # rulesets = []
+    #
+    # parser['div'].each do |declaration|
+    #   rulesets << RuleSet.new('div', declaration)
+    # end
+    #
+    # merged = CssParser.merge(rulesets)
+    #
+    # result: # merged.to_s => "{ background-color: black !important; }"
 
     new_rule = RuleSet.new('div', "{ background-color: black !important; }")
 
@@ -202,7 +202,7 @@ class CssParserTests < Minitest::Test
 
     assert_kind_of Enumerator, @cp.each_selector
 
-    @cp.each_selector.each do |sel, desc, spec|
+    @cp.each_selector.each do |sel, desc, _spec|
       assert_equal 'body', sel
       assert_equal 'color: black;', desc
     end
