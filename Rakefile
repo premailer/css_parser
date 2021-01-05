@@ -1,12 +1,14 @@
 require 'bundler/setup'
 require 'bundler/gem_tasks'
 require 'rake/testtask'
+require 'rubocop/rake_task'
 require 'bump/tasks'
 
-desc 'Run the unit tests.'
-Rake::TestTask.new(:default) do |test|
+Rake::TestTask.new do |test|
   test.verbose = true
 end
+
+RuboCop::RakeTask.new
 
 desc 'Run a performance evaluation.'
 task :benchmark do
@@ -33,3 +35,5 @@ task :benchmark do
   end
   puts "Parsing 'complex.css' 1 000 times took #{time.real.round(4)} seconds"
 end
+
+task default: %i[rubocop test]

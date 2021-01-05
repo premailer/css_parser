@@ -19,5 +19,7 @@ Gem::Specification.new name, CssParser::VERSION do |s|
   s.add_development_dependency 'bump'
   s.add_development_dependency 'maxitest'
   s.add_development_dependency 'rake'
+  s.add_development_dependency 'rubocop', '~> 1.8'
+  s.add_development_dependency 'rubocop-rake'
   s.add_development_dependency 'webrick'
 end
