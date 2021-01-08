@@ -69,13 +69,8 @@ class CssParserLoadingTests < Minitest::Test
 
   # http://github.com/premailer/css_parser/issues#issue/4
   def test_loading_a_remote_file_over_ssl
-    # TODO: test SSL locally
-    if RUBY_PLATFORM == 'java'
-      skip "SSL: does not work on jruby"
-    else
-      @cp.load_uri!("https://dialect.ca/inc/screen.css")
-      assert_includes( @cp.find_by_selector('body').join(' '), "margin: 0;" )
-    end
+    @cp.load_uri!("https://dialect.ca/inc/screen.css")
+    assert_includes( @cp.find_by_selector('body').join(' '), "margin: 0;" )
   end
 
   def test_loading_a_string
