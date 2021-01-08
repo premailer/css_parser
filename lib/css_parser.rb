@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'addressable/uri'
 require 'uri'
 require 'net/https'
@@ -13,7 +14,6 @@ require 'css_parser/regexps'
 require 'css_parser/parser'
 
 module CssParser
-
   # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules
   # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).
   #
@@ -56,10 +56,10 @@ module CssParser
     @folded_declaration_cache = {}
 
     # in case called like CssParser.merge([rule_set, rule_set])
-    rule_sets.flatten! if rule_sets[0].kind_of?(Array)
+    rule_sets.flatten! if rule_sets[0].is_a?(Array)
 
-    unless rule_sets.all? {|rs| rs.kind_of?(CssParser::RuleSet)}
-      raise ArgumentError, "all parameters must be CssParser::RuleSets."
+    unless rule_sets.all? { |rs| rs.is_a?(CssParser::RuleSet) }
+      raise ArgumentError, 'all parameters must be CssParser::RuleSets.'
     end
 
     return rule_sets[0] if rule_sets.length == 1
@@ -71,38 +71,27 @@ module CssParser
       rule_set.expand_shorthand!
 
       specificity = rule_set.specificity
-      unless specificity
-        if rule_set.selectors.length == 0
-          specificity = 0
-        else
-          specificity = rule_set.selectors.map { |s| calculate_specificity(s) }.compact.max || 0
-        end
-      end
+      specificity ||= rule_set.selectors.map { |s| calculate_specificity(s) }.compact.max || 0
 
       rule_set.each_declaration do |property, value, is_important|
         # Add the property to the list to be folded per http://www.w3.org/TR/CSS21/cascade.html#cascading-order
-        if not properties.has_key?(property)
-          properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}
+        if not properties.key?(property)
+          properties[property] = {value: value, specificity: specificity, is_important: is_important}
         elsif is_important
           if not properties[property][:is_important] or properties[property][:specificity] <= specificity
-            properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}
+            properties[property] = {value: value, specificity: specificity, is_important: is_important}
           end
         elsif properties[property][:specificity] < specificity or properties[property][:specificity] == specificity
           unless properties[property][:is_important]
-            properties[property] = {:value => value, :specificity => specificity, :is_important => is_important}
+            properties[property] = {value: value, specificity: specificity, is_important: is_important}
           end
         end
-     end
+      end
     end
 
-    merged = RuleSet.new(nil, nil)
-
-    properties.each do |property, details|
-      if details[:is_important]
-        merged[property.strip] = details[:value].strip.gsub(/\;\Z/, '') + '!important'
-      else
-        merged[property.strip] = details[:value].strip
-      end
+    merged = properties.each_with_object(RuleSet.new(nil, nil)) do |(property, details), rule_set|
+      value = details[:value].strip
+      rule_set[property.strip] = details[:is_important] ? "#{value.gsub(/;\Z/, '')}!important" : value
     end
 
     merged.create_shorthand!
@@ -128,7 +117,7 @@ module CssParser
 
     "#{a}#{b}#{c}#{d}".to_i
   rescue
-    return 0
+    0
   end
 
   # Make <tt>url()</tt> links absolute.
@@ -145,23 +134,24 @@ module CssParser
   #               "http://example.org/style/basic.css").inspect
   #  => "body { background: url('http://example.org/style/yellow.png?abc=123') };"
   def self.convert_uris(css, base_uri)
-    base_uri = Addressable::URI.parse(base_uri) unless base_uri.kind_of?(Addressable::URI)
+    base_uri = Addressable::URI.parse(base_uri) unless base_uri.is_a?(Addressable::URI)
 
     css.gsub(URI_RX) do
-      uri = $1.to_s
-      uri.gsub!(/["']+/, '')
+      uri = Regexp.last_match(1).to_s.gsub(/["']+/, '')
       # Don't process URLs that are already absolute
-      unless uri =~ /^[a-z]+\:\/\//i
+      unless uri.match(%r{^[a-z]+://}i)
         begin
-          uri = base_uri + uri
-        rescue; end
+          uri = base_uri.join(uri)
+        rescue
+          nil
+        end
       end
-      "url('#{uri.to_s}')"
+      "url('#{uri}')"
     end
   end
 
   def self.sanitize_media_query(raw)
-    mq = raw.to_s.gsub(/[\s]+/, ' ')
+    mq = raw.to_s.gsub(/\s+/, ' ')
     mq.strip!
     mq = 'all' if mq.empty?
     mq.to_sym

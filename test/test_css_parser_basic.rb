@@ -1,4 +1,6 @@
-require File.expand_path(File.dirname(__FILE__) + '/test_helper')
+# frozen_string_literal: true
+
+require_relative "test_helper"
 
 # Test cases for reading and generating CSS shorthand properties
 class CssParserBasicTests < Minitest::Test
@@ -53,17 +55,17 @@ class CssParserBasicTests < Minitest::Test
 
   def test_toggling_uri_conversion
     # with conversion
-    cp_with_conversion = Parser.new(:absolute_paths => true)
+    cp_with_conversion = Parser.new(absolute_paths: true)
     cp_with_conversion.add_block!("body { background: url('../style/yellow.png?abc=123') };",
-      :base_uri => 'http://example.org/style/basic.css')
+      base_uri: 'http://example.org/style/basic.css')
 
     assert_equal "background: url('http://example.org/style/yellow.png?abc=123');",
       cp_with_conversion['body'].join(' ')
 
     # without conversion
-    cp_without_conversion = Parser.new(:absolute_paths => false)
+    cp_without_conversion = Parser.new(absolute_paths: false)
     cp_without_conversion.add_block!("body { background: url('../style/yellow.png?abc=123') };",
-      :base_uri => 'http://example.org/style/basic.css')
+      base_uri: 'http://example.org/style/basic.css')
 
     assert_equal "background: url('../style/yellow.png?abc=123');",
       cp_without_conversion['body'].join(' ')

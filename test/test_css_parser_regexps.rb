@@ -1,5 +1,7 @@
 # coding: iso-8859-1
-require File.expand_path(File.dirname(__FILE__) + '/test_helper')
+# frozen_string_literal: true
+
+require_relative 'test_helper'
 
 # Test cases for CSS regular expressions
 #
@@ -22,7 +24,7 @@ class CssParserRegexpTests < Minitest::Test
   end
 
   def test_box_model_units
-    %w( auto inherit 80px 90pt 80pc 80rem 80vh 70vm 60vw 1vmin 2vmax 0 2em 3ex 1cm 100mm 2in 120% ).each do |str|
+    %w[auto inherit 80px 90pt 80pc 80rem 80vh 70vm 60vw 1vmin 2vmax 0 2em 3ex 1cm 100mm 2in 120%].each do |str|
       assert_match(CssParser::BOX_MODEL_UNITS_RX, str)
     end
   end
@@ -86,13 +88,13 @@ class CssParserRegexpTests < Minitest::Test
     refute_match(CssParser::IMPORTANT_IN_PROPERTY_RX, "color: #f00 !importantish;")
   end
 
-  protected
+protected
 
   def load_test_file(filename)
     fh = File.new("fixtures/#{filename}", 'r')
     test_file = fh.read
     fh.close
 
-    return test_file
+    test_file
   end
 end

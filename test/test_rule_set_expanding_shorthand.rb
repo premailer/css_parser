@@ -1,4 +1,6 @@
-require File.expand_path(File.dirname(__FILE__) + '/test_helper')
+# frozen_string_literal: true
+
+require_relative 'test_helper'
 
 class RuleSetExpandingShorthandTests < Minitest::Test
   include CssParser
@@ -94,7 +96,7 @@ class RuleSetExpandingShorthandTests < Minitest::Test
 
     # ensure normal is the default state
     ['font: normal italic 12px sans-serif;', 'font: italic 12px sans-serif;',
-      'font: small-caps normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
+     'font: small-caps normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
       declarations = expand_declarations(shorthand)
       assert_equal('normal', declarations['font-weight'], shorthand)
     end
@@ -125,7 +127,7 @@ class RuleSetExpandingShorthandTests < Minitest::Test
 
     # ensure normal is the default state
     ['font: normal bold 12px sans-serif;', 'font: small-caps 12px sans-serif;',
-      'font: normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
+     'font: normal 12px sans-serif;', 'font: 12px/16px sans-serif;'].each do |shorthand|
       declarations = expand_declarations(shorthand)
       assert_equal('normal', declarations['font-style'], shorthand)
     end
@@ -140,7 +142,7 @@ class RuleSetExpandingShorthandTests < Minitest::Test
 
     # ensure normal is the default state
     ['font: normal bold 12px sans-serif;', 'font: small-caps 12px sans-serif;',
-      'font: normal 12px sans-serif;', 'font: 12px sans-serif;'].each do |shorthand|
+     'font: normal 12px sans-serif;', 'font: 12px sans-serif;'].each do |shorthand|
       declarations = expand_declarations(shorthand)
       assert_equal('normal', declarations['line-height'], shorthand)
     end
@@ -156,8 +158,10 @@ class RuleSetExpandingShorthandTests < Minitest::Test
 
   # Background shorthand
   def test_getting_background_properties_from_shorthand
-    expected = {"background-image" => "url('chess.png')", "background-color" => "gray", "background-repeat" => "repeat",
-      "background-attachment" => "fixed", "background-position" => "50%"}
+    expected = {
+      "background-image" => "url('chess.png')", "background-color" => "gray", "background-repeat" => "repeat",
+      "background-attachment" => "fixed", "background-position" => "50%"
+    }
 
     shorthand = "background: url('chess.png') gray 50% repeat fixed;"
     declarations = expand_declarations(shorthand)
@@ -218,9 +222,8 @@ class RuleSetExpandingShorthandTests < Minitest::Test
 
   def test_getting_background_image_from_shorthand
     ['url("chess.png")', 'url("https://example.org:80/~files/chess.png?123=abc&test#5")',
-      'url(https://example.org:80/~files/chess.png?123=abc&test#5)',
-      "url('https://example.org:80/~files/chess.png?123=abc&test#5')", 'none', 'inherit'].each do |image|
-
+     'url(https://example.org:80/~files/chess.png?123=abc&test#5)',
+     "url('https://example.org:80/~files/chess.png?123=abc&test#5')", 'none', 'inherit'].each do |image|
       shorthand = "background: #0f0f0f #{image} ;"
       declarations = expand_declarations(shorthand)
       assert_equal(image, declarations['background-image'])
@@ -229,10 +232,8 @@ class RuleSetExpandingShorthandTests < Minitest::Test
 
   def test_getting_background_gradient_from_shorthand
     ['linear-gradient(top, hsla(0, 0%, 0%, 0.00) 0%, hsla(0, 0%, 0%, 0.20) 100%)',
-      '-webkit-gradient(linear, left top, left bottom, color-stop(0, hsla(0, 0%, 0%, 0.00)), color-stop(1, hsla(0, 0%, 0%, 0.20)))',
-      '-moz-linear-gradient(bottom, blue, red)'
-    ].each do |image|
-
+     '-webkit-gradient(linear, left top, left bottom, color-stop(0, hsla(0, 0%, 0%, 0.00)), color-stop(1, hsla(0, 0%, 0%, 0.20)))',
+     '-moz-linear-gradient(bottom, blue, red)'].each do |image|
       shorthand = "background: #0f0f0f #{image} repeat ;"
       declarations = expand_declarations(shorthand)
       assert_equal(image, declarations['background-image'])
@@ -241,8 +242,10 @@ class RuleSetExpandingShorthandTests < Minitest::Test
 
   # List-style shorthand
   def test_getting_list_style_properties_from_shorthand
-    expected = {'list-style-image' => 'url(\'chess.png\')', 'list-style-type' => 'katakana',
-      'list-style-position' => 'inside'}
+    expected = {
+      'list-style-image' => 'url(\'chess.png\')', 'list-style-type' => 'katakana',
+      'list-style-position' => 'inside'
+    }
 
     shorthand = "list-style: katakana inside url(\'chess.png\');"
     declarations = expand_declarations(shorthand)
@@ -265,14 +268,14 @@ class RuleSetExpandingShorthandTests < Minitest::Test
     end
   end
 
-  protected
+protected
 
   def expand_declarations(declarations)
     ruleset = RuleSet.new(nil, declarations)
     ruleset.expand_shorthand!
 
     collected = {}
-    ruleset.each_declaration do |prop, val, imp|
+    ruleset.each_declaration do |prop, val, _imp|
       collected[prop.to_s] = val.to_s
     end
     collected
