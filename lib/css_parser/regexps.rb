@@ -14,13 +14,13 @@ module CssParser
   RE_IDENT = Regexp.new("[\-]?([_a-z]|#{RE_NON_ASCII}|#{RE_ESCAPE})([_a-z0-9\-]|#{RE_NON_ASCII}|#{RE_ESCAPE})*", Regexp::IGNORECASE, 'n')
 
   # General strings
-  RE_STRING1 = Regexp.new('(\"(.[^\n\r\f\\"]*|\\\\' + RE_NL.to_s + '|' + RE_ESCAPE.to_s + ')*\")')
-  RE_STRING2 = Regexp.new('(\'(.[^\n\r\f\\\']*|\\\\' + RE_NL.to_s + '|' + RE_ESCAPE.to_s + ')*\')')
+  RE_STRING1 = /("(.[^\n\r\f"]*|\\#{RE_NL}|#{RE_ESCAPE})*")/.freeze
+  RE_STRING2 = /('(.[^\n\r\f']*|\\#{RE_NL}|#{RE_ESCAPE})*')/.freeze
   RE_STRING = Regexp.union(RE_STRING1, RE_STRING2)
 
   RE_INHERIT = regex_possible_values 'inherit'
 
-  RE_URI = Regexp.new('(url\([\s]*([\s]*' + RE_STRING.to_s + '[\s]*)[\s]*\))|(url\([\s]*([!#$%&*\-~]|' + RE_NON_ASCII.to_s + '|' + RE_ESCAPE.to_s + ')*[\s]*)\)', Regexp::IGNORECASE | Regexp::EXTENDED | Regexp::MULTILINE, 'n').freeze
+  RE_URI = Regexp.new(/(url\(\s*(\s*#{RE_STRING}\s*)\s*\))|(url\(\s*([!#$%&*\-~]|#{RE_NON_ASCII}|#{RE_ESCAPE})*\s*)\)/, Regexp::IGNORECASE | Regexp::EXTENDED | Regexp::MULTILINE, 'n').freeze
   URI_RX = /url\(("([^"]*)"|'([^']*)'|([^)]*))\)/im.freeze
   RE_GRADIENT = /[-a-z]*gradient\([-a-z0-9 .,#%()]*\)/im.freeze
 

@@ -260,7 +260,7 @@ module CssParser
 
         if in_fonts
           if font_props.key?('font-family')
-            font_props['font-family'] += ', ' + m
+            font_props['font-family'] += ", #{m}"
           else
             font_props['font-family'] = m
           end
@@ -483,7 +483,7 @@ module CssParser
       block.split(/[;$]+/m).each do |decs|
         decs = continuation ? continuation + decs : decs
         if decs =~ /\([^)]*\Z/ # if it has an unmatched parenthesis
-          continuation = decs + ';'
+          continuation = "#{decs};"
         elsif (matches = decs.match(/\s*(.[^:]*)\s*:\s*(.+?)(;?\s*\Z)/i))
           # skip end_of_declaration
           property = matches[1]
