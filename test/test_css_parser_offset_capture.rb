@@ -28,23 +28,19 @@ class CssParserOffsetCaptureTests < Minitest::Test
   # http://github.com/premailer/css_parser/issues#issue/4
   def test_capturing_offsets_from_remote_file
     # TODO: test SSL locally
-    if RUBY_PLATFORM == 'java'
-      skip "SSL: does not work on jruby"
-    else
-      @cp.load_uri!("https://dialect.ca/inc/screen.css", :capture_offsets => true)
+    @cp.load_uri!("https://dialect.ca/inc/screen.css", :capture_offsets => true)
 
-      # there are a lot of rules in this file, but check some rule offsets
-      rules = @cp.find_rule_sets(['#container', '#name_case_converter textarea'])
-      assert_equal 2, rules.count
+    # there are a lot of rules in this file, but check some rule offsets
+    rules = @cp.find_rule_sets(['#container', '#name_case_converter textarea'])
+    assert_equal 2, rules.count
 
-      assert_equal 2172, rules.first.offset.first
-      assert_equal 2227, rules.first.offset.last
-      assert_equal 'https://dialect.ca/inc/screen.css', rules.first.filename
+    assert_equal 2172, rules.first.offset.first
+    assert_equal 2227, rules.first.offset.last
+    assert_equal 'https://dialect.ca/inc/screen.css', rules.first.filename
 
-      assert_equal 10703, rules.last.offset.first
-      assert_equal 10752, rules.last.offset.last
-      assert_equal 'https://dialect.ca/inc/screen.css', rules.last.filename
-    end
+    assert_equal 10703, rules.last.offset.first
+    assert_equal 10752, rules.last.offset.last
+    assert_equal 'https://dialect.ca/inc/screen.css', rules.last.filename
   end
 
   def test_capturing_offsets_from_string

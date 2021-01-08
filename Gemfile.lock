@@ -9,7 +9,6 @@ GEM
   specs:
     addressable (2.4.0)
     bump (0.5.3)
-    jruby-openssl (0.10.4-java)
     maxitest (2.4.0)
       minitest (>= 5.0.0, < 5.11.0)
     minitest (5.10.1)
@@ -22,7 +21,6 @@ PLATFORMS
 DEPENDENCIES
   bump
   css_parser!
-  jruby-openssl
   maxitest
   rake
 
