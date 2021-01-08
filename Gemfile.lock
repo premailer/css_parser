@@ -13,6 +13,7 @@ GEM
       minitest (>= 5.0.0, < 5.11.0)
     minitest (5.10.1)
     rake (12.0.0)
+    webrick (1.7.0)
 
 PLATFORMS
   java
@@ -23,6 +24,7 @@ DEPENDENCIES
   css_parser!
   maxitest
   rake
+  webrick
 
 BUNDLED WITH
    2.1.4
