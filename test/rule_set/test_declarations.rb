@@ -13,13 +13,13 @@ class RuleSetDeclarationsTest < Minitest::Test
 
     describe 'when initial declarations is given' do
       it 'initialized with given declarations' do
-        baz_property = CssParser::RuleSet::Declarations::Value.new('baz value', order: 42, important: true)
+        baz_property = CssParser::RuleSet::Declarations::Value.new('baz value', important: true)
         declarations = CssParser::RuleSet::Declarations.new({foo: 'foo value', bar: 'bar value', baz: baz_property})
 
         assert_equal 3, declarations.size
 
-        assert_equal CssParser::RuleSet::Declarations::Value.new('foo value', order: 1), declarations['foo']
-        assert_equal CssParser::RuleSet::Declarations::Value.new('bar value', order: 2), declarations[:bar]
+        assert_equal CssParser::RuleSet::Declarations::Value.new('foo value'), declarations['foo']
+        assert_equal CssParser::RuleSet::Declarations::Value.new('bar value'), declarations[:bar]
         assert_equal baz_property, declarations['baz']
       end
     end
@@ -38,7 +38,7 @@ class RuleSetDeclarationsTest < Minitest::Test
 
     it 'assigns proper value if Declarations::Value is given' do
       declarations = CssParser::RuleSet::Declarations.new
-      property = CssParser::RuleSet::Declarations::Value.new('value', important: true, order: 42)
+      property = CssParser::RuleSet::Declarations::Value.new('value', important: true)
 
       declarations['foo'] = property
 
@@ -72,21 +72,21 @@ class RuleSetDeclarationsTest < Minitest::Test
 
   describe '#[]' do
     it 'returns property if exists' do
-      foo_value = CssParser::RuleSet::Declarations::Value.new('foo value', important: true, order: 42)
+      foo_value = CssParser::RuleSet::Declarations::Value.new('foo value', important: true)
       declarations = CssParser::RuleSet::Declarations.new({foo: foo_value})
 
       assert_equal foo_value, declarations['foo']
     end
 
     it 'returns nil if not exists' do
-      foo_value = CssParser::RuleSet::Declarations::Value.new('foo value', important: true, order: 42)
+      foo_value = CssParser::RuleSet::Declarations::Value.new('foo value', important: true)
       declarations = CssParser::RuleSet::Declarations.new({foo: foo_value})
 
       assert_nil declarations['bar']
     end
 
     it 'normalizes property name' do
-      foo_value = CssParser::RuleSet::Declarations::Value.new('foo value', important: true, order: 42)
+      foo_value = CssParser::RuleSet::Declarations::Value.new('foo value', important: true)
       declarations = CssParser::RuleSet::Declarations.new({foo: foo_value})
 
       assert_equal foo_value, declarations[:'Foo ']
@@ -167,31 +167,31 @@ class RuleSetDeclarationsTest < Minitest::Test
 
   describe '#each' do
     describe 'when block is not given' do
-      it 'returns enumerator with properties order by order' do
-        foo_value = CssParser::RuleSet::Declarations::Value.new('foo value', order: 3)
-        bar_value = CssParser::RuleSet::Declarations::Value.new('bar value', order: 1)
-        baz_value = CssParser::RuleSet::Declarations::Value.new('baz value', order: 2)
+      it 'returns enumerator with properties in order' do
+        foo_value = CssParser::RuleSet::Declarations::Value.new('foo value')
+        bar_value = CssParser::RuleSet::Declarations::Value.new('bar value')
+        baz_value = CssParser::RuleSet::Declarations::Value.new('baz value')
 
         declarations = CssParser::RuleSet::Declarations.new({foo: foo_value, bar: bar_value, baz: baz_value})
 
         assert_instance_of Enumerator, declarations.each
         assert_equal 3, declarations.each.size
-        assert_equal [['bar', bar_value], ['baz', baz_value], ['foo', foo_value]], declarations.each.to_a
+        assert_equal [['foo', foo_value], ['bar', bar_value], ['baz', baz_value]], declarations.each.to_a
       end
     end
 
     describe 'when block is given' do
-      it 'yields properties order by order' do
-        foo_value = CssParser::RuleSet::Declarations::Value.new('foo value', order: 3)
-        bar_value = CssParser::RuleSet::Declarations::Value.new('bar value', order: 1)
-        baz_value = CssParser::RuleSet::Declarations::Value.new('baz value', order: 2)
+      it 'yields properties in order' do
+        foo_value = CssParser::RuleSet::Declarations::Value.new('foo value')
+        bar_value = CssParser::RuleSet::Declarations::Value.new('bar value')
+        baz_value = CssParser::RuleSet::Declarations::Value.new('baz value')
 
         declarations = CssParser::RuleSet::Declarations.new({foo: foo_value, bar: bar_value, baz: baz_value})
 
         mock = Minitest::Mock.new
+        mock.expect :call, true, ['foo', foo_value]
         mock.expect :call, true, ['bar', bar_value]
         mock.expect :call, true, ['baz', baz_value]
-        mock.expect :call, true, ['foo', foo_value]
 
         declarations.each { |name, value| mock.call(name, value) }
 

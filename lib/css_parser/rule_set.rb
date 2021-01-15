@@ -27,16 +27,17 @@ module CssParser
     class Declarations
       class Value
         attr_reader :value
-        attr_accessor :important, :order
+        attr_accessor :important
 
-        def initialize(value, important: nil, order: 0)
+        def initialize(value, important: nil)
           self.value = value
-          @important = important.nil? ? !value.match(CssParser::IMPORTANT_IN_PROPERTY_RX).nil? : important
-          @order = order
+          @important = important unless important.nil?
         end
 
         def value=(value)
-          value = value.to_s.sub(/\s*;\s*\Z/, '').gsub(CssParser::IMPORTANT_IN_PROPERTY_RX, '').strip
+          value = value.to_s.sub(/\s*;\s*\Z/, '')
+          self.important = !value.slice!(CssParser::IMPORTANT_IN_PROPERTY_RX).nil?
+          value.strip!
           raise ArgumentError, 'value is empty' if value.empty?
 
           @value = value.freeze
@@ -50,7 +51,6 @@ module CssParser
       end
 
       def initialize(declarations = {})
-        @order = 0
         @declarations = {}
         declarations.each { |property, value| add_declaration!(property, value) }
       end
@@ -86,7 +86,7 @@ module CssParser
           return
         end
 
-        declarations[property] = Value.new(value, order: @order += 1)
+        declarations[property] = Value.new(value)
       end
       alias add_declaration! []=
 
@@ -113,8 +113,44 @@ module CssParser
       end
       alias remove_declaration! delete
 
+      def replace_declaration!(property, replacements)
+        replacement_declarations = self.class.new(replacements)
+        replacement_declarations.each { |_key, value| value.important = true } if get_value(property).important
+
+        replacement_keys = declarations.keys
+        replacement_values = declarations.values
+        property_index = replacement_keys.index(property)
+
+        replacements = replacement_declarations.each.with_object({}) do |(key, value), result|
+          if !declarations.key?(key) || (value.important && !declarations[key].important)
+            result[key] = value
+            next unless declarations.key?(key)
+
+            replaced_index = replacement_keys.index(key)
+            replacement_keys.delete_at(replaced_index)
+            replacement_values.delete_at(replaced_index)
+            property_index -= 1 if replaced_index < property_index
+            next
+          end
+
+          next if declarations[key].important && !value.important
+
+          result[key] = value if property_index > replacement_keys.index(key)
+        end
+
+        return if replacements.empty?
+
+        replacement_keys.delete_at(property_index)
+        replacement_keys.insert(property_index, *replacements.keys)
+
+        replacement_values.delete_at(property_index)
+        replacement_values.insert(property_index, *replacements.values)
+
+        @declarations = replacement_keys.zip(replacement_values).to_h
+      end
+
       def each(&block)
-        declarations.sort_by { |_name, value| value.order }.each(&block)
+        declarations.each(&block)
       end
 
       def to_s(options = {})
@@ -224,20 +260,21 @@ module CssParser
 
       value = declarations['background'].value.dup
 
-      if value =~ CssParser::RE_INHERIT
-        BACKGROUND_PROPERTIES.each do |prop|
-          split_declaration('background', prop, 'inherit')
-        end
+      if value.match(CssParser::RE_INHERIT)
+        @declarations.replace_declaration!('background', BACKGROUND_PROPERTIES.map { |key| [key, 'inherit'] }.to_h)
+        return
       end
 
-      split_declaration('background', 'background-image', value.slice!(Regexp.union(CssParser::URI_RX, CssParser::RE_GRADIENT, /none/i)))
-      split_declaration('background', 'background-attachment', value.slice!(CssParser::RE_SCROLL_FIXED))
-      split_declaration('background', 'background-repeat', value.slice!(CssParser::RE_REPEAT))
-      split_declaration('background', 'background-color', value.slice!(CssParser::RE_COLOUR))
-      split_declaration('background', 'background-size', extract_background_size_from(value))
-      split_declaration('background', 'background-position', value.slice(CssParser::RE_BACKGROUND_POSITION))
+      replacement = {
+        'background-image' => value.slice!(Regexp.union(CssParser::URI_RX, CssParser::RE_GRADIENT, /none/i)),
+        'background-attachment' => value.slice!(CssParser::RE_SCROLL_FIXED),
+        'background-repeat' => value.slice!(CssParser::RE_REPEAT),
+        'background-color' => value.slice!(CssParser::RE_COLOUR),
+        'background-size' => extract_background_size_from(value),
+        'background-position' => value.slice!(CssParser::RE_BACKGROUND_POSITION)
+      }
 
-      declarations.delete('background')
+      @declarations.replace_declaration!('background', replacement)
     end
 
     def extract_background_size_from(value)
@@ -254,11 +291,13 @@ module CssParser
 
         value = declarations[k].value.dup
 
-        split_declaration(k, "#{k}-width", value.slice!(CssParser::RE_BORDER_UNITS))
-        split_declaration(k, "#{k}-color", value.slice!(CssParser::RE_COLOUR))
-        split_declaration(k, "#{k}-style", value.slice!(CssParser::RE_BORDER_STYLE))
+        replacement = {
+          "#{k}-width" => value.slice!(CssParser::RE_BORDER_UNITS),
+          "#{k}-color" => value.slice!(CssParser::RE_COLOUR),
+          "#{k}-style" => value.slice!(CssParser::RE_BORDER_STYLE)
+        }
 
-        declarations.delete(k)
+        @declarations.replace_declaration!(k, replacement)
       end
     end
 
@@ -293,12 +332,7 @@ module CssParser
 
         t, r, b, l = values
 
-        split_declaration(property, top, t)
-        split_declaration(property, right, r)
-        split_declaration(property, bottom, b)
-        split_declaration(property, left, l)
-
-        declarations.delete(property)
+        @declarations.replace_declaration!(property, {top => t, right => r, bottom => b, left => l})
       end
     end
 
@@ -316,8 +350,6 @@ module CssParser
 
       value = declarations['font'].value.dup
       value.gsub!(%r{/\s+}, '/') # handle spaces between font size and height shorthand (e.g. 14px/ 16px)
-      is_important = declarations['font'].important
-      order = declarations['font'].order
 
       in_fonts = false
 
@@ -352,9 +384,7 @@ module CssParser
         end
       end
 
-      font_props.each { |font_prop, font_val| declarations[font_prop] = Declarations::Value.new(font_val, important: is_important, order: order) }
-
-      declarations.delete('font')
+      @declarations.replace_declaration!('font', font_props)
     end
 
     # Convert shorthand list-style declarations (e.g. <tt>list-style: lower-alpha outside;</tt>)
@@ -367,16 +397,17 @@ module CssParser
       value = declarations['list-style'].value.dup
 
       if value =~ CssParser::RE_INHERIT
-        LIST_STYLE_PROPERTIES.each do |prop|
-          split_declaration('list-style', prop, 'inherit')
-        end
+        @declarations.replace_declaration!('list-style', LIST_STYLE_PROPERTIES.map { |key| [key, 'inherit'] }.to_h)
+        return
       end
 
-      split_declaration('list-style', 'list-style-type', value.slice!(CssParser::RE_LIST_STYLE_TYPE))
-      split_declaration('list-style', 'list-style-position', value.slice!(CssParser::RE_INSIDE_OUTSIDE))
-      split_declaration('list-style', 'list-style-image', value.slice!(Regexp.union(CssParser::URI_RX, /none/i)))
+      replacement = {
+        'list-style-type' => value.slice!(CssParser::RE_LIST_STYLE_TYPE),
+        'list-style-position' => value.slice!(CssParser::RE_INSIDE_OUTSIDE),
+        'list-style-image' => value.slice!(Regexp.union(CssParser::URI_RX, /none/i))
+      }
 
-      declarations.delete('list-style')
+      @declarations.replace_declaration!('list-style', replacement)
     end
 
     # Create shorthand declarations (e.g. +margin+ or +font+) whenever possible.
@@ -523,16 +554,6 @@ module CssParser
       return %i[top left] if values[:top] == values[:bottom]
 
       %i[top left bottom]
-    end
-
-    # utility method for re-assign shorthand elements to longhand versions
-    def split_declaration(src, dest, value) # :nodoc:
-      return unless value and not value.empty?
-
-      return if declarations.key?(dest) && declarations[dest].order > declarations[src].order
-
-      declarations[dest] = declarations[src].dup
-      declarations[dest].value = value
     end
 
     def parse_declarations!(block) # :nodoc:
