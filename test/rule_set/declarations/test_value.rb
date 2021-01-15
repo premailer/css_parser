@@ -63,26 +63,6 @@ class RuleSetProperyTest < Minitest::Test
         end
       end
     end
-
-    describe 'order' do
-      it 'zero when not set' do
-        assert_equal 0, CssParser::RuleSet::Declarations::Value.new('value').order
-      end
-
-      it 'returns proper value if set' do
-        assert_equal 42, CssParser::RuleSet::Declarations::Value.new('value', order: 42).order
-      end
-    end
-  end
-
-  describe 'order=' do
-    it 'sets order' do
-      property = CssParser::RuleSet::Declarations::Value.new('value')
-      assert_equal 0, property.order
-
-      property.order = 42
-      assert_equal 42, property.order
-    end
   end
 
   describe 'important=' do
@@ -102,6 +82,17 @@ class RuleSetProperyTest < Minitest::Test
 
       property.value = "  \tvalue\t another one  \t!important  \t  ;  "
       assert_equal "value\t another one", property.value
+    end
+
+    it 'sets importance' do
+      property = CssParser::RuleSet::Declarations::Value.new('foo')
+      assert_equal 'foo', property.value
+      assert_equal false, property.important
+
+      property.value = 'bar !important'
+
+      assert_equal 'bar', property.value
+      assert_equal true, property.important
     end
 
     it 'freezes the string' do
