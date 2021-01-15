@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'forwardable'
+
 module CssParser
   class RuleSet
     # Patterns for specificity calculations
@@ -22,29 +24,122 @@ module CssParser
       ['border-width', %w[border-top-width border-right-width border-bottom-width border-left-width]]
     ].freeze
 
-    class DeclarationValue
-      attr_reader :value
-      attr_accessor :important, :order
+    class Declarations
+      class Value
+        attr_reader :value
+        attr_accessor :important, :order
 
-      def initialize(value, important: nil, order: 0)
-        self.value = value
-        @important = important.nil? ? !value.match(CssParser::IMPORTANT_IN_PROPERTY_RX).nil? : important
-        @order = order
+        def initialize(value, important: nil, order: 0)
+          self.value = value
+          @important = important.nil? ? !value.match(CssParser::IMPORTANT_IN_PROPERTY_RX).nil? : important
+          @order = order
+        end
+
+        def value=(value)
+          value = value.to_s.sub(/\s*;\s*\Z/, '').gsub(CssParser::IMPORTANT_IN_PROPERTY_RX, '').strip
+          raise ArgumentError, 'value is empty' if value.empty?
+
+          @value = value.freeze
+        end
+
+        def to_s
+          return value unless important
+
+          "#{value} !important"
+        end
       end
 
-      def value=(value)
-        value = value.to_s.sub(/\s*;\s*\Z/, '').gsub(CssParser::IMPORTANT_IN_PROPERTY_RX, '').strip
-        raise ArgumentError, 'value is empty' if value.empty?
-
-        @value = value.freeze
+      def initialize(declarations = {})
+        @order = 0
+        @declarations = {}
+        declarations.each { |property, value| add_declaration!(property, value) }
       end
 
-      def to_s
-        return value unless important
+      # Add a CSS declaration
+      # @param [#to_s] property that should be added
+      # @param [Value, #to_s] value of the property
+      #
+      # @example
+      #   declarations['color'] = 'blue'
+      #
+      #   puts declarations['color']
+      #   => #<CssParser::RuleSet::Declarations::Value:0x000000000305c730 @important=false, @order=1, @value="blue">
+      #
+      # @example
+      #   declarations['margin'] = '0px auto !important'
+      #
+      #   puts declarations['margin']
+      #   => #<CssParser::RuleSet::Declarations::Value:0x00000000030c1838 @important=true, @order=2, @value="0px auto">
+      #
+      # If the property already exists its value will be over-written.
+      # If the value is empty - property will be deleted
+      def []=(property, value)
+        property = normalize_property(property)
 
-        "#{value} !important"
+        if value.is_a?(Value)
+          declarations[property] = value
+          return
+        end
+
+        if value.to_s.strip.empty?
+          delete(property)
+          return
+        end
+
+        declarations[property] = Value.new(value, order: @order += 1)
+      end
+      alias add_declaration! []=
+
+      def [](property)
+        declarations[normalize_property(property)]
+      end
+      alias get_value []
+
+      def key?(property)
+        declarations.key?(normalize_property(property))
+      end
+
+      def size
+        declarations.size
+      end
+
+      # Remove CSS declaration
+      # @param [#to_s] property property to be removed
+      #
+      # @example
+      #   declarations.delete('color')
+      def delete(property)
+        declarations.delete(normalize_property(property))
+      end
+      alias remove_declaration! delete
+
+      def each(&block)
+        declarations.sort_by { |_name, value| value.order }.each(&block)
+      end
+
+      def to_s(options = {})
+        str = declarations.reduce(String.new) do |memo, (prop, value)|
+          importance = options[:force_important] || value.important ? ' !important' : ''
+          memo << "#{prop}: #{value.value}#{importance}; "
+        end
+        # TODO: Clean-up regexp doesn't seem to work
+        str.gsub!(/^[\s^({)]+|[\n\r\f\t]*|\s+$/mx, '')
+        str.strip!
+        str
+      end
+
+    private
+
+      attr_reader :declarations
+
+      def normalize_property(property)
+        property = property.downcase
+        property.strip!
+        property
       end
     end
+
+    extend Forwardable
 
     # Array of selector strings.
     attr_reader :selectors
@@ -52,58 +147,28 @@ module CssParser
     # Integer with the specificity to use for this RuleSet.
     attr_accessor :specificity
 
+    # @!method add_declaration!
+    #   @see CssParser::RuleSet::Declarations#add_declaration!
+    # @!method delete
+    #   @see CssParser::RuleSet::Declarations#delete
+    def_delegators :declarations, :add_declaration!, :delete
+    alias []= add_declaration!
+    alias remove_declaration! delete
+
     def initialize(selectors, block, specificity = nil)
       @selectors = []
       @specificity = specificity
-      @order = 0
       parse_selectors!(selectors) if selectors
       parse_declarations!(block)
     end
 
     # Get the value of a property
     def get_value(property)
-      return '' unless property and not property.empty?
+      return '' unless declarations.key?(property)
 
-      property = property.downcase.strip
-      properties = declarations.each_with_object([]) do |(key, data), val|
-        # puts "COMPARING #{key} #{key.inspect} against #{property} #{property.inspect}"
-        val << data if key == property
-      end
-      properties.empty? ? '' : "#{properties.map(&:to_s).join('; ')};"
+      "#{declarations[property]};"
     end
     alias [] get_value
-
-    # Add a CSS declaration to the current RuleSet.
-    #
-    #  rule_set.add_declaration!('color', 'blue')
-    #
-    #  puts rule_set['color']
-    #  => 'blue;'
-    #
-    #  rule_set.add_declaration!('margin', '0px auto !important')
-    #
-    #  puts rule_set['margin']
-    #  => '0px auto !important;'
-    #
-    # If the property already exists its value will be over-written.
-    def add_declaration!(property, value)
-      if value.nil? or value.empty?
-        declarations.delete(property)
-        return
-      end
-
-      property = property.downcase
-      property.strip!
-      declarations[property] = DeclarationValue.new(value, order: @order += 1)
-    end
-    alias []= add_declaration!
-
-    # Remove CSS declaration from the current RuleSet.
-    #
-    #  rule_set.remove_declaration!('color')
-    def remove_declaration!(property)
-      declarations.delete(property)
-    end
 
     # Iterate through selectors.
     #
@@ -115,40 +180,29 @@ module CssParser
     #     ...
     #   end
     def each_selector(options = {}) # :yields: selector, declarations, specificity
-      declarations = declarations_to_s(options)
+      decs = declarations.to_s(options)
       if @specificity
-        @selectors.each { |sel| yield sel.strip, declarations, @specificity }
+        @selectors.each { |sel| yield sel.strip, decs, @specificity }
       else
-        @selectors.each { |sel| yield sel.strip, declarations, CssParser.calculate_specificity(sel) }
+        @selectors.each { |sel| yield sel.strip, decs, CssParser.calculate_specificity(sel) }
       end
     end
 
     # Iterate through declarations.
     def each_declaration # :yields: property, value, is_important
-      declarations.sort_by { |_, value| value.order }.each do |property_name, property|
-        yield property_name, property.value, property.important
+      declarations.each do |property_name, value|
+        yield property_name, value.value, value.important
       end
     end
 
     # Return all declarations as a string.
-    #--
-    # TODO: Clean-up regexp doesn't seem to work
-    #++
     def declarations_to_s(options = {})
-      str = String.new
-      each_declaration do |prop, val, is_important|
-        importance = options[:force_important] || is_important ? ' !important' : ''
-        str << "#{prop}: #{val}#{importance}; "
-      end
-      str.gsub!(/^[\s^({)]+|[\n\r\f\t]*|\s+$/mx, '')
-      str.strip!
-      str
+      declarations.to_s(options)
     end
 
     # Return the CSS rule set as a string.
     def to_s
-      decs = declarations_to_s
-      "#{@selectors.join(',')} { #{decs} }"
+      "#{@selectors.join(',')} { #{declarations} }"
     end
 
     # Split shorthand declarations (e.g. +margin+ or +font+) into their constituent parts.
@@ -298,7 +352,7 @@ module CssParser
         end
       end
 
-      font_props.each { |font_prop, font_val| declarations[font_prop] = DeclarationValue.new(font_val, important: is_important, order: order) }
+      font_props.each { |font_prop, font_val| declarations[font_prop] = Declarations::Value.new(font_val, important: is_important, order: order) }
 
       declarations.delete('font')
     end
@@ -352,7 +406,7 @@ module CssParser
         declarations.delete(property)
       end
 
-      declarations[shorthand_property] = DeclarationValue.new(values.join(' '))
+      declarations[shorthand_property] = values.join(' ')
     end
 
     # Looks for long format CSS background properties (e.g. <tt>background-color</tt>) and
@@ -366,7 +420,7 @@ module CssParser
       # http://www.w3schools.com/cssref/css3_pr_background.asp
       if declarations.key?('background-size') and not declarations['background-size'].important
         unless declarations.key?('background-position')
-          declarations['background-position'] = DeclarationValue.new('0% 0%')
+          declarations['background-position'] = '0% 0%'
         end
 
         declarations['background-size'].value = "/ #{declarations['background-size'].value}"
@@ -394,7 +448,7 @@ module CssParser
 
       return if values.empty?
 
-      declarations['border'] = DeclarationValue.new(values.join(' '))
+      declarations['border'] = values.join(' ')
     end
 
     # Looks for long format CSS dimensional properties (margin, padding, border-color, border-style and border-width)
@@ -413,7 +467,7 @@ module CssParser
         next if values.size != dimensions.size
 
         new_value = values.values_at(*compute_dimensions_shorthand(values)).join(' ').strip
-        declarations[property] = DeclarationValue.new(new_value) unless new_value.empty?
+        declarations[property] = new_value unless new_value.empty?
 
         # Delete the longhand values
         dimensions.each { |d| declarations.delete(d) }
@@ -441,7 +495,7 @@ module CssParser
 
       new_value << ' ' << declarations['font-family'].value
 
-      declarations['font'] = DeclarationValue.new(new_value.gsub(/\s+/, ' '))
+      declarations['font'] = new_value.gsub(/\s+/, ' ')
 
       FONT_STYLE_PROPERTIES.each { |prop| declarations.delete(prop) }
     end
@@ -482,7 +536,7 @@ module CssParser
     end
 
     def parse_declarations!(block) # :nodoc:
-      self.declarations = {}
+      self.declarations = Declarations.new
 
       return unless block
 
