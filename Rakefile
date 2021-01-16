@@ -14,28 +14,27 @@ RuboCop::RakeTask.new
 
 desc 'Run a performance evaluation.'
 task :benchmark do
-  require 'benchmark'
   require 'css_parser'
 
-  fixtures_dir = Pathname.new(__dir__).join('/test/fixtures')
+  require 'benchmark/ips'
+  require 'memory_profiler'
 
-  # parse the import1 file to benchmark file loading
-  time = Benchmark.measure do
-    10_000.times do
-      parser = CssParser::Parser.new
-      parser.load_file!(fixtures_dir.join('import1.css'))
-    end
-  end
-  puts "Parsing 'import1.css' 10 000 times took #{time.real.round(4)} seconds"
+  fixtures_dir = Pathname.new(__dir__).join('test/fixtures')
+  import_css_path = fixtures_dir.join('import1.css').to_s.freeze
+  complex_css_path = fixtures_dir.join('complex.css').to_s.freeze
 
-  # parse the import1 file to benchmark rule parsing
-  time = Benchmark.measure do
-    1000.times do
-      parser = CssParser::Parser.new
-      parser.load_file!(fixtures_dir.join('complex.css'))
-    end
+  Benchmark.ips do |x|
+    x.report('import1.css loading') { CssParser::Parser.new.load_file!(import_css_path) }
+    x.report('complex.css loading') { CssParser::Parser.new.load_file!(complex_css_path) }
   end
-  puts "Parsing 'complex.css' 1 000 times took #{time.real.round(4)} seconds"
+
+  puts
+
+  report = MemoryProfiler.report { CssParser::Parser.new.load_file!(import_css_path) }
+  puts "Loading `import1.css` allocated #{report.total_allocated} objects, #{report.total_allocated_memsize / 1024} KiB"
+
+  report = MemoryProfiler.report { CssParser::Parser.new.load_file!(complex_css_path) }
+  puts "Loading `complex.css` allocated #{report.total_allocated} objects, #{report.total_allocated_memsize / 1024} KiB"
 end
 
 task default: %i[rubocop test]

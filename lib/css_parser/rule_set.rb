@@ -22,6 +22,30 @@ module CssParser
       ['border-width', %w[border-top-width border-right-width border-bottom-width border-left-width]]
     ].freeze
 
+    class DeclarationValue
+      attr_reader :value
+      attr_accessor :important, :order
+
+      def initialize(value, important: nil, order: 0)
+        self.value = value
+        @important = important.nil? ? !value.match(CssParser::IMPORTANT_IN_PROPERTY_RX).nil? : important
+        @order = order
+      end
+
+      def value=(value)
+        value = value.to_s.sub(/\s*;\s*\Z/, '').gsub(CssParser::IMPORTANT_IN_PROPERTY_RX, '').strip
+        raise ArgumentError, 'value is empty' if value.empty?
+
+        @value = value.freeze
+      end
+
+      def to_s
+        return value unless important
+
+        "#{value} !important"
+      end
+    end
+
     # Array of selector strings.
     attr_reader :selectors
 
@@ -42,12 +66,11 @@ module CssParser
       return '' unless property and not property.empty?
 
       property = property.downcase.strip
-      properties = @declarations.each_with_object(String.new) do |(key, data), val|
+      properties = @declarations.each_with_object([]) do |(key, data), val|
         # puts "COMPARING #{key} #{key.inspect} against #{property} #{property.inspect}"
-        importance = data[:is_important] ? ' !important' : ''
-        val << "#{data[:value]}#{importance}; " if key.downcase.strip == property
+        val << data if key == property
       end
-      properties ? properties.strip : ''
+      properties.empty? ? '' : "#{properties.map(&:to_s).join('; ')};"
     end
     alias [] get_value
 
@@ -70,15 +93,9 @@ module CssParser
         return
       end
 
-      value = value.gsub(/;\Z/, '')
-      is_important = !value.match(CssParser::IMPORTANT_IN_PROPERTY_RX).nil?
-      value = value.gsub(CssParser::IMPORTANT_IN_PROPERTY_RX, '')
       property = property.downcase
       property.strip!
-      # puts "SAVING #{property}  #{value} #{is_important.inspect}"
-      @declarations[property] = {
-        value: value, is_important: is_important, order: @order += 1
-      }
+      @declarations[property] = DeclarationValue.new(value, order: @order += 1)
     end
     alias []= add_declaration!
 
@@ -109,10 +126,8 @@ module CssParser
 
     # Iterate through declarations.
     def each_declaration # :yields: property, value, is_important
-      decs = @declarations.sort { |a, b| a[1][:order].nil? || b[1][:order].nil? ? 0 : a[1][:order] <=> b[1][:order] }
-      decs.each do |property, data|
-        value = data[:value]
-        yield property.downcase.strip, value.strip, data[:is_important]
+      @declarations.sort_by { |_, value| value.order }.each do |property_name, property|
+        yield property_name, property.value, property.important
       end
     end
 
@@ -154,7 +169,7 @@ module CssParser
     def expand_background_shorthand! # :nodoc:
       return unless @declarations.key?('background')
 
-      value = @declarations['background'][:value]
+      value = @declarations['background'].value.dup
 
       if value =~ CssParser::RE_INHERIT
         BACKGROUND_PROPERTIES.each do |prop|
@@ -184,7 +199,7 @@ module CssParser
       BORDER_PROPERTIES.each do |k|
         next unless @declarations.key?(k)
 
-        value = @declarations[k][:value]
+        value = @declarations[k].value.dup
 
         split_declaration(k, "#{k}-width", value.slice!(CssParser::RE_BORDER_UNITS))
         split_declaration(k, "#{k}-color", value.slice!(CssParser::RE_COLOUR))
@@ -200,7 +215,7 @@ module CssParser
       DIMENSIONS.each do |property, (top, right, bottom, left)|
         next unless @declarations.key?(property)
 
-        value = @declarations[property][:value]
+        value = @declarations[property].value.dup
 
         # RGB and HSL values in borders are the only units that can have spaces (within params).
         # We cheat a bit here by stripping spaces after commas in RGB and HSL values so that we
@@ -246,10 +261,10 @@ module CssParser
         font_props[prop] = 'normal'
       end
 
-      value = @declarations['font'][:value]
+      value = @declarations['font'].value.dup
       value.gsub!(%r{/\s+}, '/') # handle spaces between font size and height shorthand (e.g. 14px/ 16px)
-      is_important = @declarations['font'][:is_important]
-      order = @declarations['font'][:order]
+      is_important = @declarations['font'].important
+      order = @declarations['font'].order
 
       in_fonts = false
 
@@ -284,7 +299,7 @@ module CssParser
         end
       end
 
-      font_props.each { |font_prop, font_val| @declarations[font_prop] = {value: font_val, is_important: is_important, order: order} }
+      font_props.each { |font_prop, font_val| @declarations[font_prop] = DeclarationValue.new(font_val, important: is_important, order: order) }
 
       @declarations.delete('font')
     end
@@ -296,7 +311,7 @@ module CssParser
     def expand_list_style_shorthand! # :nodoc:
       return unless @declarations.key?('list-style')
 
-      value = @declarations['list-style'][:value]
+      value = @declarations['list-style'].value.dup
 
       if value =~ CssParser::RE_INHERIT
         LIST_STYLE_PROPERTIES.each do |prop|
@@ -326,8 +341,8 @@ module CssParser
       values = []
       properties_to_delete = []
       properties.each do |property|
-        if @declarations.key?(property) and not @declarations[property][:is_important]
-          values << @declarations[property][:value]
+        if @declarations.key?(property) and not @declarations[property].important
+          values << @declarations[property].value
           properties_to_delete << property
         end
       end
@@ -338,7 +353,7 @@ module CssParser
         @declarations.delete(property)
       end
 
-      @declarations[shorthand_property] = {value: values.join(' ')}
+      @declarations[shorthand_property] = DeclarationValue.new(values.join(' '))
     end
 
     # Looks for long format CSS background properties (e.g. <tt>background-color</tt>) and
@@ -350,12 +365,12 @@ module CssParser
       # background-position by preceding it with a backslash. In this case we also need to
       # have a background-position property, so we set it if it's missing.
       # http://www.w3schools.com/cssref/css3_pr_background.asp
-      if @declarations.key?('background-size') and not @declarations['background-size'][:is_important]
+      if @declarations.key?('background-size') and not @declarations['background-size'].important
         unless @declarations.key?('background-position')
-          @declarations['background-position'] = {value: '0% 0%'}
+          @declarations['background-position'] = DeclarationValue.new('0% 0%')
         end
 
-        @declarations['background-size'][:value] = "/ #{@declarations['background-size'][:value]}"
+        @declarations['background-size'].value = "/ #{@declarations['background-size'].value}"
       end
 
       create_shorthand_properties! BACKGROUND_PROPERTIES, 'background'
@@ -369,18 +384,18 @@ module CssParser
       values = []
 
       BORDER_STYLE_PROPERTIES.each do |property|
-        next unless @declarations.key?(property) and not @declarations[property][:is_important]
+        next unless @declarations.key?(property) and not @declarations[property].important
         # can't merge if any value contains a space (i.e. has multiple values)
         # we temporarily remove any spaces after commas for the check (inside rgba, etc...)
-        return nil if @declarations[property][:value].gsub(/,\s/, ',').strip =~ /\s/
+        return nil if @declarations[property].value.gsub(/,\s/, ',').strip =~ /\s/
 
-        values << @declarations[property][:value]
+        values << @declarations[property].value
         @declarations.delete(property)
       end
 
       return if values.empty?
 
-      @declarations['border'] = {value: values.join(' ')}
+      @declarations['border'] = DeclarationValue.new(values.join(' '))
     end
 
     # Looks for long format CSS dimensional properties (margin, padding, border-color, border-style and border-width)
@@ -392,14 +407,14 @@ module CssParser
         values = %i[top right bottom left].each_with_index.with_object({}) do |(side, index), result|
           next unless @declarations.key?(dimensions[index])
 
-          result[side] = @declarations[dimensions[index]][:value].downcase.strip
+          result[side] = @declarations[dimensions[index]].value
         end
 
         # All four dimensions must be present
         next if values.size != dimensions.size
 
         new_value = values.values_at(*compute_dimensions_shorthand(values)).join(' ').strip
-        @declarations[property] = {value: new_value} unless new_value.empty?
+        @declarations[property] = DeclarationValue.new(new_value) unless new_value.empty?
 
         # Delete the longhand values
         dimensions.each { |d| @declarations.delete(d) }
@@ -414,20 +429,20 @@ module CssParser
 
       new_value = String.new
       ['font-style', 'font-variant', 'font-weight'].each do |property|
-        unless @declarations[property][:value] == 'normal'
-          new_value << @declarations[property][:value] << ' '
+        unless @declarations[property].value == 'normal'
+          new_value << @declarations[property].value << ' '
         end
       end
 
-      new_value << @declarations['font-size'][:value]
+      new_value << @declarations['font-size'].value
 
-      unless @declarations['line-height'][:value] == 'normal'
-        new_value << '/' << @declarations['line-height'][:value]
+      unless @declarations['line-height'].value == 'normal'
+        new_value << '/' << @declarations['line-height'].value
       end
 
-      new_value << ' ' << @declarations['font-family'][:value]
+      new_value << ' ' << @declarations['font-family'].value
 
-      @declarations['font'] = {value: new_value.gsub(/\s+/, ' ').strip}
+      @declarations['font'] = DeclarationValue.new(new_value.gsub(/\s+/, ' '))
 
       FONT_STYLE_PROPERTIES.each { |prop| @declarations.delete(prop) }
     end
@@ -459,19 +474,10 @@ module CssParser
     def split_declaration(src, dest, value) # :nodoc:
       return unless value and not value.empty?
 
-      if @declarations.key?(dest)
-        # puts "dest #{dest} already exists"
-
-        if @declarations[src][:order].nil? || (!@declarations[dest][:order].nil? && @declarations[dest][:order] > @declarations[src][:order])
-          # puts "skipping #{dest}:#{v} due to order "
-          return
-        end
-
-        @declarations[dest] = {}
-      end
+      return if @declarations.key?(dest) && @declarations[dest].order > @declarations[src].order
 
       @declarations[dest] = @declarations[src].dup
-      @declarations[dest][:value] = value.to_s.strip
+      @declarations[dest].value = value
     end
 
     def parse_declarations!(block) # :nodoc:
