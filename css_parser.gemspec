@@ -19,8 +19,10 @@ Gem::Specification.new name, CssParser::VERSION do |s|
 
   s.add_runtime_dependency 'addressable'
 
+  s.add_development_dependency 'benchmark-ips'
   s.add_development_dependency 'bump'
   s.add_development_dependency 'maxitest'
+  s.add_development_dependency 'memory_profiler'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rubocop', '~> 1.8'
   s.add_development_dependency 'rubocop-rake'

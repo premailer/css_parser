@@ -10,9 +10,11 @@ GEM
     addressable (2.7.0)
       public_suffix (>= 2.0.2, < 5.0)
     ast (2.4.1)
+    benchmark-ips (2.8.4)
     bump (0.10.0)
     maxitest (3.6.0)
       minitest (>= 5.0.0, < 5.14.0)
+    memory_profiler (1.0.0)
     minitest (5.12.0)
     parallel (1.20.1)
     parser (3.0.0.0)
@@ -40,12 +42,15 @@ GEM
     webrick (1.7.0)
 
 PLATFORMS
+  java
   ruby
 
 DEPENDENCIES
+  benchmark-ips
   bump
   css_parser!
   maxitest
+  memory_profiler
   rake
   rubocop (~> 1.8)
   rubocop-rake
