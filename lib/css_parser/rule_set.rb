@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'forwardable'
+
 module CssParser
   class RuleSet
     # Patterns for specificity calculations
@@ -22,29 +24,122 @@ module CssParser
       ['border-width', %w[border-top-width border-right-width border-bottom-width border-left-width]]
     ].freeze
 
-    class DeclarationValue
-      attr_reader :value
-      attr_accessor :important, :order
+    class Declarations
+      class Value
+        attr_reader :value
+        attr_accessor :important, :order
 
-      def initialize(value, important: nil, order: 0)
-        self.value = value
-        @important = important.nil? ? !value.match(CssParser::IMPORTANT_IN_PROPERTY_RX).nil? : important
-        @order = order
+        def initialize(value, important: nil, order: 0)
+          self.value = value
+          @important = important.nil? ? !value.match(CssParser::IMPORTANT_IN_PROPERTY_RX).nil? : important
+          @order = order
+        end
+
+        def value=(value)
+          value = value.to_s.sub(/\s*;\s*\Z/, '').gsub(CssParser::IMPORTANT_IN_PROPERTY_RX, '').strip
+          raise ArgumentError, 'value is empty' if value.empty?
+
+          @value = value.freeze
+        end
+
+        def to_s
+          return value unless important
+
+          "#{value} !important"
+        end
       end
 
-      def value=(value)
-        value = value.to_s.sub(/\s*;\s*\Z/, '').gsub(CssParser::IMPORTANT_IN_PROPERTY_RX, '').strip
-        raise ArgumentError, 'value is empty' if value.empty?
-
-        @value = value.freeze
+      def initialize(declarations = {})
+        @order = 0
+        @declarations = {}
+        declarations.each { |property, value| add_declaration!(property, value) }
       end
 
-      def to_s
-        return value unless important
+      # Add a CSS declaration
+      # @param [#to_s] property that should be added
+      # @param [Value, #to_s] value of the property
+      #
+      # @example
+      #   declarations['color'] = 'blue'
+      #
+      #   puts declarations['color']
+      #   => #<CssParser::RuleSet::Declarations::Value:0x000000000305c730 @important=false, @order=1, @value="blue">
+      #
+      # @example
+      #   declarations['margin'] = '0px auto !important'
+      #
+      #   puts declarations['margin']
+      #   => #<CssParser::RuleSet::Declarations::Value:0x00000000030c1838 @important=true, @order=2, @value="0px auto">
+      #
+      # If the property already exists its value will be over-written.
+      # If the value is empty - property will be deleted
+      def []=(property, value)
+        property = normalize_property(property)
 
-        "#{value} !important"
+        if value.is_a?(Value)
+          declarations[property] = value
+          return
+        end
+
+        if value.to_s.strip.empty?
+          delete(property)
+          return
+        end
+
+        declarations[property] = Value.new(value, order: @order += 1)
+      end
+      alias add_declaration! []=
+
+      def [](property)
+        declarations[normalize_property(property)]
+      end
+      alias get_value []
+
+      def key?(property)
+        declarations.key?(normalize_property(property))
+      end
+
+      def size
+        declarations.size
+      end
+
+      # Remove CSS declaration
+      # @param [#to_s] property property to be removed
+      #
+      # @example
+      #   declarations.delete('color')
+      def delete(property)
+        declarations.delete(normalize_property(property))
+      end
+      alias remove_declaration! delete
+
+      def each(&block)
+        declarations.sort_by { |_name, value| value.order }.each(&block)
+      end
+
+      def to_s(options = {})
+        str = declarations.reduce(String.new) do |memo, (prop, value)|
+          importance = options[:force_important] || value.important ? ' !important' : ''
+          memo << "#{prop}: #{value.value}#{importance}; "
+        end
+        # TODO: Clean-up regexp doesn't seem to work
+        str.gsub!(/^[\s^({)]+|[\n\r\f\t]*|\s+$/mx, '')
+        str.strip!
+        str
+      end
+
+    private
+
+      attr_reader :declarations
+
+      def normalize_property(property)
+        property = property.downcase
+        property.strip!
+        property
       end
     end
+
+    extend Forwardable
 
     # Array of selector strings.
     attr_reader :selectors
@@ -52,59 +147,28 @@ module CssParser
     # Integer with the specificity to use for this RuleSet.
     attr_accessor :specificity
 
+    # @!method add_declaration!
+    #   @see CssParser::RuleSet::Declarations#add_declaration!
+    # @!method delete
+    #   @see CssParser::RuleSet::Declarations#delete
+    def_delegators :declarations, :add_declaration!, :delete
+    alias []= add_declaration!
+    alias remove_declaration! delete
+
     def initialize(selectors, block, specificity = nil)
       @selectors = []
       @specificity = specificity
-      @declarations = {}
-      @order = 0
       parse_selectors!(selectors) if selectors
       parse_declarations!(block)
     end
 
     # Get the value of a property
     def get_value(property)
-      return '' unless property and not property.empty?
+      return '' unless declarations.key?(property)
 
-      property = property.downcase.strip
-      properties = @declarations.each_with_object([]) do |(key, data), val|
-        # puts "COMPARING #{key} #{key.inspect} against #{property} #{property.inspect}"
-        val << data if key == property
-      end
-      properties.empty? ? '' : "#{properties.map(&:to_s).join('; ')};"
+      "#{declarations[property]};"
     end
     alias [] get_value
-
-    # Add a CSS declaration to the current RuleSet.
-    #
-    #  rule_set.add_declaration!('color', 'blue')
-    #
-    #  puts rule_set['color']
-    #  => 'blue;'
-    #
-    #  rule_set.add_declaration!('margin', '0px auto !important')
-    #
-    #  puts rule_set['margin']
-    #  => '0px auto !important;'
-    #
-    # If the property already exists its value will be over-written.
-    def add_declaration!(property, value)
-      if value.nil? or value.empty?
-        @declarations.delete(property)
-        return
-      end
-
-      property = property.downcase
-      property.strip!
-      @declarations[property] = DeclarationValue.new(value, order: @order += 1)
-    end
-    alias []= add_declaration!
-
-    # Remove CSS declaration from the current RuleSet.
-    #
-    #  rule_set.remove_declaration!('color')
-    def remove_declaration!(property)
-      @declarations.delete(property)
-    end
 
     # Iterate through selectors.
     #
@@ -116,40 +180,29 @@ module CssParser
     #     ...
     #   end
     def each_selector(options = {}) # :yields: selector, declarations, specificity
-      declarations = declarations_to_s(options)
+      decs = declarations.to_s(options)
       if @specificity
-        @selectors.each { |sel| yield sel.strip, declarations, @specificity }
+        @selectors.each { |sel| yield sel.strip, decs, @specificity }
       else
-        @selectors.each { |sel| yield sel.strip, declarations, CssParser.calculate_specificity(sel) }
+        @selectors.each { |sel| yield sel.strip, decs, CssParser.calculate_specificity(sel) }
       end
     end
 
     # Iterate through declarations.
     def each_declaration # :yields: property, value, is_important
-      @declarations.sort_by { |_, value| value.order }.each do |property_name, property|
-        yield property_name, property.value, property.important
+      declarations.each do |property_name, value|
+        yield property_name, value.value, value.important
       end
     end
 
     # Return all declarations as a string.
-    #--
-    # TODO: Clean-up regexp doesn't seem to work
-    #++
     def declarations_to_s(options = {})
-      str = String.new
-      each_declaration do |prop, val, is_important|
-        importance = options[:force_important] || is_important ? ' !important' : ''
-        str << "#{prop}: #{val}#{importance}; "
-      end
-      str.gsub!(/^[\s^({)]+|[\n\r\f\t]*|\s+$/mx, '')
-      str.strip!
-      str
+      declarations.to_s(options)
     end
 
     # Return the CSS rule set as a string.
     def to_s
-      decs = declarations_to_s
-      "#{@selectors.join(',')} { #{decs} }"
+      "#{@selectors.join(',')} { #{declarations} }"
     end
 
     # Split shorthand declarations (e.g. +margin+ or +font+) into their constituent parts.
@@ -167,9 +220,9 @@ module CssParser
     #
     # See http://www.w3.org/TR/CSS21/colors.html#propdef-background
     def expand_background_shorthand! # :nodoc:
-      return unless @declarations.key?('background')
+      return unless declarations.key?('background')
 
-      value = @declarations['background'].value.dup
+      value = declarations['background'].value.dup
 
       if value =~ CssParser::RE_INHERIT
         BACKGROUND_PROPERTIES.each do |prop|
@@ -184,7 +237,7 @@ module CssParser
       split_declaration('background', 'background-size', extract_background_size_from(value))
       split_declaration('background', 'background-position', value.slice(CssParser::RE_BACKGROUND_POSITION))
 
-      @declarations.delete('background')
+      declarations.delete('background')
     end
 
     def extract_background_size_from(value)
@@ -197,15 +250,15 @@ module CssParser
     # Additional splitting happens in expand_dimensions_shorthand!
     def expand_border_shorthand! # :nodoc:
       BORDER_PROPERTIES.each do |k|
-        next unless @declarations.key?(k)
+        next unless declarations.key?(k)
 
-        value = @declarations[k].value.dup
+        value = declarations[k].value.dup
 
         split_declaration(k, "#{k}-width", value.slice!(CssParser::RE_BORDER_UNITS))
         split_declaration(k, "#{k}-color", value.slice!(CssParser::RE_COLOUR))
         split_declaration(k, "#{k}-style", value.slice!(CssParser::RE_BORDER_STYLE))
 
-        @declarations.delete(k)
+        declarations.delete(k)
       end
     end
 
@@ -213,9 +266,9 @@ module CssParser
     # into their constituent parts.  Handles margin, padding, border-color, border-style and border-width.
     def expand_dimensions_shorthand! # :nodoc:
       DIMENSIONS.each do |property, (top, right, bottom, left)|
-        next unless @declarations.key?(property)
+        next unless declarations.key?(property)
 
-        value = @declarations[property].value.dup
+        value = declarations[property].value.dup
 
         # RGB and HSL values in borders are the only units that can have spaces (within params).
         # We cheat a bit here by stripping spaces after commas in RGB and HSL values so that we
@@ -245,14 +298,14 @@ module CssParser
         split_declaration(property, bottom, b)
         split_declaration(property, left, l)
 
-        @declarations.delete(property)
+        declarations.delete(property)
       end
     end
 
     # Convert shorthand font declarations (e.g. <tt>font: 300 italic 11px/14px verdana, helvetica, sans-serif;</tt>)
     # into their constituent parts.
     def expand_font_shorthand! # :nodoc:
-      return unless @declarations.key?('font')
+      return unless declarations.key?('font')
 
       font_props = {}
 
@@ -261,10 +314,10 @@ module CssParser
         font_props[prop] = 'normal'
       end
 
-      value = @declarations['font'].value.dup
+      value = declarations['font'].value.dup
       value.gsub!(%r{/\s+}, '/') # handle spaces between font size and height shorthand (e.g. 14px/ 16px)
-      is_important = @declarations['font'].important
-      order = @declarations['font'].order
+      is_important = declarations['font'].important
+      order = declarations['font'].order
 
       in_fonts = false
 
@@ -299,9 +352,9 @@ module CssParser
         end
       end
 
-      font_props.each { |font_prop, font_val| @declarations[font_prop] = DeclarationValue.new(font_val, important: is_important, order: order) }
+      font_props.each { |font_prop, font_val| declarations[font_prop] = Declarations::Value.new(font_val, important: is_important, order: order) }
 
-      @declarations.delete('font')
+      declarations.delete('font')
     end
 
     # Convert shorthand list-style declarations (e.g. <tt>list-style: lower-alpha outside;</tt>)
@@ -309,9 +362,9 @@ module CssParser
     #
     # See http://www.w3.org/TR/CSS21/generate.html#lists
     def expand_list_style_shorthand! # :nodoc:
-      return unless @declarations.key?('list-style')
+      return unless declarations.key?('list-style')
 
-      value = @declarations['list-style'].value.dup
+      value = declarations['list-style'].value.dup
 
       if value =~ CssParser::RE_INHERIT
         LIST_STYLE_PROPERTIES.each do |prop|
@@ -323,7 +376,7 @@ module CssParser
       split_declaration('list-style', 'list-style-position', value.slice!(CssParser::RE_INSIDE_OUTSIDE))
       split_declaration('list-style', 'list-style-image', value.slice!(Regexp.union(CssParser::URI_RX, /none/i)))
 
-      @declarations.delete('list-style')
+      declarations.delete('list-style')
     end
 
     # Create shorthand declarations (e.g. +margin+ or +font+) whenever possible.
@@ -341,8 +394,8 @@ module CssParser
       values = []
       properties_to_delete = []
       properties.each do |property|
-        if @declarations.key?(property) and not @declarations[property].important
-          values << @declarations[property].value
+        if declarations.key?(property) and not declarations[property].important
+          values << declarations[property].value
           properties_to_delete << property
         end
       end
@@ -350,10 +403,10 @@ module CssParser
       return if values.length <= 1
 
       properties_to_delete.each do |property|
-        @declarations.delete(property)
+        declarations.delete(property)
       end
 
-      @declarations[shorthand_property] = DeclarationValue.new(values.join(' '))
+      declarations[shorthand_property] = values.join(' ')
     end
 
     # Looks for long format CSS background properties (e.g. <tt>background-color</tt>) and
@@ -365,12 +418,12 @@ module CssParser
       # background-position by preceding it with a backslash. In this case we also need to
       # have a background-position property, so we set it if it's missing.
       # http://www.w3schools.com/cssref/css3_pr_background.asp
-      if @declarations.key?('background-size') and not @declarations['background-size'].important
-        unless @declarations.key?('background-position')
-          @declarations['background-position'] = DeclarationValue.new('0% 0%')
+      if declarations.key?('background-size') and not declarations['background-size'].important
+        unless declarations.key?('background-position')
+          declarations['background-position'] = '0% 0%'
         end
 
-        @declarations['background-size'].value = "/ #{@declarations['background-size'].value}"
+        declarations['background-size'].value = "/ #{declarations['background-size'].value}"
       end
 
       create_shorthand_properties! BACKGROUND_PROPERTIES, 'background'
@@ -384,40 +437,40 @@ module CssParser
       values = []
 
       BORDER_STYLE_PROPERTIES.each do |property|
-        next unless @declarations.key?(property) and not @declarations[property].important
+        next unless declarations.key?(property) and not declarations[property].important
         # can't merge if any value contains a space (i.e. has multiple values)
         # we temporarily remove any spaces after commas for the check (inside rgba, etc...)
-        return nil if @declarations[property].value.gsub(/,\s/, ',').strip =~ /\s/
+        return nil if declarations[property].value.gsub(/,\s/, ',').strip =~ /\s/
 
-        values << @declarations[property].value
-        @declarations.delete(property)
+        values << declarations[property].value
+        declarations.delete(property)
       end
 
       return if values.empty?
 
-      @declarations['border'] = DeclarationValue.new(values.join(' '))
+      declarations['border'] = values.join(' ')
     end
 
     # Looks for long format CSS dimensional properties (margin, padding, border-color, border-style and border-width)
     # and converts them into shorthand CSS properties.
     def create_dimensions_shorthand! # :nodoc:
-      return if @declarations.size < NUMBER_OF_DIMENSIONS
+      return if declarations.size < NUMBER_OF_DIMENSIONS
 
       DIMENSIONS.each do |property, dimensions|
         values = %i[top right bottom left].each_with_index.with_object({}) do |(side, index), result|
-          next unless @declarations.key?(dimensions[index])
+          next unless declarations.key?(dimensions[index])
 
-          result[side] = @declarations[dimensions[index]].value
+          result[side] = declarations[dimensions[index]].value
         end
 
         # All four dimensions must be present
         next if values.size != dimensions.size
 
         new_value = values.values_at(*compute_dimensions_shorthand(values)).join(' ').strip
-        @declarations[property] = DeclarationValue.new(new_value) unless new_value.empty?
+        declarations[property] = new_value unless new_value.empty?
 
         # Delete the longhand values
-        dimensions.each { |d| @declarations.delete(d) }
+        dimensions.each { |d| declarations.delete(d) }
       end
     end
 
@@ -425,26 +478,26 @@ module CssParser
     # tries to convert them into a shorthand CSS <tt>font</tt> property.  All
     # font properties must be present in order to create a shorthand declaration.
     def create_font_shorthand! # :nodoc:
-      return unless FONT_STYLE_PROPERTIES.all? { |prop| @declarations.key?(prop) }
+      return unless FONT_STYLE_PROPERTIES.all? { |prop| declarations.key?(prop) }
 
       new_value = String.new
       ['font-style', 'font-variant', 'font-weight'].each do |property|
-        unless @declarations[property].value == 'normal'
-          new_value << @declarations[property].value << ' '
+        unless declarations[property].value == 'normal'
+          new_value << declarations[property].value << ' '
         end
       end
 
-      new_value << @declarations['font-size'].value
+      new_value << declarations['font-size'].value
 
-      unless @declarations['line-height'].value == 'normal'
-        new_value << '/' << @declarations['line-height'].value
+      unless declarations['line-height'].value == 'normal'
+        new_value << '/' << declarations['line-height'].value
       end
 
-      new_value << ' ' << @declarations['font-family'].value
+      new_value << ' ' << declarations['font-family'].value
 
-      @declarations['font'] = DeclarationValue.new(new_value.gsub(/\s+/, ' '))
+      declarations['font'] = new_value.gsub(/\s+/, ' ')
 
-      FONT_STYLE_PROPERTIES.each { |prop| @declarations.delete(prop) }
+      FONT_STYLE_PROPERTIES.each { |prop| declarations.delete(prop) }
     end
 
     # Looks for long format CSS list-style properties (e.g. <tt>list-style-type</tt>) and
@@ -456,6 +509,8 @@ module CssParser
     end
 
   private
+
+    attr_accessor :declarations
 
     def compute_dimensions_shorthand(values)
       # All four sides are equal, returning single value
@@ -474,14 +529,14 @@ module CssParser
     def split_declaration(src, dest, value) # :nodoc:
       return unless value and not value.empty?
 
-      return if @declarations.key?(dest) && @declarations[dest].order > @declarations[src].order
+      return if declarations.key?(dest) && declarations[dest].order > declarations[src].order
 
-      @declarations[dest] = @declarations[src].dup
-      @declarations[dest].value = value
+      declarations[dest] = declarations[src].dup
+      declarations[dest].value = value
     end
 
     def parse_declarations!(block) # :nodoc:
-      @declarations = {}
+      self.declarations = Declarations.new
 
       return unless block
 
