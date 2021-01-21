@@ -7,6 +7,7 @@ require 'rubocop/rake_task'
 require 'bump/tasks'
 
 Rake::TestTask.new do |test|
+  test.pattern = 'test/**/test*.rb'
   test.verbose = true
 end
 

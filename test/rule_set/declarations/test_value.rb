@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
+require_relative '../../test_helper'
 require 'minitest/spec'
 
 class RuleSetProperyTest < Minitest::Test
@@ -119,6 +119,52 @@ class RuleSetProperyTest < Minitest::Test
 
     it 'returns value with important annotation if important' do
       assert_equal 'value !important', CssParser::RuleSet::Declarations::Value.new('value', important: true).to_s
+    end
+  end
+
+  describe '#==' do
+    it 'returns true if value & importance are the same' do
+      property = CssParser::RuleSet::Declarations::Value.new('value', important: true)
+      other = CssParser::RuleSet::Declarations::Value.new('value', important: true)
+
+      assert_equal property, other
+    end
+
+    it 'returns false if value is not a Declarations::Value' do
+      property = CssParser::RuleSet::Declarations::Value.new('value', important: true)
+      other = OpenStruct.new(value: 'value', important: true)
+
+      refute_equal other, property
+    end
+
+    it 'returns true if value is a Declarations::Value subclass and value are equal' do
+      property = CssParser::RuleSet::Declarations::Value.new('value', important: true)
+      other_class = Class.new(CssParser::RuleSet::Declarations::Value)
+      other = other_class.new('value', important: true)
+
+      assert_equal property, other
+    end
+
+    it 'returns false if value is a Declarations::Value subclass and value are not equal' do
+      property = CssParser::RuleSet::Declarations::Value.new('value', important: true)
+      other_class = Class.new(CssParser::RuleSet::Declarations::Value)
+      other = other_class.new('other value', important: true)
+
+      refute_equal other, property
+    end
+
+    it 'returns false if value is different' do
+      property = CssParser::RuleSet::Declarations::Value.new('value', important: true)
+      other = CssParser::RuleSet::Declarations::Value.new('other value', important: true)
+
+      refute_equal property, other
+    end
+
+    it 'returns false if importance is different' do
+      property = CssParser::RuleSet::Declarations::Value.new('value', important: true)
+      other = CssParser::RuleSet::Declarations::Value.new('value', important: false)
+
+      refute_equal property, other
     end
   end
 end
