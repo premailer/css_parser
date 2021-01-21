@@ -268,6 +268,34 @@ class RuleSetExpandingShorthandTests < Minitest::Test
     end
   end
 
+  def test_expanding_shorthand_with_replaced_properties_after
+    shorthand = 'line-height: 0.25px !important; font-style: normal; font: small-caps italic 12px sans-serif; font-size: 12em;'
+    declarations = expand_declarations(shorthand)
+    expected_declarations = {
+      'line-height' => '0.25px',
+      'font-style' => 'italic',
+      'font-variant' => 'small-caps',
+      'font-weight' => 'normal',
+      'font-family' => 'sans-serif',
+      'font-size' => '12em'
+    }
+    assert_equal expected_declarations, declarations
+  end
+
+  def test_expanding_important_shorthand_with_replaced_properties
+    shorthand = 'line-height: 0.25px !important; font-style: normal; font: small-caps italic 12px sans-serif !important; font-size: 12em; font-family: emoji !important;'
+    declarations = expand_declarations(shorthand)
+    expected_declarations = {
+      'font-style' => 'italic',
+      'font-variant' => 'small-caps',
+      'font-weight' => 'normal',
+      'line-height' => 'normal',
+      'font-family' => 'emoji',
+      'font-size' => '12px'
+    }
+    assert_equal expected_declarations, declarations
+  end
+
 protected
 
   def expand_declarations(declarations)
