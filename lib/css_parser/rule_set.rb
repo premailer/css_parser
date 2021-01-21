@@ -47,6 +47,12 @@ module CssParser
 
           "#{value} !important"
         end
+
+        def ==(other)
+          return false unless other.is_a?(self.class)
+
+          value == other.value && important == other.important
+        end
       end
 
       def initialize(declarations = {})
@@ -133,7 +139,7 @@ module CssParser
       attr_reader :declarations
 
       def normalize_property(property)
-        property = property.downcase
+        property = property.to_s.downcase
         property.strip!
         property
       end
