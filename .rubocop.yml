@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.4  # lowest supported version
   NewCops: enable
 
 Layout/ArgumentAlignment:
@@ -68,3 +68,6 @@ Style/StringLiterals:
 
 Style/WordArray:
   Enabled: false
+
+Style/SymbolArray:
+  EnforcedStyle: brackets

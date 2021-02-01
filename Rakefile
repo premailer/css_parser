@@ -6,6 +6,8 @@ require 'rake/testtask'
 require 'rubocop/rake_task'
 require 'bump/tasks'
 
+task default: [:rubocop, :test]
+
 Rake::TestTask.new do |test|
   test.pattern = 'test/**/test*.rb'
   test.verbose = true
@@ -37,5 +39,3 @@ task :benchmark do
   report = MemoryProfiler.report { CssParser::Parser.new.load_file!(complex_css_path) }
   puts "Loading `complex.css` allocated #{report.total_allocated} objects, #{report.total_allocated_memsize / 1024} KiB"
 end
-
-task default: %i[rubocop test]
