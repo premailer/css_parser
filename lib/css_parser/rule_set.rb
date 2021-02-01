@@ -529,7 +529,7 @@ module CssParser
       return if declarations.size < NUMBER_OF_DIMENSIONS
 
       DIMENSIONS.each do |property, dimensions|
-        values = %i[top right bottom left].each_with_index.with_object({}) do |(side, index), result|
+        values = [:top, :right, :bottom, :left].each_with_index.with_object({}) do |(side, index), result|
           next unless declarations.key?(dimensions[index])
 
           result[side] = declarations[dimensions[index]].value
@@ -586,15 +586,15 @@ module CssParser
 
     def compute_dimensions_shorthand(values)
       # All four sides are equal, returning single value
-      return %i[top] if values.values.uniq.count == 1
+      return [:top] if values.values.uniq.count == 1
 
       # `/* top | right | bottom | left */`
-      return %i[top right bottom left] if values[:left] != values[:right]
+      return [:top, :right, :bottom, :left] if values[:left] != values[:right]
 
       # Vertical are the same & horizontal are the same, `/* vertical | horizontal */`
-      return %i[top left] if values[:top] == values[:bottom]
+      return [:top, :left] if values[:top] == values[:bottom]
 
-      %i[top left bottom]
+      [:top, :left, :bottom]
     end
 
     def parse_declarations!(block) # :nodoc:

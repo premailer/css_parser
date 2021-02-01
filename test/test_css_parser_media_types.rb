@@ -59,7 +59,7 @@ class CssParserMediaTypesTests < Minitest::Test
       }
     CSS
 
-    assert_equal 'font-size: 13px; line-height: 1.2;', @cp.find_by_selector('body', %i[screen handheld]).join(' ')
+    assert_equal 'font-size: 13px; line-height: 1.2;', @cp.find_by_selector('body', [:screen, :handheld]).join(' ')
   end
 
   def test_adding_block_with_media_types
@@ -116,7 +116,7 @@ class CssParserMediaTypesTests < Minitest::Test
   end
 
   def test_adding_rule_set_with_media_type
-    @cp.add_rule!('body', 'color: black;', %i[handheld tty])
+    @cp.add_rule!('body', 'color: black;', [:handheld, :tty])
     @cp.add_rule!('body', 'color: blue;', :screen)
     assert_equal 'color: black;', @cp.find_by_selector('body', :handheld).join(' ')
   end
@@ -128,7 +128,7 @@ class CssParserMediaTypesTests < Minitest::Test
   end
 
   def test_selecting_with_all_media_types
-    @cp.add_rule!('body', 'color: black;', %i[handheld tty])
+    @cp.add_rule!('body', 'color: black;', [:handheld, :tty])
     assert_equal 'color: black;', @cp.find_by_selector('body', :all).join(' ')
   end
 
