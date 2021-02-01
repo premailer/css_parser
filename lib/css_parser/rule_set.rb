@@ -44,9 +44,7 @@ module CssParser
         end
 
         def to_s
-          return value unless important
-
-          "#{value} !important"
+          important ? "#{value} !important" : value
         end
 
         def ==(other)
@@ -88,15 +86,11 @@ module CssParser
 
         if value.is_a?(Value)
           declarations[property] = value
-          return
+        elsif value.to_s.strip.empty?
+          delete property
+        else
+          declarations[property] = Value.new(value)
         end
-
-        if value.to_s.strip.empty?
-          delete(property)
-          return
-        end
-
-        declarations[property] = Value.new(value)
       end
       alias add_declaration! []=
 
@@ -153,14 +147,18 @@ module CssParser
 
         # We should preserve subsequent declarations of the same properties
         # and prior important ones if replacement one is not important
-        replacements = replacement_declarations.each.with_object({}) do |(key, value), result|
-          # Replacement property doesn't exist, adding
-          next result[key] = value unless declarations.key?(key)
+        replacements = replacement_declarations.each.with_object({}) do |(key, replacement), result|
+          existing = declarations[key]
 
-          # Replacement property is important while existing one is not,
-          # replacing unconditionally
-          if value.important && !declarations[key].important
-            result[key] = value
+          # No existing -> set
+          unless existing
+            result[key] = replacement
+            next
+          end
+
+          # Replacement more important than existing -> replace
+          if replacement.important && !existing.important
+            result[key] = replacement
             replaced_index = replacement_keys.index(key)
             replacement_keys.delete_at(replaced_index)
             replacement_values.delete_at(replaced_index)
@@ -168,13 +166,12 @@ module CssParser
             next
           end
 
-          # Existing value is important while replacing is not, existing one
-          # takes precedence
-          next if !value.important && declarations[key].important
+          # Existing is more important than replacement -> keep
+          next if !replacement.important && existing.important
 
-          # Importance of existing and replacement values are the same,
+          # Existing and replacement importance are the same,
           # value which is declared later wins
-          result[key] = value if property_index > replacement_keys.index(key)
+          result[key] = replacement if property_index > replacement_keys.index(key)
         end
 
         return if replacements.empty?
@@ -245,9 +242,9 @@ module CssParser
 
     # Get the value of a property
     def get_value(property)
-      return '' unless declarations.key?(property)
+      return '' unless (value = declarations[property])
 
-      "#{declarations[property]};"
+      "#{value};"
     end
     alias [] get_value
 
@@ -301,19 +298,23 @@ module CssParser
     #
     # See http://www.w3.org/TR/CSS21/colors.html#propdef-background
     def expand_background_shorthand! # :nodoc:
-      return unless declarations.key?('background')
+      return unless (declaration = declarations['background'])
 
-      value = declarations['background'].value.dup
+      value = declaration.value.dup
 
-      replacement = BACKGROUND_PROPERTIES.map { |key| [key, 'inherit'] }.to_h if value.match(CssParser::RE_INHERIT)
-      replacement ||= {
-        'background-image' => value.slice!(Regexp.union(CssParser::URI_RX, CssParser::RE_GRADIENT, /none/i)),
-        'background-attachment' => value.slice!(CssParser::RE_SCROLL_FIXED),
-        'background-repeat' => value.slice!(CssParser::RE_REPEAT),
-        'background-color' => value.slice!(CssParser::RE_COLOUR),
-        'background-size' => extract_background_size_from(value),
-        'background-position' => value.slice!(CssParser::RE_BACKGROUND_POSITION)
-      }
+      replacement =
+        if value.match(CssParser::RE_INHERIT)
+          BACKGROUND_PROPERTIES.map { |key| [key, 'inherit'] }.to_h
+        else
+          {
+            'background-image' => value.slice!(CssParser::RE_IMAGE),
+            'background-attachment' => value.slice!(CssParser::RE_SCROLL_FIXED),
+            'background-repeat' => value.slice!(CssParser::RE_REPEAT),
+            'background-color' => value.slice!(CssParser::RE_COLOUR),
+            'background-size' => extract_background_size_from(value),
+            'background-position' => value.slice!(CssParser::RE_BACKGROUND_POSITION)
+          }
+        end
 
       declarations.replace_declaration!('background', replacement, preserve_importance: true)
     end
@@ -328,9 +329,9 @@ module CssParser
     # Additional splitting happens in expand_dimensions_shorthand!
     def expand_border_shorthand! # :nodoc:
       BORDER_PROPERTIES.each do |k|
-        next unless declarations.key?(k)
+        next unless (declaration = declarations[k])
 
-        value = declarations[k].value.dup
+        value = declaration.value.dup
 
         replacement = {
           "#{k}-width" => value.slice!(CssParser::RE_BORDER_UNITS),
@@ -346,9 +347,9 @@ module CssParser
     # into their constituent parts.  Handles margin, padding, border-color, border-style and border-width.
     def expand_dimensions_shorthand! # :nodoc:
       DIMENSIONS.each do |property, (top, right, bottom, left)|
-        next unless declarations.key?(property)
+        next unless (declaration = declarations[property])
 
-        value = declarations[property].value.dup
+        value = declaration.value.dup
 
         # RGB and HSL values in borders are the only units that can have spaces (within params).
         # We cheat a bit here by stripping spaces after commas in RGB and HSL values so that we
@@ -369,38 +370,39 @@ module CssParser
           values << matches[1] # left = right
         when 4
           values = matches.to_a
+        else
+          raise ArgumentError, "Cannot parse #{value}"
         end
 
         t, r, b, l = values
+        replacement = {top => t, right => r, bottom => b, left => l}
 
-        declarations.replace_declaration!(
-          property,
-          {top => t, right => r, bottom => b, left => l},
-          preserve_importance: true
-        )
+        declarations.replace_declaration!(property, replacement, preserve_importance: true)
       end
     end
 
     # Convert shorthand font declarations (e.g. <tt>font: 300 italic 11px/14px verdana, helvetica, sans-serif;</tt>)
     # into their constituent parts.
     def expand_font_shorthand! # :nodoc:
-      return unless declarations.key?('font')
-
-      font_props = {}
+      return unless (declaration = declarations['font'])
 
       # reset properties to 'normal' per http://www.w3.org/TR/CSS21/fonts.html#font-shorthand
-      ['font-style', 'font-variant', 'font-weight', 'font-size', 'line-height'].each do |prop|
-        font_props[prop] = 'normal'
-      end
+      font_props = {
+        'font-style' => 'normal',
+        'font-variant' => 'normal',
+        'font-weight' => 'normal',
+        'font-size' => 'normal',
+        'line-height' => 'normal'
+      }
 
-      value = declarations['font'].value.dup
+      value = declaration.value.dup
       value.gsub!(%r{/\s+}, '/') # handle spaces between font size and height shorthand (e.g. 14px/ 16px)
 
       in_fonts = false
 
-      matches = value.scan(/("(.*[^"])"|'(.*[^'])'|(\w[^ ,]+))/)
-      matches.each do |match|
-        m = match[0].to_s.strip
+      matches = value.scan(/"(?:.*[^"])"|'(?:.*[^'])'|(?:\w[^ ,]+)/)
+      matches.each do |m|
+        m.strip!
         m.gsub!(/;$/, '')
 
         if in_fonts
@@ -411,7 +413,7 @@ module CssParser
           end
         elsif m =~ /normal|inherit/i
           ['font-style', 'font-weight', 'font-variant'].each do |font_prop|
-            font_props[font_prop] = m unless font_props.key?(font_prop)
+            font_props[font_prop] ||= m
           end
         elsif m =~ /italic|oblique/i
           font_props['font-style'] = m
@@ -420,8 +422,8 @@ module CssParser
         elsif m =~ /[1-9]00$|bold|bolder|lighter/i
           font_props['font-weight'] = m
         elsif m =~ CssParser::FONT_UNITS_RX
-          if m =~ %r{/}
-            font_props['font-size'], font_props['line-height'] = m.split('/')
+          if m.include?('/')
+            font_props['font-size'], font_props['line-height'] = m.split('/', 2)
           else
             font_props['font-size'] = m
           end
@@ -437,16 +439,20 @@ module CssParser
     #
     # See http://www.w3.org/TR/CSS21/generate.html#lists
     def expand_list_style_shorthand! # :nodoc:
-      return unless declarations.key?('list-style')
+      return unless (declaration = declarations['list-style'])
 
-      value = declarations['list-style'].value.dup
+      value = declaration.value.dup
 
-      replacement = LIST_STYLE_PROPERTIES.map { |key| [key, 'inherit'] }.to_h if value =~ CssParser::RE_INHERIT
-      replacement ||= {
-        'list-style-type' => value.slice!(CssParser::RE_LIST_STYLE_TYPE),
-        'list-style-position' => value.slice!(CssParser::RE_INSIDE_OUTSIDE),
-        'list-style-image' => value.slice!(Regexp.union(CssParser::URI_RX, /none/i))
-      }
+      replacement =
+        if value =~ CssParser::RE_INHERIT
+          LIST_STYLE_PROPERTIES.map { |key| [key, 'inherit'] }.to_h
+        else
+          {
+            'list-style-type' => value.slice!(CssParser::RE_LIST_STYLE_TYPE),
+            'list-style-position' => value.slice!(CssParser::RE_INSIDE_OUTSIDE),
+            'list-style-image' => value.slice!(CssParser::URI_RX_OR_NONE)
+          }
+        end
 
       declarations.replace_declaration!('list-style', replacement, preserve_importance: true)
     end
@@ -466,10 +472,11 @@ module CssParser
       values = []
       properties_to_delete = []
       properties.each do |property|
-        if declarations.key?(property) and not declarations[property].important
-          values << declarations[property].value
-          properties_to_delete << property
-        end
+        next unless (declaration = declarations[property])
+        next if declaration.important
+
+        values << declaration.value
+        properties_to_delete << property
       end
 
       return if values.length <= 1
@@ -490,12 +497,9 @@ module CssParser
       # background-position by preceding it with a backslash. In this case we also need to
       # have a background-position property, so we set it if it's missing.
       # http://www.w3schools.com/cssref/css3_pr_background.asp
-      if declarations.key?('background-size') and not declarations['background-size'].important
-        unless declarations.key?('background-position')
-          declarations['background-position'] = '0% 0%'
-        end
-
-        declarations['background-size'].value = "/ #{declarations['background-size'].value}"
+      if (declaration = declarations['background-size']) && !declaration.important
+        declarations['background-position'] ||= '0% 0%'
+        declaration.value = "/ #{declaration.value}"
       end
 
       create_shorthand_properties! BACKGROUND_PROPERTIES, 'background'
@@ -509,12 +513,15 @@ module CssParser
       values = []
 
       BORDER_STYLE_PROPERTIES.each do |property|
-        next unless declarations.key?(property) and not declarations[property].important
+        next unless (declaration = declarations[property])
+        next if declaration.important
+
         # can't merge if any value contains a space (i.e. has multiple values)
         # we temporarily remove any spaces after commas for the check (inside rgba, etc...)
-        return nil if declarations[property].value.gsub(/,\s/, ',').strip =~ /\s/
+        return nil if declaration.value.gsub(/,\s/, ',').strip =~ /\s/
 
-        values << declarations[property].value
+        values << declaration.value
+
         declarations.delete(property)
       end
 
@@ -530,9 +537,9 @@ module CssParser
 
       DIMENSIONS.each do |property, dimensions|
         values = [:top, :right, :bottom, :left].each_with_index.with_object({}) do |(side, index), result|
-          next unless declarations.key?(dimensions[index])
+          next unless (declaration = declarations[dimensions[index]])
 
-          result[side] = declarations[dimensions[index]].value
+          result[side] = declaration.value
         end
 
         # All four dimensions must be present
@@ -604,10 +611,10 @@ module CssParser
 
       continuation = nil
       block.split(/[;$]+/m).each do |decs|
-        decs = continuation ? continuation + decs : decs
+        decs = (continuation ? continuation + decs : decs)
         if decs =~ /\([^)]*\Z/ # if it has an unmatched parenthesis
           continuation = "#{decs};"
-        elsif (matches = decs.match(/\s*(.[^:]*)\s*:\s*(.+?)(;?\s*\Z)/i))
+        elsif (matches = decs.match(/\s*(.[^:]*)\s*:\s*(.+?)(?:;?\s*\Z)/i))
           # skip end_of_declaration
           property = matches[1]
           value = matches[2]

@@ -22,6 +22,7 @@ module CssParser
 
   RE_URI = /(url\(\s*(\s*#{RE_STRING}\s*)\s*\))|(url\(\s*([!#$%&*\-~]|#{RE_NON_ASCII}|#{RE_ESCAPE})*\s*)\)/ixm.freeze
   URI_RX = /url\(("([^"]*)"|'([^']*)'|([^)]*))\)/im.freeze
+  URI_RX_OR_NONE = Regexp.union(URI_RX, /none/i)
   RE_GRADIENT = /[-a-z]*gradient\([-a-z0-9 .,#%()]*\)/im.freeze
 
   # Initial parsing
@@ -43,6 +44,7 @@ module CssParser
     'upper-latin', 'hebrew', 'armenian', 'georgian', 'cjk-ideographic', 'hiragana',
     'hira-gana-iroha', 'katakana-iroha', 'katakana', 'none'
   )
+  RE_IMAGE = Regexp.union(CssParser::URI_RX, CssParser::RE_GRADIENT, /none/i)
 
   STRIP_CSS_COMMENTS_RX = %r{/\*.*?\*/}m.freeze
   STRIP_HTML_COMMENTS_RX = /<!--|-->/m.freeze
