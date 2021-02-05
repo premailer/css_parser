@@ -1,5 +1,17 @@
 ## Ruby CSS Parser CHANGELOG
 
+### Unreleased
+
+ * Put diff here
+
+### Version 1.9.0
+
+ * Misc cleanup [#122](https://github.com/premailer/css_parser/pull/122)
+
+### Version 1.8.0
+
+ * Internal refactoring around ruleset [diff](https://github.com/premailer/css_parser/compare/v1.7.1...v1.8.0)
+
 ### Version 1.7.1
 
  * Force UTF-8 encoding; do not strip out UTF-8 chars. [#106](https://github.com/premailer/css_parser/pull/106)
@@ -7,7 +19,7 @@
 ### Version 1.7.0
 
  * No longer support ruby versions 1.9 2.0 2.1
- * Memory allocation improvements 
+ * Memory allocation improvements
 
 ### Version 1.6.0
 
