@@ -56,7 +56,7 @@ class RuleSetCreatingShorthandTests < Minitest::Test
       'border-top-style' => 'none',
       'border-width' => '1px',
       'border-style' => 'solid',
-      'border-color' => 'black',
+      'border-color' => 'black'
     }
     combined = create_shorthand(properties)
     assert_equal '', combined['border']
