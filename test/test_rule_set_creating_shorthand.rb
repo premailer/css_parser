@@ -50,6 +50,16 @@ class RuleSetCreatingShorthandTests < Minitest::Test
     }
     combined = create_shorthand(properties)
     assert_equal '#bada55 #000000 #ffffff #ff0000;', combined['border-color']
+
+    # should not combine if individual side property is set
+    properties = {
+      'border-top-style' => 'none',
+      'border-width' => '1px',
+      'border-style' => 'solid',
+      'border-color' => 'black',
+    }
+    combined = create_shorthand(properties)
+    assert_equal '', combined['border']
   end
 
   # Dimensions shorthand
