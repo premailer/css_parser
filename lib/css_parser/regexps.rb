@@ -58,6 +58,22 @@ module CssParser
   RE_BORDER_STYLE = /(\s*^)?(none|hidden|dotted|dashed|solid|double|dot-dash|dot-dot-dash|wave|groove|ridge|inset|outset)(\s*$)?/imx.freeze
   RE_BORDER_UNITS = Regexp.union(BOX_MODEL_UNITS_RX, /(thin|medium|thick)/i)
 
+  # Functions like calc, var, clamp, etc.
+  RE_FUNCTIONS = /
+    (
+      [a-z0-9-]+        # function name
+    )
+    (?>
+      \(                # opening parenthesis
+        (?:
+          ([^()]+)
+          |             # recursion via subexpression
+          \g<0>
+        )*
+      \)                # closing parenthesis
+    )
+  /imx.freeze
+
   # Patterns for specificity calculations
   NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX_NC = /
     (?:\.\w+)                     # classes

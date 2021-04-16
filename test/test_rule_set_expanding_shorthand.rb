@@ -296,6 +296,54 @@ class RuleSetExpandingShorthandTests < Minitest::Test
     assert_equal expected_declarations, declarations
   end
 
+  def test_functions_with_many_spaces
+    shorthand = 'margin: calc(1em / 4 * var(--foo));'
+    declarations = expand_declarations(shorthand)
+    expected_declarations = {
+      'margin-top' => 'calc(1em / 4 * var(--foo))',
+      'margin-bottom' => 'calc(1em / 4 * var(--foo))',
+      'margin-left' => 'calc(1em / 4 * var(--foo))',
+      'margin-right' => 'calc(1em / 4 * var(--foo))'
+    }
+    assert_equal expected_declarations, declarations
+  end
+
+  def test_functions_with_no_spaces
+    shorthand = 'margin: calc(1em/4*4);'
+    declarations = expand_declarations(shorthand)
+    expected_declarations = {
+      'margin-top' => 'calc(1em/4*4)',
+      'margin-bottom' => 'calc(1em/4*4)',
+      'margin-left' => 'calc(1em/4*4)',
+      'margin-right' => 'calc(1em/4*4)'
+    }
+    assert_equal expected_declarations, declarations
+  end
+
+  def test_functions_with_one_space
+    shorthand = 'margin: calc(1em /4);'
+    declarations = expand_declarations(shorthand)
+    expected_declarations = {
+      'margin-top' => 'calc(1em /4)',
+      'margin-bottom' => 'calc(1em /4)',
+      'margin-left' => 'calc(1em /4)',
+      'margin-right' => 'calc(1em /4)'
+    }
+    assert_equal expected_declarations, declarations
+  end
+
+  def test_functions_with_commas
+    shorthand = 'margin: clamp(1rem, 2.5vw, 2rem)'
+    declarations = expand_declarations(shorthand)
+    expected_declarations = {
+      'margin-top' => 'clamp(1rem, 2.5vw, 2rem)',
+      'margin-bottom' => 'clamp(1rem, 2.5vw, 2rem)',
+      'margin-left' => 'clamp(1rem, 2.5vw, 2rem)',
+      'margin-right' => 'clamp(1rem, 2.5vw, 2rem)'
+    }
+    assert_equal expected_declarations, declarations
+  end
+
 protected
 
   def expand_declarations(declarations)

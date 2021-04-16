@@ -2,7 +2,7 @@
 
 ### Unreleased
 
- * Put diff here
+ * Allow CSS functions to be used in CssParser::RuleSet#expand_dimensions_shorthand! [#126](https://github.com/premailer/css_parser/pull/126)
 
 ### Version 1.9.0
 
