@@ -359,9 +359,8 @@ module CssParser
         #
         # TODO: rgba, hsl, hsla
         value.gsub!(RE_COLOUR) { |c| c.gsub(/(\s*,\s*)/, ',') }
-        value.gsub!(RE_FUNCTIONS) { |c| c.gsub(/\s+/, WHITESPACE_REPLACEMENT) }
 
-        matches = value.strip.split(/\s+/)
+        matches = split_value_preserving_function_whitespace(value)
 
         case matches.length
         when 1
@@ -377,11 +376,7 @@ module CssParser
           raise ArgumentError, "Cannot parse #{value}"
         end
 
-        t, r, b, l = values
-
-        replacement = {top => t, right => r, bottom => b, left => l}.transform_values do |replacement_value|
-          replacement_value.gsub(WHITESPACE_REPLACEMENT, ' ')
-        end
+        replacement = [top, right, bottom, left].zip(values).to_h
 
         declarations.replace_declaration!(property, replacement, preserve_importance: true)
       end
@@ -638,6 +633,19 @@ module CssParser
         s.gsub!(/\s+/, ' ')
         s.strip!
         s
+      end
+    end
+
+    def split_value_preserving_function_whitespace(value)
+      split_value = value.gsub(RE_FUNCTIONS) do |c|
+        c.gsub!(/\s+/, WHITESPACE_REPLACEMENT)
+        c
+      end
+
+      matches = split_value.strip.split(/\s+/)
+
+      matches.each do |c|
+        c.gsub!(WHITESPACE_REPLACEMENT, ' ')
       end
     end
   end
