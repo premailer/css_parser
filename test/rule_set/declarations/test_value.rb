@@ -2,6 +2,7 @@
 
 require_relative '../../test_helper'
 require 'minitest/spec'
+require 'ostruct'
 
 class RuleSetProperyTest < Minitest::Test
   describe '.new' do
