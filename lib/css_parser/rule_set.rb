@@ -513,6 +513,11 @@ module CssParser
     def create_border_shorthand! # :nodoc:
       values = []
 
+      # can't merge if not shortened
+      declarations.each do |name, _value|
+        return nil if %w[border-top border-right border-bottom border-left].any? { |e| name.include?(e) }
+      end
+
       BORDER_STYLE_PROPERTIES.each do |property|
         next unless (declaration = declarations[property])
         next if declaration.important
