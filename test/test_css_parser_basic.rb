@@ -34,14 +34,61 @@ class CssParserBasicTests < Minitest::Test
     assert_equal 'color: red;', @cp.find_by_selector('p').join
   end
 
-  def test_adding_a_rule
-    @cp.add_rule!('div', 'color: blue;')
-    assert_equal 'color: blue;', @cp.find_by_selector('div').join(' ')
+  def test_add_multiple_selectors_in_one_go
+    @cp.add_block!('p, span { color: red; }')
+    assert_equal({"p" => {"color" => "red"}, "span" => {"color" => "red"}}, @cp.to_h["all"])
+  end
+
+  def test_selector_with_backslash
+    @cp.add_block!('.back\\slash { color: red; }')
+    assert_equal({".back\\slash" => {"color" => "red"}}, @cp.to_h["all"])
+  end
+
+  def test_selector_with_doublequoute
+    @cp.add_block!(<<-CSS)
+      .double\\"quote { color: red; }
+    CSS
+    assert_equal({'.double"quote' => {"color" => "red"}}, @cp.to_h["all"])
+  end
+
+  def test_selector_with_singlequoute
+    @cp.add_block!(<<-CSS)
+      .double\\"quote { color: red; }
+    CSS
+    pp @cp.to_h["all"]
+    assert_equal({".double'quote" => {"color" => "red"}}, @cp.to_h["all"])
+  end
+
+  def test_add_nested_selection
+    @cp.add_block!(<<-CSS)
+      p > span { color: red; }
+    CSS
+    assert_equal({"p > span" => {"color" => "red"}}, @cp.to_h["all"])
+  end
+
+  def test_selector_with_attrubute_selector
+    @cp.add_block!('input[type="checkbox"] { color: red; }')
+    assert_equal({"input[type=\"checkbox\"]" => {"color" => "red"}}, @cp.to_h["all"])
+  end
+
+  def test_not_modifier
+    @cp.add_block!('td:not(.active) { color: red;')
+    assert_equal({"td:not(.active)" => {"color" => "red"}}, @cp.to_h["all"])
+  end
+
+  def test_not_modifier_with_two_classes
+    @cp.add_block!('td:not(.active, .disabled) { color: red;')
+    assert_equal({"td:not(.active, .disabled)" => {"color" => "red"}}, @cp.to_h["all"])
   end
 
   def test_adding_a_rule_set
     rs = CssParser::RuleSet.new('div', 'color: blue;')
     @cp.add_rule_set!(rs)
+    assert_equal 'color: blue;', @cp.find_by_selector('div').join(' ')
+  end
+
+  def test_adding_a_rule
+    @cp.add_rule!('div', 'color: blue;')
     assert_equal 'color: blue;', @cp.find_by_selector('div').join(' ')
   end
 
