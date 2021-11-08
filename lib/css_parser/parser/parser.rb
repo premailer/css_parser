@@ -46,6 +46,8 @@ module CssParser
         while !got_to_properties
           selector = scanner.scan_until(/'|"|{|\\{2}/)
           case scanner[0]
+          when nil
+            raise "CSS invalid stylesheet, could not find end of selector"
           when "\\\\" # maybe this can be replaced with a gsub at the end .tr("\\\\", "\\")
             new_selector += selector[0..(- 1 - scanner[0].length)]
             # if you have two backslashes the selector should have one
@@ -98,6 +100,8 @@ module CssParser
         until end_of_propertied
           selector = scanner.scan_until(/'|"|}/)
           case scanner[0]
+          when nil
+            raise "CSS invalid stylesheet, could not find end of properties"
           when "\"", "'"
             backslashes = /\\*\z/.match(selector[0..-2])[0].length
             raise "Dont think you can have any escaped quates here" unless backslashes == 0

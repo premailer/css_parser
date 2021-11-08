@@ -205,6 +205,50 @@ class CSSParserCoreTests < Minitest::Test
     assert_equal rules, [{selector: %q{.parent > .child}, properties: "color: green;"}]
   end
 
+  def test_content_with_quote
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      .active {  content: "before"; }
+    CSS
+
+    assert_equal rules, [{selector: %q{.active}, properties: "content: \"before\";"}]
+  end
+
+  def test_content_with_quoted_start_curly
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      .active {  content: "a{b"; }
+    CSS
+
+    assert_equal rules, [{selector: %q{.active}, properties: "content: \"a{b\";"}]
+  end
+
+  def test_content_with_quoted_end_curly
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      .active {  content: "a}b"; }
+    CSS
+
+    assert_equal rules, [{selector: %q{.active}, properties: "content: \"a}b\";"}]
+  end
+
+  def test_no_infinet_loop_incomplete_selector
+    error = assert_raises(RuntimeError) do
+      CssParser::Parser::Parser.parse <<~INCOMPLETE_CSS
+        .active
+      INCOMPLETE_CSS
+    end
+
+    assert_equal 'CSS invalid stylesheet, could not find end of selector', error.message
+  end
+
+  def test_no_infinet_loop_incomplete_properties
+    error = assert_raises(RuntimeError) do
+      CssParser::Parser::Parser.parse <<~INCOMPLETE_CSS
+        .active {  content:
+      INCOMPLETE_CSS
+    end
+
+    assert_equal 'CSS invalid stylesheet, could not find end of properties', error.message
+  end
+
   def test_media_query
     <<~CSS
       @media only screen and (max-width: 600px) {
