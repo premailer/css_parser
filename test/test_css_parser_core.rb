@@ -13,7 +13,7 @@ class CSSParserCoreTests < Minitest::Test
     assert_equal rules, []
   end
 
-  def test_simple_tag
+  def test_tag_selector
     rules = CssParser::Parser::Parser.parse <<~CSS
       p { color: green; }
     CSS
@@ -21,7 +21,7 @@ class CSSParserCoreTests < Minitest::Test
     assert_equal rules, [{selector: "p", properties: "color: green;"}]
   end
 
-  def test_multiple_simple_tag
+  def test_tag_selector_with_multiple_tag
     rules = CssParser::Parser::Parser.parse <<~CSS
       p { color: green; }
       span { color: green; }
@@ -33,7 +33,7 @@ class CSSParserCoreTests < Minitest::Test
     ]
   end
 
-  def test_simple_any
+  def test_tag_selector_with_any_tag
     rules = CssParser::Parser::Parser.parse <<~CSS
       * { color: green; }
     CSS
@@ -41,7 +41,7 @@ class CSSParserCoreTests < Minitest::Test
     assert_equal rules, [{selector: "*", properties: "color: green;"}]
   end
 
-  def test_simple_class
+  def test_class_selector
     rules = CssParser::Parser::Parser.parse <<~CSS
       .active { color: green; }
     CSS
@@ -49,119 +49,7 @@ class CSSParserCoreTests < Minitest::Test
     assert_equal rules, [{selector: ".active", properties: "color: green;"}]
   end
 
-  def test_simple_id
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      #active { color: green; }
-    CSS
-
-    assert_equal rules, [{selector: "#active", properties: "color: green;"}]
-  end
-
-  def test_simple_attribute
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [data-id] { color: green; }
-    CSS
-
-    assert_equal rules, [{selector: "[data-id]", properties: "color: green;"}]
-  end
-
-  def test_simple_attribute_value
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [data-id="five"] { color: green; }
-      [data-id='five'] { color: green; }
-    CSS
-
-    assert_equal rules, [
-      {selector: '[data-id="five"]', properties: "color: green;"},
-      {selector: "[data-id='five']", properties: "color: green;"}
-    ]
-  end
-
-  def test_escaped_double_quote_inside_double_qoute_string
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [dum="simon\\\"er\\\"kul"] {
-        color: green;
-      }
-    CSS
-
-    assert_equal rules, [{selector: %q([dum="simon\"er\"kul"]), properties: "color: green;"}]
-  end
-
-  def test_single_qoute_inside_double_qoute_string
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [dum="simon'kul"] {
-        color: green;
-      }
-    CSS
-
-    assert_equal rules, [{selector: %q([dum="simon'kul"]), properties: "color: green;"}]
-  end
-
-  def test_escaped_backslach_inside_double_qoute_string
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [dum="simon\\\\kul"] {
-        color: green;
-      }
-    CSS
-
-    assert_equal rules, [{selector: %q([dum="simon\kul"]), properties: "color: green;"}]
-  end
-
-  def test_escaped_single_quote_inside_single_qoute_string
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [dum='simon\\\'er\\\'kul'] {
-        color: green;
-      }
-    CSS
-
-    assert_equal rules, [{selector: %q([dum='simon\'er\'kul']), properties: "color: green;"}]
-  end
-
-  def test_double_qoute_inside_single_qoute_string
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [dum='simon"kul'] {
-        color: green;
-      }
-    CSS
-
-    assert_equal rules, [{selector: %q([dum='simon"kul']), properties: "color: green;"}]
-  end
-
-  def test_escaped_backslach_inside_single_qoute_string
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [dum='simon\\\\kul'] {
-        color: green;
-      }
-    CSS
-
-    assert_equal rules, [{selector: %q([dum='simon\kul']), properties: "color: green;"}]
-  end
-
-  def test_double_quote_attribute_value_with_curly
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [data-id="fi{ve"] { color: green; }
-    CSS
-
-    assert_equal rules, [{selector: '[data-id="fi{ve"]', properties: "color: green;"}]
-  end
-
-  def test_single_quote_attribute_value_with_curly
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      [data-id='fi{ve'] { color: green; }
-    CSS
-
-    assert_equal rules, [{selector: "[data-id='fi{ve']", properties: "color: green;"}]
-  end
-
-  def test_multiple_selectors
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      .parent > .child { color: green; }
-    CSS
-
-    assert_equal rules, [{selector: '.parent > .child', properties: "color: green;"}]
-  end
-
-  def test_except_start_curly_in_name
+  def test_class_selector_with_escaped_curly
     rules = CssParser::Parser::Parser.parse <<~CSS
       .sim\\\{on { color: green; }
     CSS
@@ -169,7 +57,7 @@ class CSSParserCoreTests < Minitest::Test
     assert_equal rules, [{selector: '.sim{on', properties: "color: green;"}]
   end
 
-  def test_class_with_double_slash
+  def test_class_selector_with_double_slash
     rules = CssParser::Parser::Parser.parse <<~INVAILD_CSS
       .sim\\on { color: green; }
       .ale\\ { color: green; }
@@ -181,6 +69,126 @@ class CSSParserCoreTests < Minitest::Test
     ]
   end
 
+  def test_class_selector_with_trible_escaped_start_curly_in_name
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      .sim\\\\\\\\\\\\\\\{on { color: green; }
+    CSS
+
+    assert_equal rules, [{selector: %q(.sim\\\\\{on), properties: "color: green;"}]
+  end
+
+  def test_id_selector
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      #active { color: green; }
+    CSS
+
+    assert_equal rules, [{selector: "#active", properties: "color: green;"}]
+  end
+
+  def test_attribute_selector
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [data-id] { color: green; }
+    CSS
+
+    assert_equal rules, [{selector: "[data-id]", properties: "color: green;"}]
+  end
+
+  def test_attribute_selector_and_value
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [data-id="five"] { color: green; }
+      [data-id='five'] { color: green; }
+    CSS
+
+    assert_equal rules, [
+      {selector: '[data-id="five"]', properties: "color: green;"},
+      {selector: "[data-id='five']", properties: "color: green;"}
+    ]
+  end
+
+  def test_attribute_selector_with_escaped_double_quote_inside_double_quoted_string
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [dum="simon\\\"er\\\"kul"] {
+        color: green;
+      }
+    CSS
+
+    assert_equal rules, [{selector: %q([dum="simon\"er\"kul"]), properties: "color: green;"}]
+  end
+
+  def test_attribute_selector_with_single_quote_inside_double_quoted_string
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [dum="simon'kul"] {
+        color: green;
+      }
+    CSS
+
+    assert_equal rules, [{selector: %q([dum="simon'kul"]), properties: "color: green;"}]
+  end
+
+  def test_attribute_selector_with_escaped_backslash_inside_double_quoted_string
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [dum="simon\\\\kul"] {
+        color: green;
+      }
+    CSS
+
+    assert_equal rules, [{selector: %q([dum="simon\kul"]), properties: "color: green;"}]
+  end
+
+  def test_attribute_selector_with_escaped_single_quote_inside_single_quoted_string
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [dum='simon\\\'er\\\'kul'] {
+        color: green;
+      }
+    CSS
+
+    assert_equal rules, [{selector: %q([dum='simon\'er\'kul']), properties: "color: green;"}]
+  end
+
+  def test_attribute_selector_with_double_quote_inside_single_quoted_string
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [dum='simon"kul'] {
+        color: green;
+      }
+    CSS
+
+    assert_equal rules, [{selector: %q([dum='simon"kul']), properties: "color: green;"}]
+  end
+
+  def test_attribute_selector_with_escaped_backslash_inside_single_quoted_string
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [dum='simon\\\\kul'] {
+        color: green;
+      }
+    CSS
+
+    assert_equal rules, [{selector: %q([dum='simon\kul']), properties: "color: green;"}]
+  end
+
+  def test_attribute_selector_with_curly_inside_double_quoted_string
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [data-id="fi{ve"] { color: green; }
+    CSS
+
+    assert_equal rules, [{selector: '[data-id="fi{ve"]', properties: "color: green;"}]
+  end
+
+  def test_attribute_selector_with_curly_inside_single_quoted_string
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [data-id='fi{ve'] { color: green; }
+    CSS
+
+    assert_equal rules, [{selector: "[data-id='fi{ve']", properties: "color: green;"}]
+  end
+
+  def test_class_selector_with_child_link
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      .parent > .child { color: green; }
+    CSS
+
+    assert_equal rules, [{selector: '.parent > .child', properties: "color: green;"}]
+  end
+
   # should I try to validate this?
   # def test_double_except_start_curly_in_name_is_invalid
   #   rules = CssParser::Parser::Parser.parse %q(
@@ -189,23 +197,7 @@ class CSSParserCoreTests < Minitest::Test
   #   assert_equal rules, [{selector: %q{blow up}, properties: "color: green;"}]
   # end
 
-  def test_trible_escaped_start_curly_in_name
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      .sim\\\\\\\\\\\\\\\{on { color: green; }
-    CSS
-
-    assert_equal rules, [{selector: %q(.sim\\\\\{on), properties: "color: green;"}]
-  end
-
-  def test_child_selector
-    rules = CssParser::Parser::Parser.parse <<~CSS
-      .parent > .child { color: green; }
-    CSS
-
-    assert_equal rules, [{selector: '.parent > .child', properties: "color: green;"}]
-  end
-
-  def test_content_with_quote
+  def test_propperties_with_quote
     rules = CssParser::Parser::Parser.parse <<~CSS
       .active {  content: "before"; }
     CSS
@@ -213,7 +205,7 @@ class CSSParserCoreTests < Minitest::Test
     assert_equal rules, [{selector: '.active', properties: "content: \"before\";"}]
   end
 
-  def test_content_with_quoted_start_curly
+  def test_propperties_with_quoted_start_curly
     rules = CssParser::Parser::Parser.parse <<~CSS
       .active {  content: "a{b"; }
     CSS
@@ -221,7 +213,7 @@ class CSSParserCoreTests < Minitest::Test
     assert_equal rules, [{selector: '.active', properties: "content: \"a{b\";"}]
   end
 
-  def test_content_with_quoted_end_curly
+  def test_propperties_with_quoted_end_curly
     rules = CssParser::Parser::Parser.parse <<~CSS
       .active {  content: "a}b"; }
     CSS

@@ -42,8 +42,8 @@ module CssParser
 
       def self.parse_selector(scanner)
         new_selector = ''
-
         got_to_properties = false
+
         until got_to_properties
           selector = scanner.scan_until(/'|"|{|\\{2}/)
           case scanner[0]
