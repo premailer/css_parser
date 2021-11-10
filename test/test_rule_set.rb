@@ -73,7 +73,7 @@ class RuleSetTests < Minitest::Test
 
   def test_each_declaration_containing_semicolons
     rs = RuleSet.new(nil, "background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAiCAMAAAB7);" \
-      "background-repeat: no-repeat")
+                          "background-repeat: no-repeat")
     assert_equal('url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAiCAMAAAB7);', rs['background-image'])
     assert_equal('no-repeat;', rs['background-repeat'])
   end

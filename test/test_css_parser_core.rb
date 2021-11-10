@@ -29,7 +29,7 @@ class CSSParserCoreTests < Minitest::Test
 
     assert_equal rules, [
       {selector: "p", properties: "color: green;"},
-      {selector: "span", properties: "color: green;"},
+      {selector: "span", properties: "color: green;"}
     ]
   end
 
@@ -72,67 +72,67 @@ class CSSParserCoreTests < Minitest::Test
     CSS
 
     assert_equal rules, [
-      {selector: %q{[data-id="five"]}, properties: "color: green;"},
-      {selector: %q{[data-id='five']}, properties: "color: green;"},
+      {selector: '[data-id="five"]', properties: "color: green;"},
+      {selector: "[data-id='five']", properties: "color: green;"}
     ]
   end
 
   def test_escaped_double_quote_inside_double_qoute_string
-    rules = CssParser::Parser::Parser.parse %q(
-      [dum="simon\"er\"kul"] {
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [dum="simon\\\"er\\\"kul"] {
         color: green;
       }
-    )
+    CSS
 
     assert_equal rules, [{selector: %q([dum="simon\"er\"kul"]), properties: "color: green;"}]
   end
 
   def test_single_qoute_inside_double_qoute_string
-    rules = CssParser::Parser::Parser.parse %q(
+    rules = CssParser::Parser::Parser.parse <<~CSS
       [dum="simon'kul"] {
         color: green;
       }
-    )
+    CSS
 
     assert_equal rules, [{selector: %q([dum="simon'kul"]), properties: "color: green;"}]
   end
 
   def test_escaped_backslach_inside_double_qoute_string
-    rules = CssParser::Parser::Parser.parse %q(
+    rules = CssParser::Parser::Parser.parse <<~CSS
       [dum="simon\\\\kul"] {
         color: green;
       }
-    )
+    CSS
 
     assert_equal rules, [{selector: %q([dum="simon\kul"]), properties: "color: green;"}]
   end
 
   def test_escaped_single_quote_inside_single_qoute_string
-    rules = CssParser::Parser::Parser.parse %q(
-      [dum='simon\'er\'kul'] {
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      [dum='simon\\\'er\\\'kul'] {
         color: green;
       }
-    )
+    CSS
 
     assert_equal rules, [{selector: %q([dum='simon\'er\'kul']), properties: "color: green;"}]
   end
 
   def test_double_qoute_inside_single_qoute_string
-    rules = CssParser::Parser::Parser.parse %q(
+    rules = CssParser::Parser::Parser.parse <<~CSS
       [dum='simon"kul'] {
         color: green;
       }
-    )
+    CSS
 
     assert_equal rules, [{selector: %q([dum='simon"kul']), properties: "color: green;"}]
   end
 
   def test_escaped_backslach_inside_single_qoute_string
-    rules = CssParser::Parser::Parser.parse %q(
+    rules = CssParser::Parser::Parser.parse <<~CSS
       [dum='simon\\\\kul'] {
         color: green;
       }
-    )
+    CSS
 
     assert_equal rules, [{selector: %q([dum='simon\kul']), properties: "color: green;"}]
   end
@@ -142,7 +142,7 @@ class CSSParserCoreTests < Minitest::Test
       [data-id="fi{ve"] { color: green; }
     CSS
 
-    assert_equal rules, [{selector: %q([data-id="fi{ve"]), properties: "color: green;"}]
+    assert_equal rules, [{selector: '[data-id="fi{ve"]', properties: "color: green;"}]
   end
 
   def test_single_quote_attribute_value_with_curly
@@ -150,7 +150,7 @@ class CSSParserCoreTests < Minitest::Test
       [data-id='fi{ve'] { color: green; }
     CSS
 
-    assert_equal rules, [{selector: %q([data-id='fi{ve']), properties: "color: green;"}]
+    assert_equal rules, [{selector: "[data-id='fi{ve']", properties: "color: green;"}]
   end
 
   def test_multiple_selectors
@@ -158,15 +158,15 @@ class CSSParserCoreTests < Minitest::Test
       .parent > .child { color: green; }
     CSS
 
-    assert_equal rules, [{selector: %q{.parent > .child}, properties: "color: green;"}]
+    assert_equal rules, [{selector: '.parent > .child', properties: "color: green;"}]
   end
 
   def test_except_start_curly_in_name
-    rules = CssParser::Parser::Parser.parse %q(
-      .sim\{on { color: green; }
-    )
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      .sim\\\{on { color: green; }
+    CSS
 
-    assert_equal rules, [{selector: %q[.sim{on], properties: "color: green;"}]
+    assert_equal rules, [{selector: '.sim{on', properties: "color: green;"}]
   end
 
   def test_class_with_double_slash
@@ -176,8 +176,8 @@ class CSSParserCoreTests < Minitest::Test
     INVAILD_CSS
 
     assert_equal rules, [
-      {selector: %q{.sim\on}, properties: "color: green;"},
-      {selector: %q{.ale\\}, properties: "color: green;"},
+      {selector: %q(.sim\on), properties: "color: green;"},
+      {selector: '.ale\\', properties: "color: green;"}
     ]
   end
 
@@ -189,12 +189,12 @@ class CSSParserCoreTests < Minitest::Test
   #   assert_equal rules, [{selector: %q{blow up}, properties: "color: green;"}]
   # end
 
-  def test_triblee_except_start_curly_in_name
-    rules = CssParser::Parser::Parser.parse %q(
-      .sim\\\\\{on { color: green; }
-    )
+  def test_trible_escaped_start_curly_in_name
+    rules = CssParser::Parser::Parser.parse <<~CSS
+      .sim\\\\\\\\\\\\\\\{on { color: green; }
+    CSS
 
-    assert_equal rules, [{selector: %q{.sim\\\{on}, properties: "color: green;"}]
+    assert_equal rules, [{selector: %q(.sim\\\\\{on), properties: "color: green;"}]
   end
 
   def test_child_selector
@@ -202,7 +202,7 @@ class CSSParserCoreTests < Minitest::Test
       .parent > .child { color: green; }
     CSS
 
-    assert_equal rules, [{selector: %q{.parent > .child}, properties: "color: green;"}]
+    assert_equal rules, [{selector: '.parent > .child', properties: "color: green;"}]
   end
 
   def test_content_with_quote
@@ -210,7 +210,7 @@ class CSSParserCoreTests < Minitest::Test
       .active {  content: "before"; }
     CSS
 
-    assert_equal rules, [{selector: %q{.active}, properties: "content: \"before\";"}]
+    assert_equal rules, [{selector: '.active', properties: "content: \"before\";"}]
   end
 
   def test_content_with_quoted_start_curly
@@ -218,7 +218,7 @@ class CSSParserCoreTests < Minitest::Test
       .active {  content: "a{b"; }
     CSS
 
-    assert_equal rules, [{selector: %q{.active}, properties: "content: \"a{b\";"}]
+    assert_equal rules, [{selector: '.active', properties: "content: \"a{b\";"}]
   end
 
   def test_content_with_quoted_end_curly
@@ -226,7 +226,7 @@ class CSSParserCoreTests < Minitest::Test
       .active {  content: "a}b"; }
     CSS
 
-    assert_equal rules, [{selector: %q{.active}, properties: "content: \"a}b\";"}]
+    assert_equal rules, [{selector: '.active', properties: "content: \"a}b\";"}]
   end
 
   def test_no_infinet_loop_incomplete_selector
@@ -260,6 +260,5 @@ class CSSParserCoreTests < Minitest::Test
 
     # @font-face
     # @keyframe
-
   end
 end

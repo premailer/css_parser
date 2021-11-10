@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "parser/parser"
+require_relative 'parser/parser'
 
 module CssParser
   # Exception class used for any errors encountered while downloading remote files.
