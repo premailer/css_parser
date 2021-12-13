@@ -513,6 +513,14 @@ module CssParser
     def create_border_shorthand! # :nodoc:
       values = []
 
+      border_style_declarations = BORDER_STYLE_PROPERTIES.map do |property|
+        declarations[property]
+      end
+
+      if border_style_declarations.compact.size != BORDER_STYLE_PROPERTIES.size
+        return
+      end
+
       BORDER_STYLE_PROPERTIES.each do |property|
         next unless (declaration = declarations[property])
         next if declaration.important
