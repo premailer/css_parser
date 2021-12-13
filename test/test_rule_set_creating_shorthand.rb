@@ -13,12 +13,22 @@ class RuleSetCreatingShorthandTests < Minitest::Test
   def test_border_width
     combined = create_shorthand(
       'border-width': '1px',
-      'border-color': 'black'
     )
 
     assert_equal '', combined['border']
     assert_equal '1px;', combined['border-width']
-    assert_equal 'black;', combined['border-color']
+  end
+
+  def test_border_width_with_border_color_with_spaces
+    combined = create_shorthand(
+      'border-width': '1px',
+      'border-color': 'rgb(0 0 0 / 1)',
+      'border-style': 'solid'
+    )
+
+    assert_equal '', combined['border']
+    assert_equal '1px;', combined['border-width']
+    assert_equal 'rgb(0 0 0 / 1);', combined['border-color']
   end
 
   # Border shorthand

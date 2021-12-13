@@ -530,7 +530,9 @@ module CssParser
         return nil if declaration.value.gsub(/,\s/, ',').strip =~ /\s/
 
         values << declaration.value
+      end
 
+      BORDER_STYLE_PROPERTIES.each do |property|
         declarations.delete(property)
       end
 
