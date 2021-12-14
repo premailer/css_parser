@@ -517,6 +517,7 @@ module CssParser
         # can't merge if any value contains a space (i.e. has multiple values)
         # we temporarily remove any spaces after commas for the check (inside rgba, etc...)
         next if declaration.value.gsub(/,\s/, ',').strip =~ /\s/
+
         declaration.value
       end.compact
 
