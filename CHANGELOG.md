@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### Version 1.11.0
+
  * Do not combine border styles width/color/style are not all present
 
 ### Version 1.10.0
