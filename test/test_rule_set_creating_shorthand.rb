@@ -10,10 +10,31 @@ class RuleSetCreatingShorthandTests < Minitest::Test
     @cp = CssParser::Parser.new
   end
 
+  def test_border_width
+    combined = create_shorthand('border-width': '1px')
+
+    assert_equal '', combined['border']
+    assert_equal '1px;', combined['border-width']
+  end
+
+  def test_border_width_with_border_color_with_spaces
+    combined = create_shorthand(
+      'border-width': '1px',
+      'border-color': 'rgb(0 0 0 / 1)',
+      'border-style': 'solid'
+    )
+
+    assert_equal '', combined['border']
+    assert_equal '1px;', combined['border-width']
+    assert_equal 'rgb(0 0 0 / 1);', combined['border-color']
+  end
+
   # Border shorthand
   def test_combining_borders_into_shorthand
     properties = {
-      'border-top-width' => 'auto', 'border-right-width' => 'thin', 'border-bottom-width' => 'auto',
+      'border-top-width' => 'auto',
+      'border-right-width' => 'thin',
+      'border-bottom-width' => 'auto',
       'border-left-width' => '0px'
     }
 
@@ -32,20 +53,31 @@ class RuleSetCreatingShorthandTests < Minitest::Test
 
     assert_equal '', combined['border-width']
 
-    properties = {'border-width' => '22%', 'border-color' => 'rgba(255, 0, 0)'}
+    properties = {
+      'border-width' => '22%',
+      'border-color' => 'rgba(255, 0, 0)',
+      'border-style' => 'solid'
+    }
     combined = create_shorthand(properties)
-    assert_equal '22% rgba(255, 0, 0);', combined['border']
+    assert_equal '22% solid rgba(255, 0, 0);', combined['border']
     assert_equal '', combined['border-width']
+    assert_equal '', combined['border-color']
+    assert_equal '', combined['border-style']
 
     properties = {
-      'border-top-style' => 'none', 'border-right-style' => 'none', 'border-bottom-style' => 'none',
+      'border-top-style' => 'none',
+      'border-right-style' => 'none',
+      'border-bottom-style' => 'none',
       'border-left-style' => 'none'
     }
     combined = create_shorthand(properties)
-    assert_equal 'none;', combined['border']
+    assert_equal '', combined['border']
+    assert_equal 'none;', combined['border-style']
 
     properties = {
-      'border-top-color' => '#bada55', 'border-right-color' => '#000000', 'border-bottom-color' => '#ffffff',
+      'border-top-color' => '#bada55',
+      'border-right-color' => '#000000',
+      'border-bottom-color' => '#ffffff',
       'border-left-color' => '#ff0000'
     }
     combined = create_shorthand(properties)

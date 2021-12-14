@@ -511,22 +511,20 @@ module CssParser
     #
     # TODO: this is extremely similar to create_background_shorthand! and should be combined
     def create_border_shorthand! # :nodoc:
-      values = []
-
-      BORDER_STYLE_PROPERTIES.each do |property|
+      values = BORDER_STYLE_PROPERTIES.map do |property|
         next unless (declaration = declarations[property])
         next if declaration.important
-
         # can't merge if any value contains a space (i.e. has multiple values)
         # we temporarily remove any spaces after commas for the check (inside rgba, etc...)
-        return nil if declaration.value.gsub(/,\s/, ',').strip =~ /\s/
+        next if declaration.value.gsub(/,\s/, ',').strip =~ /\s/
+        declaration.value
+      end.compact
 
-        values << declaration.value
+      return if values.size != BORDER_STYLE_PROPERTIES.size
 
+      BORDER_STYLE_PROPERTIES.each do |property|
         declarations.delete(property)
       end
-
-      return if values.empty?
 
       declarations['border'] = values.join(' ')
     end

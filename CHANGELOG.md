@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+ * Do not combine border styles width/color/style are not all present
+
 ### Version 1.10.0
 
  * Allow CSS functions to be used in CssParser::RuleSet#expand_dimensions_shorthand! [#126](https://github.com/premailer/css_parser/pull/126)
