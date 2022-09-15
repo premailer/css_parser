@@ -39,6 +39,7 @@ module CssParser
       @options = {absolute_paths: false,
                   import: true,
                   io_exceptions: true,
+                  rule_set_exceptions: true,
                   capture_offsets: false}.merge(options)
 
       # array of RuleSets
@@ -167,6 +168,8 @@ module CssParser
     def add_rule!(selectors, declarations, media_types = :all)
       rule_set = RuleSet.new(selectors, declarations)
       add_rule_set!(rule_set, media_types)
+    rescue ArgumentError => e
+      raise e if @options[:rule_set_exceptions]
     end
 
     # Add a CSS rule by setting the +selectors+, +declarations+, +filename+, +offset+ and +media_types+.
