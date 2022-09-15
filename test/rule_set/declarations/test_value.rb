@@ -102,6 +102,12 @@ class RuleSetProperyTest < Minitest::Test
 
       assert_equal true, CssParser::RuleSet::Declarations::Value.new('value').value.frozen?
     end
+
+    it 'raises an exception when the value is empty' do
+      assert_raises ArgumentError do
+        CssParser::RuleSet::Declarations::Value.new
+      end
+    end
   end
 
   describe '#to_s' do
