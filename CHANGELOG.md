@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+ * Improve exception message for missing value [#131](https://github.com/premailer/css_parser/pull/131)
+
 ### Version 1.11.0
 
  * Do not combine border styles width/color/style are not all present
