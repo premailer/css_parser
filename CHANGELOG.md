@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+ * `:rule_set_exceptions` option added [#132](https://github.com/premailer/css_parser/pull/132)
+
 ### Version 1.11.0
 
  * Do not combine border styles width/color/style are not all present
