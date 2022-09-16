@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### Version v1.12.0
+
  * Improve exception message for missing value [#131](https://github.com/premailer/css_parser/pull/131)
  * `:rule_set_exceptions` option added [#132](https://github.com/premailer/css_parser/pull/132)
 
