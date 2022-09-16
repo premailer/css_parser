@@ -93,6 +93,8 @@ module CssParser
         else
           declarations[property] = Value.new(value)
         end
+      rescue ArgumentError => e
+        raise e.exception, "#{property} #{e.message}"
       end
       alias add_declaration! []=
 
