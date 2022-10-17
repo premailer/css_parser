@@ -43,7 +43,7 @@ class CssParserMediaTypesTests < Minitest::Test
 
     assert_equal 'font-size: 10pt; line-height: 1.2;', @cp.find_by_selector('body', :print).join(' ')
     assert_equal 'font-size: 13px; line-height: 1.2; color: blue;', @cp.find_by_selector('body', :screen).join(' ')
-    assert_equal 'color: blue;', @cp.find_by_selector('body', 'print and resolution > 90dpi'.to_sym).join(' ')
+    assert_equal 'color: blue;', @cp.find_by_selector('body', :'print and resolution > 90dpi').join(' ')
   end
 
   def test_finding_by_multiple_media_types

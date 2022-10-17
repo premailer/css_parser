@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: 2.4  # lowest supported version
+  TargetRubyVersion: 2.5  # lowest supported version
   NewCops: enable
 
 Layout/ArgumentAlignment:

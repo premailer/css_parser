@@ -167,7 +167,7 @@ class RuleSetDeclarationsTest < Minitest::Test
       declarations = CssParser::RuleSet::Declarations.new({foo: 'foo value'})
       assert_equal 1, declarations.size
 
-      declarations.remove_declaration!('fOo'.to_sym)
+      declarations.remove_declaration!(:fOo)
 
       assert_equal 0, declarations.size
     end
