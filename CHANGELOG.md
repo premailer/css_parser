@@ -2,6 +2,15 @@
 
 ### Unreleased
 
+### Version v1.14.0
+
+ * Fix parsing of multiline URL values for rule sets [#97](https://github.com/premailer/css_parser/pull/97)
+
+### Version v1.13.0
+
+ * Drop suppor for EOL ruby versions
+ * fix regex deprecation
+
 ### Version v1.12.0
 
  * Improve exception message for missing value [#131](https://github.com/premailer/css_parser/pull/131)
