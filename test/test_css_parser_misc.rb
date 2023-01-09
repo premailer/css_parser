@@ -113,6 +113,26 @@ class CssParserTests < Minitest::Test
     end
   end
 
+  def test_multiline_declarations
+    css = <<-CSS
+      @font-face {
+        font-family: 'some_font';
+        src: url(https://example.com/font.woff2) format('woff2'),
+             url(https://example.com/font.woff) format('woff');
+        font-style: normal;
+      }
+    CSS
+
+    @cp.add_block!(css)
+    @cp.each_selector do |selector, declarations, _spec|
+      assert_equal '@font-face', selector
+      assert_equal "font-family: 'some_font'; " \
+                   "src: url(https://example.com/font.woff2) format('woff2')," \
+                        "url(https://example.com/font.woff) format('woff'); " \
+                   "font-style: normal;", declarations
+    end
+  end
+
   def test_find_rule_sets
     css = <<-CSS
       h1, h2 { color: blue; }
