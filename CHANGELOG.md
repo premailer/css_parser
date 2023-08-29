@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+ * Fix parsing background shorthands in ruby 3.2 [#140](https://github.com/premailer/css_parser/pull/140)
+
 ### Version v1.14.0
 
  * Fix parsing of multiline URL values for rule sets [#97](https://github.com/premailer/css_parser/pull/97)
