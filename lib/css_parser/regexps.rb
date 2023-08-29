@@ -52,10 +52,10 @@ module CssParser
   # Special units
   BOX_MODEL_UNITS_RX = /(auto|inherit|0|(-*([0-9]+|[0-9]*\.[0-9]+)(rem|vw|vh|vm|vmin|vmax|e[mx]+|px|[cm]+m|p[tc+]|in|%)))([\s;]|\Z)/imx.freeze
   RE_LENGTH_OR_PERCENTAGE = Regexp.new('([\-]*(([0-9]*\.[0-9]+)|[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|\%))', Regexp::IGNORECASE)
-  RE_SINGLE_BACKGROUND_POSITION = /#{RE_LENGTH_OR_PERCENTAGE}|left|center|right|top|bottom/i
-  RE_SINGLE_BACKGROUND_SIZE = /#{RE_LENGTH_OR_PERCENTAGE}|auto|cover|contain|initial|inherit/i
-  RE_BACKGROUND_POSITION = /#{RE_SINGLE_BACKGROUND_POSITION}\s+#{RE_SINGLE_BACKGROUND_POSITION}|#{RE_SINGLE_BACKGROUND_POSITION}/
-  RE_BACKGROUND_SIZE = %r{\s*/\s*(#{RE_SINGLE_BACKGROUND_SIZE}\s+#{RE_SINGLE_BACKGROUND_SIZE}|#{RE_SINGLE_BACKGROUND_SIZE})}
+  RE_SINGLE_BACKGROUND_POSITION = /#{RE_LENGTH_OR_PERCENTAGE}|left|center|right|top|bottom/i.freeze
+  RE_SINGLE_BACKGROUND_SIZE = /#{RE_LENGTH_OR_PERCENTAGE}|auto|cover|contain|initial|inherit/i.freeze
+  RE_BACKGROUND_POSITION = /#{RE_SINGLE_BACKGROUND_POSITION}\s+#{RE_SINGLE_BACKGROUND_POSITION}|#{RE_SINGLE_BACKGROUND_POSITION}/.freeze
+  RE_BACKGROUND_SIZE = %r{\s*/\s*(#{RE_SINGLE_BACKGROUND_SIZE}\s+#{RE_SINGLE_BACKGROUND_SIZE}|#{RE_SINGLE_BACKGROUND_SIZE})}.freeze
   FONT_UNITS_RX = /((x+-)*small|medium|larger*|auto|inherit|([0-9]+|[0-9]*\.[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|%)*)/i.freeze
   RE_BORDER_STYLE = /(\s*^)?(none|hidden|dotted|dashed|solid|double|dot-dash|dot-dot-dash|wave|groove|ridge|inset|outset)(\s*$)?/imx.freeze
   RE_BORDER_UNITS = Regexp.union(BOX_MODEL_UNITS_RX, /(thin|medium|thick)/i)
