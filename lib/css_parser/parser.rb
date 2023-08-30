@@ -329,7 +329,7 @@ module CssParser
       rule_start = nil
       offset = nil
 
-      block.scan(/\s+|\\{2,}|\\?[{}\s"]|.[^\s"{}\\]*/) do |token|
+      block.scan(/\s+|\\{2,}|\\?[{}\s"]|[()]|.[^\s"{}()\\]*/) do |token|
         # save the regex offset so that we know where in the file we are
         offset = Regexp.last_match.offset(0) if options[:capture_offsets]
 
@@ -391,7 +391,16 @@ module CssParser
             current_media_query = String.new
           else
             token.strip!
-            current_media_query << token << ' '
+            # special-case the ( and ) tokens to remove inner-whitespace
+            # (eg we'd prefer '(width: 500px)' to '( width: 500px )' )
+            case token
+            when '('
+              current_media_query << token
+            when ')'
+              current_media_query.sub!(/ ?$/, token)
+            else
+              current_media_query << token << ' '
+            end
           end
         elsif in_charset or token =~ /@charset/i
           # iterate until we are out of the charset declaration
