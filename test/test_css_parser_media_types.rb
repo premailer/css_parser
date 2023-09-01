@@ -46,6 +46,25 @@ class CssParserMediaTypesTests < Minitest::Test
     assert_equal 'color: blue;', @cp.find_by_selector('body', 'print and resolution > 90dpi'.to_sym).join(' ')
   end
 
+  def test_with_parenthesized_media_features
+    @cp.add_block!(<<-CSS)
+      body { color: black }
+      @media(prefers-color-scheme: dark) {
+        body { color: white }
+      }
+      @media(min-width: 500px) {
+        body { color: blue }
+      }
+      @media screen and (width > 500px) {
+        body { color: red }
+      }
+    CSS
+    assert_equal [:all, :'(prefers-color-scheme: dark)', :'(min-width: 500px)', :'screen and (width > 500px)'], @cp.rules_by_media_query.keys
+    assert_equal 'color: white;', @cp.find_by_selector('body', :'(prefers-color-scheme: dark)').join(' ')
+    assert_equal 'color: blue;', @cp.find_by_selector('body', :'(min-width: 500px)').join(' ')
+    assert_equal 'color: red;', @cp.find_by_selector('body', :'screen and (width > 500px)').join(' ')
+  end
+
   def test_finding_by_multiple_media_types
     @cp.add_block!(<<-CSS)
       @media print {
