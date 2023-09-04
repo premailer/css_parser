@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-### Version v1.15.0
+### Version v1.16.0
 
  * Fix parsing space-less media query features like `@media(width:123px)` [#141](https://github.com/premailer/css_parser/pull/141)
 
