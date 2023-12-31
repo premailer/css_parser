@@ -1,32 +1,36 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    "version": "0.1.0",
+    "version": "2.0.0",
     "tasks": [
-        {
-            "taskName": "Bundle dependencies and stubs",
-            "command": "bundle",
-            "isShellCommand": true,
-            "isBackground": true,
-            "args": ["--binstubs"],
-            "showOutput": "silent"
-        },
-        {
-            "taskName": "Test",
-            "command": "${workspaceRoot}/bin/rake",
-            "isTestCommand": true,
-            "isShellCommand": false,
-            "args": [],
-            "showOutput": "always"
-        },
-        {
-            "taskName": "Benchmark",
-            "command": "${workspaceRoot}/bin/rake",
-            "isShellCommand": false,
-            "args": [
-                "benchmark"
-            ],
-            "showOutput": "always"
+      {
+        "label": "Bundle dependencies and stubs",
+        "type": "shell",
+        "command": "bundle",
+        "args": [
+          "--binstubs"
+        ],
+        "isBackground": true,
+        "problemMatcher": []
+      },
+      {
+        "label": "Test",
+        "type": "shell",
+        "command": "${workspaceRoot}/bin/rake",
+        "problemMatcher": [],
+        "group": {
+          "_id": "test",
+          "isDefault": false
         }
+      },
+      {
+        "label": "Benchmark",
+        "type": "shell",
+        "command": "${workspaceRoot}/bin/rake",
+        "args": [
+          "benchmark"
+        ],
+        "problemMatcher": []
+      }
     ]
 }
