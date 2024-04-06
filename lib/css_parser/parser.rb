@@ -35,12 +35,14 @@ module CssParser
     class << self; attr_reader :folded_declaration_cache; end
 
     def initialize(options = {})
-      @options = {absolute_paths: false,
-                  import: true,
-                  io_exceptions: true,
-                  rule_set_exceptions: true,
-                  capture_offsets: false,
-                  user_agent: USER_AGENT}.merge(options)
+      @options = {
+        absolute_paths: false,
+        import: true,
+        io_exceptions: true,
+        rule_set_exceptions: true,
+        capture_offsets: false,
+        user_agent: USER_AGENT
+      }.merge(options)
 
       # array of RuleSets
       @rules = []

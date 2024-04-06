@@ -75,13 +75,13 @@ module CssParser
 
       rule_set.each_declaration do |property, value, is_important|
         # Add the property to the list to be folded per http://www.w3.org/TR/CSS21/cascade.html#cascading-order
-        if not properties.key?(property)
+        if !properties.key?(property)
           properties[property] = {value: value, specificity: specificity, is_important: is_important}
         elsif is_important
-          if not properties[property][:is_important] or properties[property][:specificity] <= specificity
+          if !properties[property][:is_important] || properties[property][:specificity] <= specificity
             properties[property] = {value: value, specificity: specificity, is_important: is_important}
           end
-        elsif properties[property][:specificity] < specificity or properties[property][:specificity] == specificity
+        elsif properties[property][:specificity] < specificity || properties[property][:specificity] == specificity
           unless properties[property][:is_important]
             properties[property] = {value: value, specificity: specificity, is_important: is_important}
           end
