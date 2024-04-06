@@ -40,7 +40,7 @@ module CssParser
                   io_exceptions: true,
                   rule_set_exceptions: true,
                   capture_offsets: false,
-                  user_agent: "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)"}.merge(options)
+                  user_agent: USER_AGENT}.merge(options)
 
       # array of RuleSets
       @rules = []
