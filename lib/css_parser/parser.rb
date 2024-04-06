@@ -17,7 +17,6 @@ module CssParser
   # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
   class Parser
     USER_AGENT = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)"
-
     STRIP_CSS_COMMENTS_RX = %r{/\*.*?\*/}m.freeze
     STRIP_HTML_COMMENTS_RX = /<!--|-->/m.freeze
 
@@ -40,7 +39,8 @@ module CssParser
                   import: true,
                   io_exceptions: true,
                   rule_set_exceptions: true,
-                  capture_offsets: false}.merge(options)
+                  capture_offsets: false,
+                  user_agent: USER_AGENT}.merge(options)
 
       # array of RuleSets
       @rules = []
@@ -597,7 +597,7 @@ module CssParser
             http = Net::HTTP.new(uri.host, uri.port)
           end
 
-          res = http.get(uri.request_uri, {'User-Agent' => USER_AGENT, 'Accept-Encoding' => 'gzip'})
+          res = http.get(uri.request_uri, {'User-Agent' => @options[:user_agent], 'Accept-Encoding' => 'gzip'})
           src = res.body
           charset = res.respond_to?(:charset) ? res.encoding : 'utf-8'
 
