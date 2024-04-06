@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### Version v1.17.0
+
  * Added `user_agent` as an option to Parser [#146](https://github.com/premailer/css_parser/pull/146)
 
 ### Version v1.16.0
