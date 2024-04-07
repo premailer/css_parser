@@ -53,6 +53,10 @@ Style/Not:
 Style/NumericPredicate:
   Enabled: false
 
+Style/OpenStructUse:
+  Exclude:
+    - 'test/**/*'
+
 Style/RedundantFreeze:
   Enabled: false
 
