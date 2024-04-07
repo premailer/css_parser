@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+ * Improve security by using `File.read` instead of `IO.read` [#148](https://github.com/premailer/css_parser/pull/148)
+
 ### Version v1.17.0
 
  * Added `user_agent` as an option to Parser [#146](https://github.com/premailer/css_parser/pull/146)

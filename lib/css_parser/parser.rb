@@ -486,7 +486,7 @@ module CssParser
       return unless File.readable?(file_name)
       return unless circular_reference_check(file_name)
 
-      src = IO.read(file_name)
+      src = File.read(file_name)
 
       opts[:filename] = file_name if opts[:capture_offsets]
       opts[:base_dir] = File.dirname(file_name)
