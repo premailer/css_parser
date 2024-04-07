@@ -1,3 +1,6 @@
+require:
+  - rubocop-rake
+
 AllCops:
   TargetRubyVersion: 2.7  # lowest supported version
   NewCops: enable
@@ -52,6 +55,10 @@ Style/Not:
 
 Style/NumericPredicate:
   Enabled: false
+
+Style/OpenStructUse:
+  Exclude:
+    - 'test/**/*'
 
 Style/RedundantFreeze:
   Enabled: false

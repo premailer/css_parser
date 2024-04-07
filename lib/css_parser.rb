@@ -111,7 +111,7 @@ module CssParser
   #++
   def self.calculate_specificity(selector)
     a = 0
-    b = selector.scan(/\#/).length
+    b = selector.scan('#').length
     c = selector.scan(NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX_NC).length
     d = selector.scan(ELEMENTS_AND_PSEUDO_ELEMENTS_RX_NC).length
 

@@ -133,7 +133,7 @@ module CssParser
         block.scan(RE_AT_IMPORT_RULE).each do |import_rule|
           media_types = []
           if (media_string = import_rule[-1])
-            media_string.split(/,/).each do |t|
+            media_string.split(',').each do |t|
               media_types << CssParser.sanitize_media_query(t) unless t.empty?
             end
           else
