@@ -5,3 +5,12 @@
 source 'https://rubygems.org'
 
 gemspec
+
+gem 'benchmark-ips'
+gem 'bump'
+gem 'maxitest'
+gem 'memory_profiler'
+gem 'rake'
+gem 'rubocop'
+gem 'rubocop-rake'
+gem 'webrick'

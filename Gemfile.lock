@@ -60,7 +60,7 @@ DEPENDENCIES
   maxitest
   memory_profiler
   rake
-  rubocop (~> 1.8)
+  rubocop
   rubocop-rake
   webrick
 
