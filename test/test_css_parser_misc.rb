@@ -79,7 +79,7 @@ class CssParserTests < Minitest::Test
       \
           foo(int x) {\
               this.x = 'test';\
-              this.x = \"test\";\
+              this.x = "test";\
           }\
       \
       }"] { color: red }
@@ -127,8 +127,7 @@ class CssParserTests < Minitest::Test
     @cp.each_selector do |selector, declarations, _spec|
       assert_equal '@font-face', selector
       assert_equal "font-family: 'some_font'; " \
-                   "src: url(https://example.com/font.woff2) format('woff2')," \
-                        "url(https://example.com/font.woff) format('woff'); " \
+                   "src: url(https://example.com/font.woff2) format('woff2'),url(https://example.com/font.woff) format('woff'); " \
                    "font-style: normal;", declarations
     end
   end

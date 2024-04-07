@@ -247,7 +247,7 @@ class RuleSetExpandingShorthandTests < Minitest::Test
       'list-style-position' => 'inside'
     }
 
-    shorthand = "list-style: katakana inside url(\'chess.png\');"
+    shorthand = "list-style: katakana inside url('chess.png');"
     declarations = expand_declarations(shorthand)
     assert_equal expected, declarations
   end
