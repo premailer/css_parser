@@ -58,7 +58,7 @@ module CssParser
 
       extend Forwardable
 
-      def_delegators :declarations, :each
+      def_delegators :declarations, :each, :each_value
 
       def initialize(declarations = {})
         self.declarations = {}
@@ -142,7 +142,7 @@ module CssParser
 
         if preserve_importance
           importance = get_value(property).important
-          replacement_declarations.each { |_key, value| value.important = importance }
+          replacement_declarations.each_value { |value| value.important = importance }
         end
 
         replacement_keys = declarations.keys
@@ -308,7 +308,7 @@ module CssParser
 
       replacement =
         if value.match(CssParser::RE_INHERIT)
-          BACKGROUND_PROPERTIES.map { |key| [key, 'inherit'] }.to_h
+          BACKGROUND_PROPERTIES.to_h { |key| [key, 'inherit'] }
         else
           {
             'background-image' => value.slice!(CssParser::RE_IMAGE),
@@ -448,7 +448,7 @@ module CssParser
 
       replacement =
         if value =~ CssParser::RE_INHERIT
-          LIST_STYLE_PROPERTIES.map { |key| [key, 'inherit'] }.to_h
+          LIST_STYLE_PROPERTIES.to_h { |key| [key, 'inherit'] }
         else
           {
             'list-style-type' => value.slice!(CssParser::RE_LIST_STYLE_TYPE),

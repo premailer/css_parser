@@ -219,7 +219,7 @@ class RuleSetCreatingShorthandTests < Minitest::Test
 protected
 
   def assert_properties_are_deleted(ruleset, properties)
-    properties.each do |property, _value|
+    properties.each_key do |property|
       assert_equal '', ruleset[property]
     end
   end
