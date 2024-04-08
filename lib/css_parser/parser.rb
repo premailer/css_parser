@@ -16,7 +16,7 @@ module CssParser
   # [<tt>import</tt>] Follow <tt>@import</tt> rules. Boolean, default is <tt>true</tt>.
   # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
   class Parser
-    USER_AGENT = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)"
+    USER_AGENT = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)".freeze
     STRIP_CSS_COMMENTS_RX = %r{/\*.*?\*/}m.freeze
     STRIP_HTML_COMMENTS_RX = /<!--|-->/m.freeze
 

@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### Version v1.18.0
+
+ * Drop Ruby 2.7 compatibility for parity with Premailer [#149](https://github.com/premailer/css_parser/pull/149)
+
 ### Version v1.17.1
 
  * Improve security by using `File.read` instead of `IO.read` [#149](https://github.com/premailer/css_parser/pull/149)

@@ -11,7 +11,7 @@ Gem::Specification.new name, CssParser::VERSION do |s|
   s.author = 'Alex Dunae'
   s.files = Dir.glob('lib/**/*') + ['MIT-LICENSE']
   s.license = 'MIT'
-  s.required_ruby_version = '>= 2.7'
+  s.required_ruby_version = '>= 3.0'
 
   s.metadata['changelog_uri'] = 'https://github.com/premailer/css_parser/blob/master/CHANGELOG.md'
   s.metadata['source_code_uri'] = 'https://github.com/premailer/css_parser'
