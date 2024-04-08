@@ -4,7 +4,7 @@
 
 ### Version v1.17.1
 
- * Improve security by using `File.read` instead of `IO.read` [#148](https://github.com/premailer/css_parser/pull/148)
+ * Improve security by using `File.read` instead of `IO.read` [#149](https://github.com/premailer/css_parser/pull/149)
 
 ### Version v1.17.0
 
