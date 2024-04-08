@@ -2,7 +2,7 @@ require:
   - rubocop-rake
 
 AllCops:
-  TargetRubyVersion: 2.7  # lowest supported version
+  TargetRubyVersion: 3.0 # lowest supported version
   NewCops: enable
 
 Layout/ArgumentAlignment:
