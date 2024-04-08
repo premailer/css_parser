@@ -78,7 +78,7 @@ bundle
 bundle exec rake
 ```
 
-Runs on Ruby/JRuby 1.9.2 or above.
+Runs on Ruby 3.0/JRuby 9.4 or above.
 
 # Credits
 
