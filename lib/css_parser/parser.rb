@@ -166,9 +166,13 @@ module CssParser
 
     # Add a CSS rule by setting the +selectors+, +declarations+ and +media_types+.
     #
-    # +media_types+ can be a symbol or an array of symbols.
+    # +media_types+ can be a symbol or an array of symbols. default to :all
+    # optional fields for source location for source location
+    # +filename+ can be a string or uri pointing to the file or url location.
+    # +offset+ should be Range object representing the start and end byte locations where the rule was found in the file.
+
     def add_rule!(selectors, declarations, media_types = :all)
-      rule_set = RuleSet.new(selectors, declarations)
+      rule_set = RuleSet.new(selectors: selectors, block: declarations)
       add_rule_set!(rule_set, media_types)
     rescue ArgumentError => e
       raise e if @options[:rule_set_exceptions]
@@ -180,7 +184,11 @@ module CssParser
     # +offset+ should be Range object representing the start and end byte locations where the rule was found in the file.
     # +media_types+ can be a symbol or an array of symbols.
     def add_rule_with_offsets!(selectors, declarations, filename, offset, media_types = :all)
-      rule_set = OffsetAwareRuleSet.new(filename, offset, selectors, declarations)
+      rule_set = RuleSet.new(
+        selectors: selectors, block: declarations,
+        offset: offset, filename: filename
+      )
+
       add_rule_set!(rule_set, media_types)
     end
 

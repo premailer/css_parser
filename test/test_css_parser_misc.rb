@@ -195,20 +195,20 @@ class CssParserTests < Minitest::Test
     # rulesets = []
     #
     # parser['div'].each do |declaration|
-    #   rulesets << RuleSet.new('div', declaration)
+    #   rulesets << RuleSet.new(selectors: 'div', block: declaration)
     # end
     #
     # merged = CssParser.merge(rulesets)
     #
     # result: # merged.to_s => "{ background-color: black !important; }"
 
-    new_rule = RuleSet.new('div', "{ background-color: black !important; }")
+    new_rule = RuleSet.new(selectors: 'div', block: "{ background-color: black !important; }")
 
     assert_equal 'div { background-color: black !important; }', new_rule.to_s
   end
 
   def test_content_with_data
-    rule = RuleSet.new('div', '{content: url(data:image/png;base64,LOTSOFSTUFF)}')
+    rule = RuleSet.new(selectors: 'div', block: '{content: url(data:image/png;base64,LOTSOFSTUFF)}')
     assert_includes rule.to_s, "image/png;base64,LOTSOFSTUFF"
   end
 
