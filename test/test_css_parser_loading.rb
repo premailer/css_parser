@@ -204,16 +204,4 @@ class CssParserLoadingTests < Minitest::Test
 
     cp_without_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
   end
-
-  def test_rule_set_argument_exceptions
-    cp_with_exceptions = Parser.new(rule_set_exceptions: true)
-
-    assert_raises ArgumentError, 'background-color value is empty' do
-      cp_with_exceptions.add_rule!('body', 'background-color: !important')
-    end
-
-    cp_without_exceptions = Parser.new(rule_set_exceptions: false)
-
-    cp_without_exceptions.add_rule!('body', 'background-color: !important')
-  end
 end

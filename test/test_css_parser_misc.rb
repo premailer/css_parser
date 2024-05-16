@@ -226,4 +226,28 @@ class CssParserTests < Minitest::Test
       assert_equal 'color: black;', desc
     end
   end
+
+  def test_catching_argument_exceptions_for_add_rule
+    cp_with_exceptions = Parser.new(rule_set_exceptions: true)
+
+    assert_raises ArgumentError, 'background-color value is empty' do
+      cp_with_exceptions.add_rule!('body', 'background-color: !important')
+    end
+
+    cp_without_exceptions = Parser.new(rule_set_exceptions: false)
+
+    cp_without_exceptions.add_rule!('body', 'background-color: !important')
+  end
+
+  def test_catching_argument_exceptions_for_add_rule_with_offsets
+    cp_with_exceptions = Parser.new(capture_offsets: true, rule_set_exceptions: true)
+
+    assert_raises ArgumentError, 'background-color value is empty' do
+      cp_with_exceptions.add_rule_with_offsets!('body', 'background-color: !important', 'inline', 1)
+    end
+
+    cp_without_exceptions = Parser.new(capture_offsets: true, rule_set_exceptions: false)
+
+    cp_without_exceptions.add_rule_with_offsets!('body', 'background-color: !important', 'inline', 1)
+  end
 end
