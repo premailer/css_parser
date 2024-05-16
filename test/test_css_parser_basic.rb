@@ -35,7 +35,7 @@ class CssParserBasicTests < Minitest::Test
   end
 
   def test_adding_a_rule
-    @cp.add_rule!('div', 'color: blue;')
+    @cp.add_rule!(selectors: 'div', block: 'color: blue;')
     assert_equal 'color: blue;', @cp.find_by_selector('div').join(' ')
   end
 

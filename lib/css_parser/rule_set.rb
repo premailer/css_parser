@@ -269,7 +269,7 @@ module CssParser
       @specificity = specificity
 
       unless offset.nil? == filename.nil?
-        raise ArgumentError, 'require both offset and filename'
+        raise ArgumentError, 'require both offset and filename or no offset and no filename'
       end
 
       @offset = offset

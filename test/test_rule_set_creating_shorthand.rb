@@ -111,7 +111,7 @@ class RuleSetCreatingShorthandTests < Minitest::Test
 
   # Dimensions shorthand, auto property
   def test_combining_dimensions_into_shorthand_with_auto
-    rs = RuleSet.new('#page', "margin: 0; margin-left: auto; margin-right: auto;")
+    rs = RuleSet.new(selectors: '#page', block: "margin: 0; margin-left: auto; margin-right: auto;")
     rs.expand_shorthand!
     assert_equal('auto;', rs['margin-left'])
     rs.create_shorthand!
@@ -201,7 +201,11 @@ class RuleSetCreatingShorthandTests < Minitest::Test
   end
 
   def test_property_values_in_url
-    rs = RuleSet.new('#header', "background:url(http://example.com/1528/www/top-logo.jpg) no-repeat top right; padding: 79px 0 10px 0;  text-align:left;")
+    rs = RuleSet.new(
+      selectors: '#header',
+      block: "background:url(http://example.com/1528/www/top-logo.jpg) no-repeat top right; " \
+             "padding: 79px 0 10px 0;  text-align:left;"
+    )
     rs.expand_shorthand!
     assert_equal('top right;', rs['background-position'])
     rs.create_shorthand!
