@@ -35,20 +35,20 @@ class CssParserBasicTests < Minitest::Test
   end
 
   def test_adding_a_rule
-    @cp.add_rule!('div', 'color: blue;')
+    @cp.add_rule!(selectors: 'div', block: 'color: blue;')
     assert_equal 'color: blue;', @cp.find_by_selector('div').join(' ')
   end
 
   def test_adding_a_rule_set
-    rs = CssParser::RuleSet.new('div', 'color: blue;')
+    rs = CssParser::RuleSet.new(selectors: 'div', block: 'color: blue;')
     @cp.add_rule_set!(rs)
     assert_equal 'color: blue;', @cp.find_by_selector('div').join(' ')
   end
 
   def test_removing_a_rule_set
-    rs = CssParser::RuleSet.new('div', 'color: blue;')
+    rs = CssParser::RuleSet.new(selectors: 'div', block: 'color: blue;')
     @cp.add_rule_set!(rs)
-    rs2 = CssParser::RuleSet.new('div', 'color: blue;')
+    rs2 = CssParser::RuleSet.new(selectors: 'div', block: 'color: blue;')
     @cp.remove_rule_set!(rs2)
     assert_equal '', @cp.find_by_selector('div').join(' ')
   end
@@ -72,7 +72,7 @@ class CssParserBasicTests < Minitest::Test
   end
 
   def test_converting_to_hash
-    rs = CssParser::RuleSet.new('div', 'color: blue;')
+    rs = CssParser::RuleSet.new(selectors: 'div', block: 'color: blue;')
     @cp.add_rule_set!(rs)
     hash = @cp.to_h
     assert_equal 'blue', hash['all']['div']['color']

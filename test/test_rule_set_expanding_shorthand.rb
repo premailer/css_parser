@@ -347,7 +347,7 @@ class RuleSetExpandingShorthandTests < Minitest::Test
 protected
 
   def expand_declarations(declarations)
-    ruleset = RuleSet.new(nil, declarations)
+    ruleset = RuleSet.new(block: declarations)
     ruleset.expand_shorthand!
 
     collected = {}

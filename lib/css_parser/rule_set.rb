@@ -223,6 +223,12 @@ module CssParser
 
     extend Forwardable
 
+    # optional field for storing source reference
+    # File offset range
+    attr_reader :offset
+    # the local or remote location
+    attr_accessor :filename
+
     # Array of selector strings.
     attr_reader :selectors
 
@@ -237,9 +243,38 @@ module CssParser
     alias []= add_declaration!
     alias remove_declaration! delete
 
-    def initialize(selectors, block, specificity = nil)
+    def initialize(*args, selectors: nil, block: nil, offset: nil, filename: nil, specificity: nil) # rubocop:disable Metrics/ParameterLists
+      if args.any?
+        if selectors || block || offset || filename || specificity
+          raise ArgumentError, "don't mix positional and keyword arguments"
+        end
+
+        warn '[DEPRECATION] positional arguments are deprecated use keyword instead.', uplevel: 1
+
+        case args.length
+        when 2
+          selectors, block = args
+        when 3
+          selectors, block, specificity = args
+        when 4
+          filename, offset, selectors, block = args
+        when 5
+          filename, offset, selectors, block, specificity = args
+        else
+          raise ArgumentError
+        end
+      end
+
       @selectors = []
       @specificity = specificity
+
+      unless offset.nil? == filename.nil?
+        raise ArgumentError, 'require both offset and filename or no offset and no filename'
+      end
+
+      @offset = offset
+      @filename = filename
+
       parse_selectors!(selectors) if selectors
       parse_declarations!(block)
     end
@@ -648,20 +683,6 @@ module CssParser
       matches.each do |c|
         c.gsub!(WHITESPACE_REPLACEMENT, ' ')
       end
-    end
-  end
-
-  class OffsetAwareRuleSet < RuleSet
-    # File offset range
-    attr_reader :offset
-
-    # the local or remote location
-    attr_accessor :filename
-
-    def initialize(filename, offset, selectors, block, specificity = nil)
-      super(selectors, block, specificity)
-      @offset = offset
-      @filename = filename
     end
   end
 end

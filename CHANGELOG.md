@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+* Deprecate `add_rule!` (positional arguments)and `add_rule_with_offsets!` for `add_rule!` (keyword argument)
+* RuleSet initialize now takes keyword argument, positional arguments are still supported but deprecated
+* Removed OffsetAwareRuleSet, it's a RuleSet with optional attributes filename and offset
+
 ### Version v1.18.0
 
  * Drop Ruby 2.7 compatibility for parity with Premailer [#149](https://github.com/premailer/css_parser/pull/149)

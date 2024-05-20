@@ -13,7 +13,11 @@ Rake::TestTask.new do |test|
   test.verbose = true
 end
 
-RuboCop::RakeTask.new
+RuboCop::RakeTask.new do |t|
+  # allow you to run "$ rake rubocop -a" to autofix
+  t.options << '-a' if ARGV.include?('-a')
+  t.options << '-A' if ARGV.include?('-A')
+end
 
 desc 'Run a performance evaluation.'
 task :benchmark do

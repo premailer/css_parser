@@ -135,24 +135,24 @@ class CssParserMediaTypesTests < Minitest::Test
   end
 
   def test_adding_rule_set_with_media_type
-    @cp.add_rule!('body', 'color: black;', [:handheld, :tty])
-    @cp.add_rule!('body', 'color: blue;', :screen)
+    @cp.add_rule!(selectors: 'body', block: 'color: black;', media_types: [:handheld, :tty])
+    @cp.add_rule!(selectors: 'body', block: 'color: blue;', media_types: :screen)
     assert_equal 'color: black;', @cp.find_by_selector('body', :handheld).join(' ')
   end
 
   def test_adding_rule_set_with_media_query
-    @cp.add_rule!('body', 'color: black;', 'aural and (device-aspect-ratio: 16/9)')
+    @cp.add_rule!(selectors: 'body', block: 'color: black;', media_types: 'aural and (device-aspect-ratio: 16/9)')
     assert_equal 'color: black;', @cp.find_by_selector('body', 'aural and (device-aspect-ratio: 16/9)').join(' ')
     assert_equal 'color: black;', @cp.find_by_selector('body', :all).join(' ')
   end
 
   def test_selecting_with_all_media_types
-    @cp.add_rule!('body', 'color: black;', [:handheld, :tty])
+    @cp.add_rule!(selectors: 'body', block: 'color: black;', media_types: [:handheld, :tty])
     assert_equal 'color: black;', @cp.find_by_selector('body', :all).join(' ')
   end
 
   def test_to_s_includes_media_queries
-    @cp.add_rule!('body', 'color: black;', 'aural and (device-aspect-ratio: 16/9)')
+    @cp.add_rule!(selectors: 'body', block: 'color: black;', media_types: 'aural and (device-aspect-ratio: 16/9)')
     assert_equal "@media aural and (device-aspect-ratio: 16/9) {\n  body {\n    color: black;\n  }\n}\n", @cp.to_s
   end
 end
