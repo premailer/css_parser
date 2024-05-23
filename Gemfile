@@ -14,3 +14,5 @@ gem 'rake'
 gem 'rubocop'
 gem 'rubocop-rake'
 gem 'webrick'
+
+gem 'debug', '~> 1.9', platforms: [:mri, :mingw, :x64_mingw]
