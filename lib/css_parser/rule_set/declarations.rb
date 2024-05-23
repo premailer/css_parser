@@ -16,7 +16,7 @@ module CssParser
           value = value.to_s.sub(/\s*;\s*\Z/, '')
           self.important = !value.slice!(CssParser::IMPORTANT_IN_PROPERTY_RX).nil?
           value.strip!
-          raise ArgumentError, 'value is empty' if value.empty?
+          raise EmptyValueError, 'value is empty' if value.empty?
 
           @value = value.freeze
         end
@@ -67,10 +67,12 @@ module CssParser
         elsif value.to_s.strip.empty?
           delete property
         else
-          declarations[property] = Value.new(value)
+          begin
+            declarations[property] = Value.new(value)
+          rescue EmptyValueError => e
+            raise e.exception, "#{property} #{e.message}"
+          end
         end
-      rescue ArgumentError => e
-        raise e.exception, "#{property} #{e.message}"
       end
       alias add_declaration! []=
 

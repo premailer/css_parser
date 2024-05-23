@@ -73,9 +73,9 @@ class RuleSetDeclarationsTest < Minitest::Test
     it 'raises an exception including the property when the value is empty' do
       declarations = CssParser::RuleSet::Declarations.new
 
-      assert_raises ArgumentError do
+      assert_raises CssParser::EmptyValueError do
         declarations['foo'] = '!important'
-      rescue ArgumentError => e
+      rescue CssParser::EmptyValueError => e
         assert_equal e.message, 'foo value is empty'
         raise e
       end

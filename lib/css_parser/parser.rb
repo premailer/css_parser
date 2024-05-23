@@ -199,7 +199,7 @@ module CssParser
         )
 
         add_rule_set!(rule_set, media_types)
-      rescue ArgumentError => e
+      rescue CssParser::Error => e
         raise e if @options[:rule_set_exceptions]
       end
     end
