@@ -10,6 +10,7 @@ require 'iconv' unless String.method_defined?(:encode)
 
 require 'css_parser/version'
 require 'css_parser/rule_set'
+require 'css_parser/rule_set/declarations'
 require 'css_parser/regexps'
 require 'css_parser/parser'
 
