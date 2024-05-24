@@ -103,6 +103,20 @@ module CssParser
       # @param [#to_s] property property name to be replaces
       # @param [Hash<String => [String, Value]>] replacements hash with properties to replace with
       #
+      # This function is used to expand and collapse css properties that has
+      # short and syntax like `border: 1px solid` is short for `border-width:
+      # 1p; border-type: solid;` or `border-width: 1p; border-top-style:
+      # solid;border-right-style: solid;border-bottom-style:
+      # solid;border-left-style: solid;`
+      #
+      # This function also respects the order the order the rules was written in. If we had the declaration like
+      #   border-top-style:solid;
+      #   border-right-style: solid;
+      #   border-bottom-style: solid;
+      #   border-left-style: solid;
+      # and want to replace "border-bottom-style" with "border-left-style: dashed;" border-left-style will still be "solid" because the rule that is last take presidency. If you replace "border-bottom-style" with "border-right-style: dashed;", "border-right-style" with be dashed
+      #
+      #
       # @example
       #  declarations = Declarations.new('line-height' => '0.25px', 'font' => 'small-caps', 'font-size' => '12em')
       #  declarations.replace_declaration!('font', {'line-height' => '1px', 'font-variant' => 'small-caps', 'font-size' => '24px'})
@@ -112,59 +126,55 @@ module CssParser
       #  {"line-height"=>#<CssParser::RuleSet::Declarations::Value:0x00000000038ac458 @important=false, @value="1px">,
       #   "font-variant"=>#<CssParser::RuleSet::Declarations::Value:0x00000000039b3ec8 @important=false, @value="small-caps">,
       #   "font-size"=>#<CssParser::RuleSet::Declarations::Value:0x00000000029c2c80 @important=false, @value="12em">}>
-      def replace_declaration!(property, replacements, preserve_importance: false)
-        property = normalize_property(property)
-        raise ArgumentError, "property #{property} does not exist" unless key?(property)
+      def replace_declaration!(replacing_property, replacements, preserve_importance: false)
+        replacing_property = normalize_property(replacing_property)
+        raise ArgumentError, "property #{replacing_property} does not exist" unless key?(replacing_property)
 
         replacement_declarations = self.class.new(replacements)
 
         if preserve_importance
-          importance = get_value(property).important
+          importance = get_value(replacing_property).important
           replacement_declarations.each_value { |value| value.important = importance }
         end
 
-        replacement_keys = declarations.keys
-        replacement_values = declarations.values
-        property_index = replacement_keys.index(property)
-
-        # We should preserve subsequent declarations of the same properties
-        # and prior important ones if replacement one is not important
-        replacements = replacement_declarations.each.with_object({}) do |(key, replacement), result|
-          existing = declarations[key]
-
-          # No existing -> set
-          unless existing
-            result[key] = replacement
-            next
+        # remove declarations where replacement is important but not current
+        each do |property, value|
+          if replacement_declarations[property]&.important && !value.important
+            delete(property)
           end
-
-          # Replacement more important than existing -> replace
-          if replacement.important && !existing.important
-            result[key] = replacement
-            replaced_index = replacement_keys.index(key)
-            replacement_keys.delete_at(replaced_index)
-            replacement_values.delete_at(replaced_index)
-            property_index -= 1 if replaced_index < property_index
-            next
-          end
-
-          # Existing is more important than replacement -> keep
-          next if !replacement.important && existing.important
-
-          # Existing and replacement importance are the same,
-          # value which is declared later wins
-          result[key] = replacement if property_index > replacement_keys.index(key)
         end
 
-        return if replacements.empty?
+        # remove replacement declarations where current is important but not replacement
+        replacement_declarations.each do |property, value|
+          if self[property]&.important && !value.important
+            replacement_declarations.delete(property)
+          end
+        end
 
-        replacement_keys.delete_at(property_index)
-        replacement_keys.insert(property_index, *replacements.keys)
+        propperties = declarations.keys
+        property_index = propperties.index(replacing_property)
+        property_with_higher_precidence =
+          propperties[(property_index + 1)..].to_set
+        replacement_declarations.each do |property, _value|
+          if property_with_higher_precidence.member?(property)
+            replacement_declarations.delete(property)
+          else
+            delete(property)
+          end
+        end
 
-        replacement_values.delete_at(property_index)
-        replacement_values.insert(property_index, *replacements.values)
+        new_declaration = []
+        declarations.each do |property, value|
+          if property == replacing_property
+            replacement_declarations.each do |property, value|
+              new_declaration << [property, value]
+            end
+          else
+            new_declaration << [property, value]
+          end
+        end
 
-        self.declarations = replacement_keys.zip(replacement_values).to_h
+        self.declarations = new_declaration.to_h
       end
 
       def to_s(options = {})

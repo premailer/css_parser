@@ -311,12 +311,18 @@ class RuleSetDeclarationsTest < Minitest::Test
     describe 'when prior declarations for the replacement declarations exist' do
       it 'replaces declarations when both are not important' do
         declarations = CssParser::RuleSet::Declarations.new(
-          'bar1' => 'old_bar1_value', 'foo' => 'foo_value', 'bar' => 'bar_value', 'baz' => 'baz_value'
+          'bar1' => 'old_bar1_value',
+          'foo' => 'foo_value',
+          'bar' => 'bar_value',
+          'baz' => 'baz_value'
         )
 
         declarations.replace_declaration!('bar', {'bar1' => 'bar1_value', 'bar2' => 'bar2_value'})
         expected = CssParser::RuleSet::Declarations.new(
-          'bar1' => 'bar1_value', 'foo' => 'foo_value', 'bar2' => 'bar2_value', 'baz' => 'baz_value'
+          'foo' => 'foo_value',
+          'bar1' => 'bar1_value',
+          'bar2' => 'bar2_value',
+          'baz' => 'baz_value'
         )
 
         assert_equal expected, declarations
@@ -324,12 +330,18 @@ class RuleSetDeclarationsTest < Minitest::Test
 
       it 'replaces declarations when both are important' do
         declarations = CssParser::RuleSet::Declarations.new(
-          'bar1' => 'old_bar1_value !important', 'foo' => 'foo_value', 'bar' => 'bar_value', 'baz' => 'baz_value'
+          'bar1' => 'old_bar1_value !important',
+          'foo' => 'foo_value',
+          'bar' => 'bar_value',
+          'baz' => 'baz_value'
         )
 
         declarations.replace_declaration!('bar', {'bar1' => 'bar1_value !important', 'bar2' => 'bar2_value'})
         expected = CssParser::RuleSet::Declarations.new(
-          'bar1' => 'bar1_value !important', 'foo' => 'foo_value', 'bar2' => 'bar2_value', 'baz' => 'baz_value'
+          'foo' => 'foo_value',
+          'bar1' => 'bar1_value !important',
+          'bar2' => 'bar2_value',
+          'baz' => 'baz_value'
         )
 
         assert_equal expected, declarations
