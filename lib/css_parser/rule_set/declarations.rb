@@ -34,7 +34,7 @@ module CssParser
 
       extend Forwardable
 
-      def_delegators :declarations, :each, :each_value
+      def_delegators :declarations, :each, :each_key, :each_value
 
       def initialize(declarations = {})
         self.declarations = {}
@@ -155,7 +155,7 @@ module CssParser
         property_index = propperties.index(replacing_property)
         property_with_higher_precidence =
           propperties[(property_index + 1)..].to_set
-        replacement_declarations.each do |property, _value|
+        replacement_declarations.each_key do |property|
           if property_with_higher_precidence.member?(property)
             replacement_declarations.delete(property)
           else

@@ -447,6 +447,11 @@ module CssParser
     end
 
     def parse_declarations!(block) # :nodoc:
+      if block.is_a? Declarations
+        self.declarations = block
+        return
+      end
+
       self.declarations = Declarations.new
 
       return unless block

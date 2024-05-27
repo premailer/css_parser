@@ -25,14 +25,6 @@ module CssParser
   URI_RX_OR_NONE = Regexp.union(URI_RX, /none/i)
   RE_GRADIENT = /[-a-z]*gradient\([-a-z0-9 .,#%()]*\)/im.freeze
 
-  # Initial parsing
-  RE_AT_IMPORT_RULE = /@import\s+(url\()?["']?(.[^'"\s]*)["']?\)?([\w\s,^\])]*)\)?;?/.freeze
-
-  #--
-  # RE_AT_MEDIA_RULE = Regexp.new('(\"(.[^\n\r\f\\"]*|\\\\' + RE_NL.to_s + '|' + RE_ESCAPE.to_s + ')*\")')
-
-  # RE_AT_IMPORT_RULE = Regexp.new('@import[\s]*(' + RE_STRING.to_s + ')([\w\s\,]*)[;]?', Regexp::IGNORECASE) -- should handle url() even though it is not allowed
-  #++
   IMPORTANT_IN_PROPERTY_RX = /\s*!important\b\s*/i.freeze
 
   RE_INSIDE_OUTSIDE = regex_possible_values 'inside', 'outside'
@@ -45,9 +37,6 @@ module CssParser
     'hira-gana-iroha', 'katakana-iroha', 'katakana', 'none'
   )
   RE_IMAGE = Regexp.union(CssParser::URI_RX, CssParser::RE_GRADIENT, /none/i)
-
-  STRIP_CSS_COMMENTS_RX = %r{/\*.*?\*/}m.freeze
-  STRIP_HTML_COMMENTS_RX = /<!--|-->/m.freeze
 
   # Special units
   BOX_MODEL_UNITS_RX = /(auto|inherit|0|(-*([0-9]+|[0-9]*\.[0-9]+)(rem|vw|vh|vm|vmin|vmax|e[mx]+|px|[cm]+m|p[tc+]|in|%)))([\s;]|\Z)/imx.freeze

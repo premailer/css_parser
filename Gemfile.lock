@@ -3,6 +3,7 @@ PATH
   specs:
     css_parser (1.18.0)
       addressable
+      crass (~> 1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -12,6 +13,7 @@ GEM
     ast (2.4.2)
     benchmark-ips (2.13.0)
     bump (0.10.0)
+    crass (1.0.6)
     debug (1.9.2)
       irb (~> 1.10)
       reline (>= 0.3.8)
@@ -68,8 +70,8 @@ GEM
     webrick (1.8.1)
 
 PLATFORMS
+  arm64-darwin-22
   java
-  ruby
 
 DEPENDENCIES
   benchmark-ips

@@ -17,12 +17,6 @@ module CssParser
   # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
   class Parser
     USER_AGENT = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)".freeze
-    STRIP_CSS_COMMENTS_RX = %r{/\*.*?\*/}m.freeze
-    STRIP_HTML_COMMENTS_RX = /<!--|-->/m.freeze
-
-    # Initial parsing
-    RE_AT_IMPORT_RULE = /@import\s*(?:url\s*)?(?:\()?(?:\s*)["']?([^'"\s)]*)["']?\)?([\w\s,^\]()]*)\)?[;\n]?/.freeze
-
     MAX_REDIRECTS = 3
 
     # Array of CSS files that have been loaded.
@@ -122,46 +116,111 @@ module CssParser
       options[:media_types] = [options[:media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt) }
       options[:only_media_types] = [options[:only_media_types]].flatten.collect { |mt| CssParser.sanitize_media_query(mt) }
 
-      block = cleanup_block(block, options)
-
+      # TODO: Would be nice to skip this step too
       if options[:base_uri] and @options[:absolute_paths]
         block = CssParser.convert_uris(block, options[:base_uri])
       end
 
-      # Load @imported CSS
-      if @options[:import]
-        block.scan(RE_AT_IMPORT_RULE).each do |import_rule|
-          media_types = []
-          if (media_string = import_rule[-1])
-            media_string.split(',').each do |t|
-              media_types << CssParser.sanitize_media_query(t) unless t.empty?
-            end
-          else
-            media_types = [:all]
-          end
-
-          next unless options[:only_media_types].include?(:all) or media_types.empty? or !(media_types & options[:only_media_types]).empty?
-
-          import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
-
-          import_options = {media_types: media_types}
-          import_options[:capture_offsets] = true if options[:capture_offsets]
-
-          if options[:base_uri]
-            import_uri = Addressable::URI.parse(options[:base_uri].to_s) + Addressable::URI.parse(import_path)
-            import_options[:base_uri] = options[:base_uri]
-            load_uri!(import_uri, import_options)
-          elsif options[:base_dir]
-            import_options[:base_dir] = options[:base_dir]
-            load_file!(import_path, import_options)
-          end
-        end
+      current_media_queries = [:all]
+      if options[:media_types]
+        current_media_queries = options[:media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt) }
       end
 
-      # Remove @import declarations
-      block = ignore_pattern(block, RE_AT_IMPORT_RULE, options)
+      Crass.parse(block).each do |node|
+        case node
+        in node: :style_rule
+          declarations = create_declaration_from_properties(node[:children])
 
-      parse_block_into_rule_sets!(block, options)
+          add_rule_options = {
+            selectors: node[:selector][:value],
+            block: declarations,
+            media_types: current_media_queries
+          }
+          if options[:capture_offsets]
+            add_rule_options.merge!(
+              filename: options[:filename],
+              offset: node[:selector][:tokens].first[:pos]..node[:children].last[:pos]
+            )
+          end
+
+          add_rule!(**add_rule_options)
+        in node: :at_rule, name: 'media'
+          new_media_queries = split_media_query_by_or_condition(node[:prelude])
+          add_block!(node[:block], options.merge(media_types: new_media_queries))
+
+        in node: :at_rule, name: 'page'
+          declarations = create_declaration_from_properties(Crass.parse_properties(node[:block]))
+          add_rule_options = {
+            selectors: "@page#{Crass::Parser.stringify(node[:prelude])}",
+            block: declarations,
+            media_types: current_media_queries
+          }
+          if options[:capture_offsets]
+            add_rule_options.merge!(
+              filename: options[:filename],
+              offset: node[:tokens].first[:pos]..node[:tokens].last[:pos]
+            )
+          end
+          add_rule!(**add_rule_options)
+
+        in node: :at_rule, name: 'font-face'
+          declarations = create_declaration_from_properties(Crass.parse_properties(node[:block]))
+          add_rule_options = {
+            selectors: "@font-face#{Crass::Parser.stringify(node[:prelude])}",
+            block: declarations,
+            media_types: current_media_queries
+          }
+          if options[:capture_offsets]
+            add_rule_options.merge!(
+              filename: options[:filename],
+              offset: node[:tokens].first[:pos]..node[:tokens].last[:pos]
+            )
+          end
+          add_rule!(**add_rule_options)
+
+        in node: :at_rule, name: 'import'
+          next unless @options[:import]
+
+          import = nil
+          import_options = options.slice(:capture_offsets, :base_uri, :base_dir)
+
+          prelude = node[:prelude].each
+          loop do
+            case (token = prelude.next)
+            in node: :whitespace # nothing
+            in node: :string
+              import = {type: :file, path: token[:value]}
+              break
+            in node: :function, name: 'url'
+              import = {type: :url, path: token[:value].first[:value]}
+              break
+            end
+          end
+
+          media_query_section = []
+          loop { media_query_section << prelude.next }
+
+          import_options[:media_types] = split_media_query_by_or_condition(media_query_section)
+          if import_options[:media_types].empty?
+            import_options[:media_types] = [:all]
+          end
+
+          unless options[:only_media_types].include?(:all) or !(import_options[:media_types] & options[:only_media_types]).empty?
+            next
+          end
+
+          if options[:base_uri]
+            load_uri!(
+              Addressable::URI.parse(options[:base_uri].to_s) + Addressable::URI.parse(import[:path]),
+              import_options
+            )
+          elsif options[:base_dir]
+            load_file!(import[:path], import_options)
+          end
+        in node: :whitespace # nothing
+        in node: :error # nothing
+        end
+      end
     end
 
     # Add a CSS rule by setting the +selectors+, +declarations+
@@ -342,140 +401,6 @@ module CssParser
       []
     end
 
-    def parse_block_into_rule_sets!(block, options = {}) # :nodoc:
-      current_media_queries = [:all]
-      if options[:media_types]
-        current_media_queries = options[:media_types].flatten.collect { |mt| CssParser.sanitize_media_query(mt) }
-      end
-
-      in_declarations = 0
-      block_depth = 0
-
-      in_charset = false # @charset is ignored for now
-      in_string = false
-      in_at_media_rule = false
-      in_media_block = false
-
-      current_selectors = String.new
-      current_media_query = String.new
-      current_declarations = String.new
-
-      # once we are in a rule, we will use this to store where we started if we are capturing offsets
-      rule_start = nil
-      offset = nil
-
-      block.scan(/\s+|\\{2,}|\\?[{}\s"]|[()]|.[^\s"{}()\\]*/) do |token|
-        # save the regex offset so that we know where in the file we are
-        offset = Regexp.last_match.offset(0) if options[:capture_offsets]
-
-        if token.start_with?('"') # found un-escaped double quote
-          in_string = !in_string
-        end
-
-        if in_declarations > 0
-          # too deep, malformed declaration block
-          if in_declarations > 1
-            in_declarations -= 1 if token.include?('}')
-            next
-          end
-
-          if !in_string && token.include?('{')
-            in_declarations += 1
-            next
-          end
-
-          current_declarations << token
-
-          if !in_string && token.include?('}')
-            current_declarations.gsub!(/\}\s*$/, '')
-
-            in_declarations -= 1
-            current_declarations.strip!
-
-            unless current_declarations.empty?
-              add_rule_options = {
-                selectors: current_selectors, block: current_declarations,
-                media_types: current_media_queries
-              }
-              if options[:capture_offsets]
-                add_rule_options.merge!(filename: options[:filename], offset: rule_start..offset.last)
-              end
-              add_rule!(**add_rule_options)
-            end
-
-            current_selectors = String.new
-            current_declarations = String.new
-
-            # restart our search for selectors and declarations
-            rule_start = nil if options[:capture_offsets]
-          end
-        elsif token =~ /@media/i
-          # found '@media', reset current media_types
-          in_at_media_rule = true
-          current_media_queries = []
-        elsif in_at_media_rule
-          if token.include?('{')
-            block_depth += 1
-            in_at_media_rule = false
-            in_media_block = true
-            current_media_queries << CssParser.sanitize_media_query(current_media_query)
-            current_media_query = String.new
-          elsif token.include?(',')
-            # new media query begins
-            token.tr!(',', ' ')
-            token.strip!
-            current_media_query << token << ' '
-            current_media_queries << CssParser.sanitize_media_query(current_media_query)
-            current_media_query = String.new
-          else
-            token.strip!
-            # special-case the ( and ) tokens to remove inner-whitespace
-            # (eg we'd prefer '(width: 500px)' to '( width: 500px )' )
-            case token
-            when '('
-              current_media_query << token
-            when ')'
-              current_media_query.sub!(/ ?$/, token)
-            else
-              current_media_query << token << ' '
-            end
-          end
-        elsif in_charset or token =~ /@charset/i
-          # iterate until we are out of the charset declaration
-          in_charset = !token.include?(';')
-        elsif !in_string && token.include?('}')
-          block_depth -= 1
-
-          # reset the current media query scope
-          if in_media_block
-            current_media_queries = [:all]
-            in_media_block = false
-          end
-        elsif !in_string && token.include?('{')
-          current_selectors.strip!
-          in_declarations += 1
-        else
-          # if we are in a selector, add the token to the current selectors
-          current_selectors << token
-
-          # mark this as the beginning of the selector unless we have already marked it
-          rule_start = offset.first if options[:capture_offsets] && rule_start.nil? && token =~ /^[^\s]+$/
-        end
-      end
-
-      # check for unclosed braces
-      return unless in_declarations > 0
-
-      add_rule_options = {
-        selectors: current_selectors, block: current_declarations,
-        media_types: current_media_queries
-      }
-      if options[:capture_offsets]
-        add_rule_options.merge!(filename: options[:filename], offset: rule_start..offset.last)
-      end
-      add_rule!(**add_rule_options)
-    end
-
     # Load a remote CSS file.
     #
     # You can also pass in file://test.css
@@ -563,35 +488,6 @@ module CssParser
         @loaded_uris << path
         true
       end
-    end
-
-    # Remove a pattern from a given string
-    #
-    # Returns a string.
-    def ignore_pattern(css, regex, options)
-      # if we are capturing file offsets, replace the characters with spaces to retail the original positions
-      return css.gsub(regex) { |m| ' ' * m.length } if options[:capture_offsets]
-
-      # otherwise just strip it out
-      css.gsub(regex, '')
-    end
-
-    # Strip comments and clean up blank lines from a block of CSS.
-    #
-    # Returns a string.
-    def cleanup_block(block, options = {}) # :nodoc:
-      # Strip CSS comments
-      utf8_block = block.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ' ')
-      utf8_block = ignore_pattern(utf8_block, STRIP_CSS_COMMENTS_RX, options)
-
-      # Strip HTML comments - they shouldn't really be in here but
-      # some people are just crazy...
-      utf8_block = ignore_pattern(utf8_block, STRIP_HTML_COMMENTS_RX, options)
-
-      # Strip lines containing just whitespace
-      utf8_block.gsub!(/^\s+$/, '') unless options[:capture_offsets]
-
-      utf8_block
     end
 
     # Download a file into a string.
@@ -683,6 +579,45 @@ module CssParser
     end
 
   private
+
+    def split_media_query_by_or_condition(media_query_selector)
+      media_query_selector
+        .each_with_object([[]]) do |token, sum|
+          # comma is the same as or
+          # https://developer.mozilla.org/en-US/docs/Web/CSS/@media#logical_operators
+          case token
+          in node: :comma
+            sum << []
+          in node: :ident, value: 'or' # rubocop:disable Lint/DuplicateBranch
+            sum << []
+          else
+            sum.last << token
+          end
+        end # rubocop:disable Style/MultilineBlockChain
+        .map { Crass::Parser.stringify(_1).strip }
+        .reject(&:empty?)
+        .map(&:to_sym)
+    end
+
+    def create_declaration_from_properties(properties)
+      declarations = RuleSet::Declarations.new
+
+      properties.each do |child|
+        case child
+        in node: :property, value: '' # nothing, happen for { color:green; color: }
+        in node: :property
+          declarations.add_declaration!(
+            child[:name],
+            RuleSet::Declarations::Value.new(child[:value], important: child[:important])
+          )
+        in node: :whitespace # nothing
+        in node: :semicolon # nothing
+        in node: :error # nothing
+        end
+      end
+
+      declarations
+    end
 
     # Save a folded declaration block to the internal cache.
     def save_folded_declaration(block_hash, folded_declaration) # :nodoc:
