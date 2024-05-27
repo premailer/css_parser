@@ -237,40 +237,4 @@ class CssParserTests < Minitest::Test
     cp_without_exceptions = Parser.new(rule_set_exceptions: false)
     cp_without_exceptions.add_rule!(selectors: 'body', block: 'background-color: !important')
   end
-
-  def test_catching_argument_exceptions_for_add_rule_positional
-    cp_with_exceptions = Parser.new(rule_set_exceptions: true)
-
-    error = assert_raises CssParser::EmptyValueError do
-      _, err = capture_io do
-        cp_with_exceptions.add_rule!('body', 'background-color: !important')
-      end
-      assert_includes err, "DEPRECATION"
-    end
-    assert_equal error.message, 'background-color value is empty'
-
-    cp_without_exceptions = Parser.new(rule_set_exceptions: false)
-    _, err = capture_io do
-      cp_without_exceptions.add_rule!('body', 'background-color: !important')
-    end
-    assert_includes err, "DEPRECATION"
-  end
-
-  def test_catching_argument_exceptions_for_add_rule_with_offsets
-    cp_with_exceptions = Parser.new(capture_offsets: true, rule_set_exceptions: true)
-
-    error = assert_raises CssParser::EmptyValueError do
-      _, err = capture_io do
-        cp_with_exceptions.add_rule_with_offsets!('body', 'background-color: !important', 'inline', 1)
-      end
-      assert_includes err, "DEPRECATION"
-    end
-    assert_equal error.message, 'background-color value is empty'
-
-    cp_without_exceptions = Parser.new(capture_offsets: true, rule_set_exceptions: false)
-    _, err = capture_io do
-      cp_without_exceptions.add_rule_with_offsets!('body', 'background-color: !important', 'inline', 1)
-    end
-    assert_includes err, "DEPRECATION"
-  end
 end

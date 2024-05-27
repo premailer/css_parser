@@ -48,28 +48,7 @@ module CssParser
     alias []= add_declaration!
     alias remove_declaration! delete
 
-    def initialize(*args, selectors: nil, block: nil, offset: nil, filename: nil, specificity: nil) # rubocop:disable Metrics/ParameterLists
-      if args.any?
-        if selectors || block || offset || filename || specificity
-          raise ArgumentError, "don't mix positional and keyword arguments"
-        end
-
-        warn '[DEPRECATION] positional arguments are deprecated use keyword instead.', uplevel: 1
-
-        case args.length
-        when 2
-          selectors, block = args
-        when 3
-          selectors, block, specificity = args
-        when 4
-          filename, offset, selectors, block = args
-        when 5
-          filename, offset, selectors, block, specificity = args
-        else
-          raise ArgumentError
-        end
-      end
-
+    def initialize(selectors: nil, block: nil, offset: nil, filename: nil, specificity: nil)
       @selectors = []
       @specificity = specificity
 

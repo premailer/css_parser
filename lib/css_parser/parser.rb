@@ -231,49 +231,15 @@ module CssParser
     # optional fields for source location for source location
     # +filename+ can be a string or uri pointing to the file or url location.
     # +offset+ should be Range object representing the start and end byte locations where the rule was found in the file.
-    def add_rule!(*args, selectors: nil, block: nil, filename: nil, offset: nil, media_types: :all) # rubocop:disable Metrics/ParameterLists
-      if args.any?
-        media_types = nil
-        if selectors || block || filename || offset || media_types
-          raise ArgumentError, "don't mix positional and keyword arguments arguments"
-        end
-
-        warn '[DEPRECATION] `add_rule!` with positional arguments is deprecated. ' \
-             'Please use keyword arguments instead.', uplevel: 1
-
-        case args.length
-        when 2
-          selectors, block = args
-        when 3
-          selectors, block, media_types = args
-        else
-          raise ArgumentError
-        end
-      end
-
-      begin
-        rule_set = RuleSet.new(
-          selectors: selectors, block: block,
-          offset: offset, filename: filename
-        )
-
-        add_rule_set!(rule_set, media_types)
-      rescue CssParser::Error => e
-        raise e if @options[:rule_set_exceptions]
-      end
-    end
-
-    # Add a CSS rule by setting the +selectors+, +declarations+, +filename+, +offset+ and +media_types+.
-    #
-    # +filename+ can be a string or uri pointing to the file or url location.
-    # +offset+ should be Range object representing the start and end byte locations where the rule was found in the file.
-    # +media_types+ can be a symbol or an array of symbols.
-    def add_rule_with_offsets!(selectors, declarations, filename, offset, media_types = :all)
-      warn '[DEPRECATION] `add_rule_with_offsets!` is deprecated. Please use `add_rule!` instead.', uplevel: 1
-      add_rule!(
-        selectors: selectors, block: declarations, media_types: media_types,
-        filename: filename, offset: offset
+    def add_rule!(selectors: nil, block: nil, filename: nil, offset: nil, media_types: :all)
+      rule_set = RuleSet.new(
+        selectors: selectors, block: block,
+        offset: offset, filename: filename
       )
+
+      add_rule_set!(rule_set, media_types)
+    rescue CssParser::Error => e
+      raise e if @options[:rule_set_exceptions]
     end
 
     # Add a CssParser RuleSet object.
