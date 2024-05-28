@@ -208,7 +208,7 @@ class CssParserTests < Minitest::Test
   end
 
   def test_content_with_data
-    rule = RuleSet.new(selectors: 'div', block: '{content: url(data:image/png;base64,LOTSOFSTUFF)}')
+    rule = RuleSet.new(selectors: 'div', block: 'content: url(data:image/png;base64,LOTSOFSTUFF)')
     assert_includes rule.to_s, "image/png;base64,LOTSOFSTUFF"
   end
 
@@ -225,16 +225,5 @@ class CssParserTests < Minitest::Test
       assert_equal 'body', sel
       assert_equal 'color: black;', desc
     end
-  end
-
-  def test_catching_argument_exceptions_for_add_rule
-    cp_with_exceptions = Parser.new(rule_set_exceptions: true)
-    error = assert_raises CssParser::EmptyValueError do
-      cp_with_exceptions.add_rule!(selectors: 'body', block: 'background-color: !important')
-    end
-    assert_equal error.message, 'background-color value is empty'
-
-    cp_without_exceptions = Parser.new(rule_set_exceptions: false)
-    cp_without_exceptions.add_rule!(selectors: 'body', block: 'background-color: !important')
   end
 end

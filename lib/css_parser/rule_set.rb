@@ -426,27 +426,15 @@ module CssParser
     end
 
     def parse_declarations!(block) # :nodoc:
-      if block.is_a? Declarations
+      case block
+      when nil
+        self.declarations = Declarations.new
+      when Declarations
         self.declarations = block
-        return
-      end
-
-      self.declarations = Declarations.new
-
-      return unless block
-
-      continuation = nil
-      block.split(/[;$]+/m).each do |decs|
-        decs = (continuation ? continuation + decs : decs)
-        if decs =~ /\([^)]*\Z/ # if it has an unmatched parenthesis
-          continuation = "#{decs};"
-        elsif (matches = decs.match(/\s*(.[^:]*)\s*:\s*(?m:(.+))(?:;?\s*\Z)/i))
-          # skip end_of_declaration
-          property = matches[1]
-          value = matches[2]
-          add_declaration!(property, value)
-          continuation = nil
-        end
+      when String
+        Crass.parse_properties(block)
+             .then { ParserFx.create_declaration_from_properties(_1) }
+             .then { self.declarations = _1 }
       end
     end
 

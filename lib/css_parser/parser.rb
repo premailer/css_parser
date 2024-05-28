@@ -7,6 +7,33 @@ module CssParser
   # Exception class used if a request is made to load a CSS file more than once.
   class CircularReferenceError < StandardError; end
 
+  # We have a Parser class which you create and instance of but we have some
+  # functions which is nice to have outside of this instance
+  #
+  # Intended as private helpers for lib. Breaking changed with no warning
+  module ParserFx
+    # Receives properties from a style_rule node from crass.
+    def self.create_declaration_from_properties(properties)
+      declarations = RuleSet::Declarations.new
+
+      properties.each do |child|
+        case child
+        in node: :property, value: '' # nothing, happen for { color:green; color: }
+        in node: :property
+          declarations.add_declaration!(
+            child[:name],
+            RuleSet::Declarations::Value.new(child[:value], important: child[:important])
+          )
+        in node: :whitespace # nothing
+        in node: :semicolon # nothing
+        in node: :error # nothing
+        end
+      end
+
+      declarations
+    end
+  end
+
   # == Parser class
   #
   # All CSS is converted to UTF-8.
@@ -129,7 +156,7 @@ module CssParser
       Crass.parse(block).each do |node|
         case node
         in node: :style_rule
-          declarations = create_declaration_from_properties(node[:children])
+          declarations = ParserFx.create_declaration_from_properties(node[:children])
 
           add_rule_options = {
             selectors: node[:selector][:value],
@@ -149,7 +176,7 @@ module CssParser
           add_block!(node[:block], options.merge(media_types: new_media_queries))
 
         in node: :at_rule, name: 'page'
-          declarations = create_declaration_from_properties(Crass.parse_properties(node[:block]))
+          declarations = ParserFx.create_declaration_from_properties(Crass.parse_properties(node[:block]))
           add_rule_options = {
             selectors: "@page#{Crass::Parser.stringify(node[:prelude])}",
             block: declarations,
@@ -164,7 +191,7 @@ module CssParser
           add_rule!(**add_rule_options)
 
         in node: :at_rule, name: 'font-face'
-          declarations = create_declaration_from_properties(Crass.parse_properties(node[:block]))
+          declarations = ParserFx.create_declaration_from_properties(Crass.parse_properties(node[:block]))
           add_rule_options = {
             selectors: "@font-face#{Crass::Parser.stringify(node[:prelude])}",
             block: declarations,
@@ -563,26 +590,6 @@ module CssParser
         .map { Crass::Parser.stringify(_1).strip }
         .reject(&:empty?)
         .map(&:to_sym)
-    end
-
-    def create_declaration_from_properties(properties)
-      declarations = RuleSet::Declarations.new
-
-      properties.each do |child|
-        case child
-        in node: :property, value: '' # nothing, happen for { color:green; color: }
-        in node: :property
-          declarations.add_declaration!(
-            child[:name],
-            RuleSet::Declarations::Value.new(child[:value], important: child[:important])
-          )
-        in node: :whitespace # nothing
-        in node: :semicolon # nothing
-        in node: :error # nothing
-        end
-      end
-
-      declarations
     end
 
     # Save a folded declaration block to the internal cache.
