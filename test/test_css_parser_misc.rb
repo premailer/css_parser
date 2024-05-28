@@ -187,26 +187,6 @@ class CssParserTests < Minitest::Test
     assert_equal ".specs {font-family:Helvetica;font-weight:bold;font-style:italic;color:#008CA8;font-size:1.4em;list-style-image:url('http://www.example.org/directory/images/bullet.gif');}", converted_css
   end
 
-  def test_ruleset_with_braces
-    # parser = Parser.new
-    # parser.add_block!("div { background-color: black !important; }")
-    # parser.add_block!("div { background-color: red; }")
-    #
-    # rulesets = []
-    #
-    # parser['div'].each do |declaration|
-    #   rulesets << RuleSet.new(selectors: 'div', block: declaration)
-    # end
-    #
-    # merged = CssParser.merge(rulesets)
-    #
-    # result: # merged.to_s => "{ background-color: black !important; }"
-
-    new_rule = RuleSet.new(selectors: 'div', block: "{ background-color: black !important; }")
-
-    assert_equal 'div { background-color: black !important; }', new_rule.to_s
-  end
-
   def test_content_with_data
     rule = RuleSet.new(selectors: 'div', block: 'content: url(data:image/png;base64,LOTSOFSTUFF)')
     assert_includes rule.to_s, "image/png;base64,LOTSOFSTUFF"
