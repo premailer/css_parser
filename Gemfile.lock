@@ -3,6 +3,7 @@ PATH
   specs:
     css_parser (1.18.0)
       addressable
+      crass (~> 1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -12,6 +13,16 @@ GEM
     ast (2.4.2)
     benchmark-ips (2.13.0)
     bump (0.10.0)
+    crass (1.0.6)
+    debug (1.9.2)
+      irb (~> 1.10)
+      reline (>= 0.3.8)
+    io-console (0.7.2)
+    io-console (0.7.2-java)
+    irb (1.13.1)
+      rdoc (>= 4.0.0)
+      reline (>= 0.4.2)
+    jar-dependencies (0.4.1)
     json (2.7.2)
     json (2.7.2-java)
     language_server-protocol (3.17.0.3)
@@ -23,12 +34,20 @@ GEM
     parser (3.3.0.5)
       ast (~> 2.4.1)
       racc
+    psych (5.1.2)
+      stringio
+    psych (5.1.2-java)
+      jar-dependencies (>= 0.1.7)
     public_suffix (5.0.5)
     racc (1.7.3)
     racc (1.7.3-java)
     rainbow (3.1.1)
     rake (13.2.1)
+    rdoc (6.6.3.1)
+      psych (>= 4.0.0)
     regexp_parser (2.9.0)
+    reline (0.5.7)
+      io-console (~> 0.5)
     rexml (3.2.6)
     rubocop (1.62.1)
       json (~> 2.3)
@@ -46,17 +65,20 @@ GEM
     rubocop-rake (0.6.0)
       rubocop (~> 1.0)
     ruby-progressbar (1.13.0)
+    stringio (3.1.0)
     unicode-display_width (2.5.0)
     webrick (1.8.1)
 
 PLATFORMS
+  arm64-darwin-22
   java
-  ruby
+  x86_64-linux
 
 DEPENDENCIES
   benchmark-ips
   bump
   css_parser!
+  debug (~> 1.9)
   maxitest
   memory_profiler
   rake

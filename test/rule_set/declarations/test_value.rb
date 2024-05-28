@@ -8,17 +8,17 @@ class RuleSetProperyTest < Minitest::Test
   describe '.new' do
     describe 'with invalid value' do
       it 'raises an error when empty' do
-        exception = assert_raises(ArgumentError) { CssParser::RuleSet::Declarations::Value.new('  ') }
+        exception = assert_raises(CssParser::EmptyValueError) { CssParser::RuleSet::Declarations::Value.new('  ') }
         assert_equal 'value is empty', exception.message
       end
 
       it 'raises an error when nil' do
-        exception = assert_raises(ArgumentError) { CssParser::RuleSet::Declarations::Value.new(nil) }
+        exception = assert_raises(CssParser::EmptyValueError) { CssParser::RuleSet::Declarations::Value.new(nil) }
         assert_equal 'value is empty', exception.message
       end
 
       it 'raises an error when contains only important declaration' do
-        exception = assert_raises(ArgumentError) { CssParser::RuleSet::Declarations::Value.new(' !important; ') }
+        exception = assert_raises(CssParser::EmptyValueError) { CssParser::RuleSet::Declarations::Value.new(' !important; ') }
         assert_equal 'value is empty', exception.message
       end
     end
@@ -103,7 +103,13 @@ class RuleSetProperyTest < Minitest::Test
       assert_equal true, CssParser::RuleSet::Declarations::Value.new('value').value.frozen?
     end
 
-    it 'raises an exception when the value is empty' do
+    it 'raises an EmptyValueError when an empty string is passed' do
+      assert_raises CssParser::EmptyValueError do
+        CssParser::RuleSet::Declarations::Value.new ""
+      end
+    end
+
+    it 'raises an ArgumentError when no argument is supplied' do
       assert_raises ArgumentError do
         CssParser::RuleSet::Declarations::Value.new
       end

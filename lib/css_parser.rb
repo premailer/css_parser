@@ -7,13 +7,18 @@ require 'digest/md5'
 require 'zlib'
 require 'stringio'
 require 'iconv' unless String.method_defined?(:encode)
+require 'crass'
 
 require 'css_parser/version'
 require 'css_parser/rule_set'
+require 'css_parser/rule_set/declarations'
 require 'css_parser/regexps'
 require 'css_parser/parser'
 
 module CssParser
+  class Error < StandardError; end
+  class EmptyValueError < Error; end
+
   # Merge multiple CSS RuleSets by cascading according to the CSS 2.1 cascading rules
   # (http://www.w3.org/TR/REC-CSS2/cascade.html#cascading-order).
   #
@@ -89,7 +94,7 @@ module CssParser
       end
     end
 
-    merged = properties.each_with_object(RuleSet.new(nil, nil)) do |(property, details), rule_set|
+    merged = properties.each_with_object(RuleSet.new) do |(property, details), rule_set|
       value = details[:value].strip
       rule_set[property.strip] = details[:is_important] ? "#{value.gsub(/;\Z/, '')}!important" : value
     end

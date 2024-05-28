@@ -2,6 +2,7 @@
 
 require_relative '../test_helper'
 require 'minitest/spec'
+require 'ostruct'
 
 class RuleSetDeclarationsTest < Minitest::Test
   describe '.new' do
@@ -72,8 +73,11 @@ class RuleSetDeclarationsTest < Minitest::Test
     it 'raises an exception including the property when the value is empty' do
       declarations = CssParser::RuleSet::Declarations.new
 
-      assert_raises ArgumentError, 'foo value is empty' do
+      assert_raises CssParser::EmptyValueError do
         declarations['foo'] = '!important'
+      rescue CssParser::EmptyValueError => e
+        assert_equal e.message, 'foo value is empty'
+        raise e
       end
     end
   end
@@ -307,12 +311,18 @@ class RuleSetDeclarationsTest < Minitest::Test
     describe 'when prior declarations for the replacement declarations exist' do
       it 'replaces declarations when both are not important' do
         declarations = CssParser::RuleSet::Declarations.new(
-          'bar1' => 'old_bar1_value', 'foo' => 'foo_value', 'bar' => 'bar_value', 'baz' => 'baz_value'
+          'bar1' => 'old_bar1_value',
+          'foo' => 'foo_value',
+          'bar' => 'bar_value',
+          'baz' => 'baz_value'
         )
 
         declarations.replace_declaration!('bar', {'bar1' => 'bar1_value', 'bar2' => 'bar2_value'})
         expected = CssParser::RuleSet::Declarations.new(
-          'bar1' => 'bar1_value', 'foo' => 'foo_value', 'bar2' => 'bar2_value', 'baz' => 'baz_value'
+          'foo' => 'foo_value',
+          'bar1' => 'bar1_value',
+          'bar2' => 'bar2_value',
+          'baz' => 'baz_value'
         )
 
         assert_equal expected, declarations
@@ -320,12 +330,18 @@ class RuleSetDeclarationsTest < Minitest::Test
 
       it 'replaces declarations when both are important' do
         declarations = CssParser::RuleSet::Declarations.new(
-          'bar1' => 'old_bar1_value !important', 'foo' => 'foo_value', 'bar' => 'bar_value', 'baz' => 'baz_value'
+          'bar1' => 'old_bar1_value !important',
+          'foo' => 'foo_value',
+          'bar' => 'bar_value',
+          'baz' => 'baz_value'
         )
 
         declarations.replace_declaration!('bar', {'bar1' => 'bar1_value !important', 'bar2' => 'bar2_value'})
         expected = CssParser::RuleSet::Declarations.new(
-          'bar1' => 'bar1_value !important', 'foo' => 'foo_value', 'bar2' => 'bar2_value', 'baz' => 'baz_value'
+          'foo' => 'foo_value',
+          'bar1' => 'bar1_value !important',
+          'bar2' => 'bar2_value',
+          'baz' => 'baz_value'
         )
 
         assert_equal expected, declarations

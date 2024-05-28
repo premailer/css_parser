@@ -18,5 +18,6 @@ Gem::Specification.new name, CssParser::VERSION do |s|
   s.metadata['bug_tracker_uri'] = 'https://github.com/premailer/css_parser/issues'
   s.metadata['rubygems_mfa_required'] = 'true'
 
-  s.add_runtime_dependency 'addressable'
+  s.add_dependency 'addressable'
+  s.add_dependency 'crass', '~> 1.0'
 end

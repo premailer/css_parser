@@ -229,7 +229,7 @@ protected
   end
 
   def create_shorthand(properties)
-    ruleset = RuleSet.new(nil, nil)
+    ruleset = RuleSet.new
     properties.each do |property, value|
       ruleset[property] = value
     end
