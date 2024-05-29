@@ -29,8 +29,9 @@ class CssParserOffsetCaptureTests < Minitest::Test
 
   # http://github.com/premailer/css_parser/issues#issue/4
   def test_capturing_offsets_from_remote_file
-    # TODO: test SSL locally
-    # TODO: cache request to make test not require internet (and so much faster)
+    stub_request(:get, "https://dialect.ca/inc/screen.css")
+      .to_return(status: 200, body: fixture("dialect_ca_inc_screen.css"), headers: {})
+
     @cp.load_uri!("https://dialect.ca/inc/screen.css", capture_offsets: true)
 
     # there are a lot of rules in this file, but check some rule offsets
