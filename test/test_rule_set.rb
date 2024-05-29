@@ -38,7 +38,7 @@ class RuleSetTests < Minitest::Test
     ]
 
     actual = []
-    rs = RuleSet.new(selectors: '#content p, a', block: 'color: #fff;')
+    rs = RuleSet.new(selectors: ['#content p', 'a'], block: 'color: #fff;')
     rs.each_selector do |sel, decs, spec|
       actual << {selector: sel, declarations: decs, specificity: spec}
     end
@@ -76,12 +76,6 @@ class RuleSetTests < Minitest::Test
                             "background-repeat: no-repeat")
     assert_equal('url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAiCAMAAAB7);', rs['background-image'])
     assert_equal('no-repeat;', rs['background-repeat'])
-  end
-
-  def test_selector_sanitization
-    selectors = "h1, h2,\nh3 "
-    rs = RuleSet.new(selectors: selectors, block: "color: #fff;")
-    assert rs.selectors.member?("h3")
   end
 
   def test_multiple_selectors_to_s

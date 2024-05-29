@@ -60,7 +60,7 @@ module CssParser
       @offset = offset
       @filename = filename
 
-      parse_selectors!(selectors) if selectors
+      @selectors = Array(selectors) if selectors
       parse_declarations!(block)
     end
 
@@ -519,17 +519,6 @@ module CssParser
         Crass.parse_properties(block)
              .then { ParserFx.create_declaration_from_properties(_1) }
              .then { self.declarations = _1 }
-      end
-    end
-
-    #--
-    # TODO: way too simplistic
-    #++
-    def parse_selectors!(selectors) # :nodoc:
-      @selectors = selectors.split(',').map do |s|
-        s.gsub!(/\s+/, ' ')
-        s.strip!
-        s
       end
     end
 

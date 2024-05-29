@@ -32,6 +32,20 @@ module CssParser
 
       declarations
     end
+
+    # it is expecting the selector tokens from node: :style_rule, not just
+    # from Crass::Tokenizer.tokenize(input)
+    def self.split_selectors(tokens)
+      tokens
+        .each_with_object([[]]) do |token, sum|
+          case token
+          in node: :comma
+            sum << []
+          else
+            sum.last << token
+          end
+        end
+    end
   end
 
   # == Parser class
@@ -107,7 +121,7 @@ module CssParser
       rule_sets = []
 
       selectors.each do |selector|
-        selector = selector.gsub(/\s+/, ' ').strip
+        selector = selector.strip
         each_rule_set(media_types) do |rule_set, _media_type|
           if !rule_sets.member?(rule_set) && rule_set.selectors.member?(selector)
             rule_sets << rule_set
@@ -157,9 +171,12 @@ module CssParser
         case node
         in node: :style_rule
           declarations = ParserFx.create_declaration_from_properties(node[:children])
+          selectors = ParserFx
+                      .split_selectors(node[:selector][:tokens])
+                      .map { Crass::Parser.stringify(_1).strip }
 
           add_rule_options = {
-            selectors: node[:selector][:value],
+            selectors: selectors,
             block: declarations,
             media_types: current_media_queries
           }

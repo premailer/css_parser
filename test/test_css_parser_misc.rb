@@ -133,7 +133,7 @@ class CssParserTests < Minitest::Test
   end
 
   def test_find_rule_sets
-    css = <<-CSS
+    css = <<~CSS
       h1, h2 { color: blue; }
       h1 { font-size: 10px; }
       h2 { font-size: 5px; }
@@ -144,9 +144,37 @@ class CssParserTests < Minitest::Test
 
     @cp.add_block!(css)
     assert_equal 2, @cp.find_rule_sets(["h2"]).size
+    assert_equal 2, @cp.find_rule_sets(["  h2  "]).size
     assert_equal 3, @cp.find_rule_sets(["h1", "h2"]).size
-    assert_equal 2, @cp.find_rule_sets(["article h3"]).size
-    assert_equal 2, @cp.find_rule_sets(["  article \t  \n  h3 \n "]).size
+    assert_equal 1, @cp.find_rule_sets(["article  h3"]).size
+    assert_equal 1, @cp.find_rule_sets(["article\nh3"]).size
+    assert_equal 0, @cp.find_rule_sets(["  article \t  \n  h3 \n "]).size
+  end
+
+  def test_whitespace_in_selector_names
+    css = <<~CSS
+      h1        {}
+        h1 pre{}
+      .a.b.c
+      .d.e.f {}
+      h1     > pre {}
+      input[name="Joe"]{}
+      input[name="Joe    Doe"]{}
+      input:not(a,b){}
+    CSS
+
+    @cp.add_block!(css)
+
+    assert_equal(
+      ["h1",
+       "h1 pre",
+       ".a.b.c\n.d.e.f",
+       "h1     > pre",
+       "input[name=\"Joe\"]",
+       "input[name=\"Joe    Doe\"]",
+       "input:not(a,b)"],
+      @cp.rules_by_media_query[:all].flat_map(&:selectors)
+    )
   end
 
   def test_calculating_specificity
@@ -171,13 +199,17 @@ class CssParserTests < Minitest::Test
 
   def test_converting_uris
     base_uri = 'http://www.example.org/style/basic.css'
-    ["body { background: url(yellow) };", "body { background: url('yellow') };",
-     "body { background: url('/style/yellow') };",
-     "body { background: url(\"../style/yellow\") };",
-     "body { background: url(\"lib/../../style/yellow\") };"].each do |css|
-      converted_css = CssParser.convert_uris(css, base_uri)
-      assert_equal "body { background: url('http://www.example.org/style/yellow') };", converted_css
-    end
+    [
+      "body { background: url(yellow) };",
+      "body { background: url('yellow') };",
+      "body { background: url('/style/yellow') };",
+      "body { background: url(\"../style/yellow\") };",
+      "body { background: url(\"lib/../../style/yellow\") };"
+    ]
+      .each do |css|
+        converted_css = CssParser.convert_uris(css, base_uri)
+        assert_equal "body { background: url('http://www.example.org/style/yellow') };", converted_css
+      end
 
     converted_css = CssParser.convert_uris("body { background: url(../style/yellow-dot_symbol$.png?abc=123&amp;def=456&ghi=789#1011) };", base_uri)
     assert_equal "body { background: url('http://www.example.org/style/yellow-dot_symbol$.png?abc=123&amp;def=456&ghi=789#1011') };", converted_css
