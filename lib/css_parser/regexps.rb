@@ -45,7 +45,6 @@ module CssParser
   RE_SINGLE_BACKGROUND_SIZE = /#{RE_LENGTH_OR_PERCENTAGE}|auto|cover|contain|initial|inherit/i.freeze
   RE_BACKGROUND_POSITION = /#{RE_SINGLE_BACKGROUND_POSITION}\s+#{RE_SINGLE_BACKGROUND_POSITION}|#{RE_SINGLE_BACKGROUND_POSITION}/.freeze
   RE_BACKGROUND_SIZE = %r{\s*/\s*(#{RE_SINGLE_BACKGROUND_SIZE}\s+#{RE_SINGLE_BACKGROUND_SIZE}|#{RE_SINGLE_BACKGROUND_SIZE})}.freeze
-  FONT_UNITS_RX = /((x+-)*small|medium|larger*|auto|inherit|([0-9]+|[0-9]*\.[0-9]+)(e[mx]+|px|[cm]+m|p[tc+]|in|%)*)/i.freeze
   RE_BORDER_STYLE = /(\s*^)?(none|hidden|dotted|dashed|solid|double|dot-dash|dot-dot-dash|wave|groove|ridge|inset|outset)(\s*$)?/imx.freeze
   RE_BORDER_UNITS = Regexp.union(BOX_MODEL_UNITS_RX, /(thin|medium|thick)/i)
 
