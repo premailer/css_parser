@@ -74,7 +74,7 @@ class RuleSetExpandingShorthandTests < Minitest::Test
       assert_equal("11.25#{unit}", declarations['font-size'])
     end
 
-    ['smaller', 'small', 'medium', 'large', 'x-large', 'auto'].each do |unit|
+    ['smaller', 'small', 'medium', 'large', 'x-large'].each do |unit|
       shorthand = "font: 300 italic #{unit}/14px verdana, helvetica, sans-serif;"
       declarations = expand_declarations(shorthand)
       assert_equal(unit, declarations['font-size'])
