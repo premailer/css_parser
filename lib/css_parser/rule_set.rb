@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'forwardable'
+require 'set'
 
 module CssParser
   class RuleSet
@@ -203,6 +204,85 @@ module CssParser
       end
     end
 
+    class FontScanner
+      FONT_STYLES = Set.new(['normal', 'italic', 'oblique', 'inherit'])
+      FONT_VARIANTS = Set.new(['normal', 'small-caps', 'inherit'])
+      FONT_WEIGHTS = Set.new(
+        [
+          'normal', 'bold', 'bolder', 'lighter',
+          '100', '200', '300', '400', '500', '600', '700', '800', '900',
+          'inherit'
+        ]
+      )
+      ABSOLUTE_SIZES = Set.new(
+        ['xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large']
+      )
+      RELATIVE_SIZES = Set.new(['smaller', 'larger'])
+
+      attr_reader :current, :pos, :tokens
+
+      def initialize(tokens)
+        @token_scanner = Crass::TokenScanner.new(tokens)
+      end
+
+      def peek = @token_scanner.peek
+      def consume = @token_scanner.consume
+      def collect(&block) = @token_scanner.collect(&block)
+
+      private def consume_iden_str(value)
+        consume if peek[:node] == :ident && peek[:value] == value
+      end
+
+      private def consume_iden_set(set)
+        consume if peek[:node] == :ident && set.member?(peek[:value])
+      end
+
+      private def consume_type(type)
+        consume if peek[:node] == type
+      end
+
+      def consume_font_style = consume_iden_set(FONT_STYLES)
+      def consume_font_variant = consume_iden_set(FONT_VARIANTS)
+      def consume_font_weight = consume_iden_set(FONT_WEIGHTS) || consume_type(:number)
+      def consume_absulute_size = consume_iden_set(ABSOLUTE_SIZES)
+      def consume_relative_size = consume_iden_set(RELATIVE_SIZES)
+      def consume_length = consume_type(:dimension)
+      def consume_percentage = consume_type(:percentage)
+      def consume_number = consume_type(:percentage)
+      def consume_inherit = consume_iden_str('inherit')
+      def consume_normal = consume_iden_str('normal')
+
+      def consume_font_style_variant_weight
+        consume_font_style || consume_font_variant || consume_font_weight
+      end
+
+      def consume_font_size
+        consume_absulute_size ||
+          consume_relative_size ||
+          consume_length ||
+          consume_percentage ||
+          consume_inherit
+      end
+
+      def consume_line_height
+        consume_normal ||
+          consume_number ||
+          consume_length ||
+          consume_percentage ||
+          consume_inherit
+      end
+
+      def consume_system_fonts
+        consume_iden_str('caption') ||
+          consume_iden_str('icon') ||
+          consume_iden_str('menu') ||
+          consume_iden_str('message-box') ||
+          consume_iden_str('small-caption') ||
+          consume_iden_str('status-bar') ||
+          consume_inherit
+      end
+    end
+
     # Convert shorthand font declarations (e.g. <tt>font: 300 italic 11px/14px verdana, helvetica, sans-serif;</tt>)
     # into their constituent parts.
     def expand_font_shorthand! # :nodoc:
@@ -216,41 +296,45 @@ module CssParser
         'font-size' => 'normal',
         'line-height' => 'normal'
       }
+      tokens = Crass::Tokenizer
+               .tokenize(declaration.value.dup)
+               .reject { _1[:node] == :whitespace }
+      scanner = FontScanner.new(tokens)
 
-      value = declaration.value.dup
-      value.gsub!(%r{/\s+}, '/') # handle spaces between font size and height shorthand (e.g. 14px/ 16px)
+      if scanner.consume_system_fonts
+        # nothing we can do with system fonts
+        return
+      end
 
-      in_fonts = false
-
-      matches = value.scan(/"(?:.*[^"])"|'(?:.*[^'])'|(?:\w[^ ,]+)/)
-      matches.each do |m|
-        m.strip!
-        m.gsub!(/;$/, '')
-
-        if in_fonts
-          if font_props.key?('font-family')
-            font_props['font-family'] += ", #{m}"
-          else
-            font_props['font-family'] = m
-          end
-        elsif m =~ /normal|inherit/i
-          ['font-style', 'font-weight', 'font-variant'].each do |font_prop|
-            font_props[font_prop] ||= m
-          end
-        elsif m =~ /italic|oblique/i
-          font_props['font-style'] = m
-        elsif m =~ /small-caps/i
-          font_props['font-variant'] = m
-        elsif m =~ /[1-9]00$|bold|bolder|lighter/i
-          font_props['font-weight'] = m
-        elsif m =~ CssParser::FONT_UNITS_RX
-          if m.include?('/')
-            font_props['font-size'], font_props['line-height'] = m.split('/', 2)
-          else
-            font_props['font-size'] = m
-          end
-          in_fonts = true
+      while (token = scanner.consume_font_style_variant_weight)
+        if FontScanner::FONT_STYLES.member?(token[:value])
+          font_props['font-style'] = token[:value]
         end
+        if FontScanner::FONT_VARIANTS.member?(token[:value])
+          font_props['font-variant'] = token[:value]
+        end
+        # we use raw from font wights since it include numbers
+        if FontScanner::FONT_WEIGHTS.member?(token[:raw])
+          font_props['font-weight'] = token[:raw]
+        end
+      end
+
+      font_size = scanner.consume_font_size
+      font_props['font-size'] = font_size[:raw]
+
+      if scanner.peek[:node] == :delim && scanner.peek[:value] == '/'
+        scanner.consume
+        line_height = scanner.consume_line_height
+        font_props['line-height'] = line_height[:raw]
+      end
+
+      rest = scanner.collect do
+        while scanner.consume
+          # nothing, just collect the rest
+        end
+      end
+      if rest.any?
+        font_props['font-family'] = Crass::Parser.stringify(rest)
       end
 
       declarations.replace_declaration!('font', font_props, preserve_importance: true)
@@ -426,27 +510,15 @@ module CssParser
     end
 
     def parse_declarations!(block) # :nodoc:
-      if block.is_a? Declarations
+      case block
+      when nil
+        self.declarations = Declarations.new
+      when Declarations
         self.declarations = block
-        return
-      end
-
-      self.declarations = Declarations.new
-
-      return unless block
-
-      continuation = nil
-      block.split(/[;$]+/m).each do |decs|
-        decs = (continuation ? continuation + decs : decs)
-        if decs =~ /\([^)]*\Z/ # if it has an unmatched parenthesis
-          continuation = "#{decs};"
-        elsif (matches = decs.match(/\s*(.[^:]*)\s*:\s*(?m:(.+))(?:;?\s*\Z)/i))
-          # skip end_of_declaration
-          property = matches[1]
-          value = matches[2]
-          add_declaration!(property, value)
-          continuation = nil
-        end
+      when String
+        Crass.parse_properties(block)
+             .then { ParserFx.create_declaration_from_properties(_1) }
+             .then { self.declarations = _1 }
       end
     end
 

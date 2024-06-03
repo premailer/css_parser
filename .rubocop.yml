@@ -41,6 +41,9 @@ Metrics/ModuleLength:
 Metrics/PerceivedComplexity:
   Enabled: false
 
+Style/AccessModifierDeclarations:
+  Enabled: false
+
 Style/AndOr:
   Enabled: false
 

@@ -100,7 +100,7 @@ module CssParser
       alias remove_declaration! delete
 
       # Replace CSS property with multiple declarations
-      # @param [#to_s] property property name to be replaces
+      # @param [#to_s] replacing_property property name to be replaces
       # @param [Hash<String => [String, Value]>] replacements hash with properties to replace with
       #
       # This function is used to expand and collapse css properties that has
