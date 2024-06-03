@@ -8,10 +8,10 @@ gemspec
 
 gem 'benchmark-ips'
 gem 'bump'
+gem 'debug', platforms: [:mri, :mingw, :x64_mingw]
+gem 'maxitest'
 gem 'memory_profiler'
 gem 'rake'
-gem 'maxitest'
-gem 'webmock'
-gem 'debug', platforms: [:mri, :mingw, :x64_mingw]
 gem 'rubocop'
 gem 'rubocop-rake'
+gem 'webmock'
