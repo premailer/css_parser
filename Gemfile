@@ -10,10 +10,8 @@ gem 'benchmark-ips'
 gem 'bump'
 gem 'memory_profiler'
 gem 'rake'
-
 gem 'maxitest'
-gem 'webmock', '~> 3.23'
-
-gem 'debug', '~> 1.9', platforms: [:mri, :mingw, :x64_mingw]
+gem 'webmock'
+gem 'debug', platforms: [:mri, :mingw, :x64_mingw]
 gem 'rubocop'
 gem 'rubocop-rake'

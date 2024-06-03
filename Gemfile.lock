@@ -80,6 +80,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-22
+  arm64-darwin-23
   java
   x86_64-linux
 
@@ -87,13 +88,13 @@ DEPENDENCIES
   benchmark-ips
   bump
   css_parser!
-  debug (~> 1.9)
+  debug
   maxitest
   memory_profiler
   rake
   rubocop
   rubocop-rake
-  webmock (~> 3.23)
+  webmock
 
 BUNDLED WITH
    2.4.12
