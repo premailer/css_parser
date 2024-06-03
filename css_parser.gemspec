@@ -14,6 +14,7 @@ Gem::Specification.new name, CssParser::VERSION do |s|
   s.required_ruby_version = '>= 3.0'
 
   s.metadata['changelog_uri'] = 'https://github.com/premailer/css_parser/blob/master/CHANGELOG.md'
+  s.metadata['documentation_uri'] = "https://www.rubydoc.info/gems/css_parser/#{s.version}"
   s.metadata['source_code_uri'] = 'https://github.com/premailer/css_parser'
   s.metadata['bug_tracker_uri'] = 'https://github.com/premailer/css_parser/issues'
   s.metadata['rubygems_mfa_required'] = 'true'
