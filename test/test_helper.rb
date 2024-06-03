@@ -6,7 +6,8 @@ require 'net/http'
 require 'css_parser'
 require 'webmock/minitest'
 
-def fixture(*path)
-  Pathname(File.expand_path('fixtures', __dir__))
-    .join(*path)
+Minitest::Test.class_eval do
+  def fixture(*path)
+    Pathname(File.expand_path('fixtures', __dir__)).join(*path)
+  end
 end
