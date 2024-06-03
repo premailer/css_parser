@@ -5,50 +5,40 @@ require_relative 'test_helper'
 # Test cases for the CssParser's loading functions.
 class CssParserLoadingTests < Minitest::Test
   include CssParser
-  include WEBrick
 
   def setup
-    # from http://nullref.se/blog/2006/5/17/testing-with-webrick
     @cp = Parser.new
-
     @uri_base = 'http://localhost:12000'
-
-    @www_root = File.expand_path('fixtures', __dir__)
-
-    @server_thread = Thread.new do
-      s = WEBrick::HTTPServer.new(Port: 12_000, DocumentRoot: @www_root, Logger: Log.new(nil, BasicLog::FATAL), AccessLog: [])
-      s.mount_proc('/redirect301') do |_request, response|
-        response['Location'] = '/simple.css'
-        raise WEBrick::HTTPStatus::MovedPermanently
-      end
-      s.mount_proc('/redirect302') do |_request, response|
-        response['Location'] = '/simple.css'
-        raise WEBrick::HTTPStatus::TemporaryRedirect
-      end
-      @port = s.config[:Port]
-      begin
-        s.start
-      ensure
-        s.shutdown
-      end
-    end
-
-    sleep 1 # ensure the server has time to load
   end
 
-  def teardown
-    @server_thread.kill
-    @server_thread.join(5)
-    @server_thread = nil
+  def stub_request_file(file)
+    stub_request(:get, "http://localhost:12000/#{file}")
+      .to_return(status: 200, body: fixture(file), headers: {})
   end
 
+  # Moved Permanently
   def test_loading_301_redirect
+    stub_request_file("simple.css")
+    stub_request(:get, "http://localhost:12000/redirect301")
+      .to_return(
+        status: 301, body: "",
+        headers: {"Location" => 'http://localhost:12000/simple.css'}
+      )
+
     @cp.load_uri!("#{@uri_base}/redirect301")
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
   end
 
-  def test_loading_302_redirect
-    @cp.load_uri!("#{@uri_base}/redirect302")
+  # Temporary Redirect
+  def test_loading_307_redirect
+    stub_request_file("simple.css")
+    stub_request(:get, "http://localhost:12000/redirect307")
+      .to_return(
+        status: 307, body: "",
+        headers: {"Location" => 'http://localhost:12000/simple.css'}
+      )
+
+    @cp.load_uri!("#{@uri_base}/redirect307")
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
   end
 
@@ -65,12 +55,17 @@ class CssParserLoadingTests < Minitest::Test
   end
 
   def test_loading_a_remote_file
+    stub_request_file("simple.css")
+
     @cp.load_uri!("#{@uri_base}/simple.css")
     assert_equal 'margin: 0px;', @cp.find_by_selector('p').join(' ')
   end
 
   # http://github.com/premailer/css_parser/issues#issue/4
   def test_loading_a_remote_file_over_ssl
+    stub_request(:get, "https://dialect.ca/inc/screen.css")
+      .to_return(status: 200, body: +"body{margin:0}")
+
     @cp.load_uri!("https://dialect.ca/inc/screen.css")
     assert_includes(@cp.find_by_selector('body').join(' '), "margin: 0;")
   end
@@ -95,6 +90,10 @@ class CssParserLoadingTests < Minitest::Test
   end
 
   def test_following_at_import_rules_remote
+    stub_request_file("import1.css")
+    stub_request_file("subdir/import2.css")
+    stub_request_file("subdir/../simple.css")
+
     @cp.load_uri!("#{@uri_base}/import1.css")
 
     # from '/import1.css'
@@ -108,6 +107,8 @@ class CssParserLoadingTests < Minitest::Test
   end
 
   def test_imports_disabled
+    stub_request_file("import1.css")
+
     cp = Parser.new(import: false)
     cp.load_uri!("#{@uri_base}/import1.css")
 
@@ -122,6 +123,9 @@ class CssParserLoadingTests < Minitest::Test
   end
 
   def test_following_remote_import_rules
+    stub_request(:get, "http://example.com/css")
+      .to_return(status: 500, body: "", headers: {})
+
     css_block = '@import "http://example.com/css";'
 
     assert_raises CssParser::RemoteFileError do
@@ -130,6 +134,9 @@ class CssParserLoadingTests < Minitest::Test
   end
 
   def test_following_badly_escaped_import_rules
+    stub_request(:get, "http://example.com/css?family=Droid%20Sans:regular,bold%7CDroid%20Serif:regular,italic,bold,bolditalic&subset=latin")
+      .to_return(status: 500, body: "", headers: {})
+
     css_block = '@import "http://example.com/css?family=Droid+Sans:regular,bold|Droid+Serif:regular,italic,bold,bolditalic&subset=latin";'
 
     assert_raises CssParser::RemoteFileError do
@@ -157,6 +164,8 @@ class CssParserLoadingTests < Minitest::Test
   end
 
   def test_following_at_import_rules_from_add_block
+    stub_request_file("subdir/../simple.css")
+
     css_block = '@import "../simple.css";'
 
     @cp.add_block!(css_block, base_uri: "#{@uri_base}/subdir/")
@@ -166,6 +175,9 @@ class CssParserLoadingTests < Minitest::Test
   end
 
   def test_importing_with_media_types
+    stub_request_file("simple.css")
+    stub_request_file("import-with-media-types.css")
+
     @cp.load_uri!("#{@uri_base}/import-with-media-types.css")
 
     # from simple.css with :screen media type
@@ -180,18 +192,25 @@ class CssParserLoadingTests < Minitest::Test
   end
 
   def test_remote_circular_reference_exception
+    stub_request_file("import-circular-reference.css")
+
     assert_raises CircularReferenceError do
       @cp.load_uri!("#{@uri_base}/import-circular-reference.css")
     end
   end
 
   def test_suppressing_circular_reference_exceptions
+    stub_request_file("import-circular-reference.css")
+
     cp_without_exceptions = Parser.new(io_exceptions: false)
 
     cp_without_exceptions.load_uri!("#{@uri_base}/import-circular-reference.css")
   end
 
   def test_toggling_not_found_exceptions
+    stub_request(:get, "http://localhost:12000/no-exist.xyz")
+      .to_return(status: 404, body: "", headers: {})
+
     cp_with_exceptions = Parser.new(io_exceptions: true)
 
     err = assert_raises RemoteFileError do
