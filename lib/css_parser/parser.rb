@@ -410,17 +410,11 @@ module CssParser
     # See add_block! for options.
     #
     # Deprecated: originally accepted three params: `uri`, `base_uri` and `media_types`
-    def load_uri!(uri, options = {}, deprecated = nil)
+    def load_uri!(uri, options = {})
       uri = Addressable::URI.parse(uri) unless uri.respond_to? :scheme
 
       opts = {base_uri: nil, media_types: :all}
-
-      if options.is_a? Hash
-        opts.merge!(options)
-      else
-        opts[:base_uri] = options if options.is_a? String
-        opts[:media_types] = deprecated if deprecated
-      end
+      opts.merge!(options)
 
       if uri.scheme == 'file' or uri.scheme.nil?
         uri.path = File.expand_path(uri.path)
@@ -438,15 +432,9 @@ module CssParser
     end
 
     # Load a local CSS file.
-    def load_file!(file_name, options = {}, deprecated = nil)
+    def load_file!(file_name, options = {})
       opts = {base_dir: nil, media_types: :all}
-
-      if options.is_a? Hash
-        opts.merge!(options)
-      else
-        opts[:base_dir] = options if options.is_a? String
-        opts[:media_types] = deprecated if deprecated
-      end
+      opts.merge!(options)
 
       file_path = @options[:file_resource]
                   .find_file(file_name, base_dir: opts[:base_dir])
@@ -462,15 +450,9 @@ module CssParser
     end
 
     # Load a local CSS string.
-    def load_string!(src, options = {}, deprecated = nil)
+    def load_string!(src, options = {})
       opts = {base_dir: nil, media_types: :all}
-
-      if options.is_a? Hash
-        opts.merge!(options)
-      else
-        opts[:base_dir] = options if options.is_a? String
-        opts[:media_types] = deprecated if deprecated
-      end
+      opts.merge!(options)
 
       add_block!(src, opts)
     end

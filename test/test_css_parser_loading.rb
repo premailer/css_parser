@@ -77,7 +77,7 @@ class CssParserLoadingTests < Minitest::Test
 
   def test_following_at_import_rules_local
     base_dir = File.expand_path('fixtures', __dir__)
-    @cp.load_file!('import1.css', base_dir)
+    @cp.load_file!('import1.css', base_dir: base_dir)
 
     # from '/import1.css'
     assert_equal 'color: lime;', @cp.find_by_selector('div').join(' ')
