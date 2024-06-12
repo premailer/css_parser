@@ -1,12 +1,6 @@
 # frozen_string_literal: true
 
 module CssParser
-  # Exception class used for any errors encountered while downloading remote files.
-  class RemoteFileError < IOError; end
-
-  # Exception class used if a request is made to load a CSS file more than once.
-  class CircularReferenceError < StandardError; end
-
   # We have a Parser class which you create and instance of but we have some
   # functions which is nice to have outside of this instance
   #
@@ -58,10 +52,6 @@ module CssParser
   # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
   class Parser
     USER_AGENT = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)".freeze
-    MAX_REDIRECTS = 3
-
-    # Array of CSS files that have been loaded.
-    attr_reader   :loaded_uris
 
     #--
     # Class variable? see http://www.oreillynet.com/ruby/blog/2007/01/nubygems_dont_use_class_variab_1.html
@@ -79,12 +69,14 @@ module CssParser
         user_agent: USER_AGENT
       }.merge(options)
 
+      @options[:http_resource] ||= CssParser::HTTPReadURL
+                                   .new(agent: @options[:user_agent],
+                                     io_exceptions: @options[:io_exceptions])
+      @options[:file_resource] ||= CssParser::FileResource
+                                   .new(io_exceptions: @options[:io_exceptions])
+
       # array of RuleSets
       @rules = []
-
-      @redirect_count = nil
-
-      @loaded_uris = []
 
       # unprocessed blocks of CSS
       @blocks = []
@@ -440,7 +432,7 @@ module CssParser
       # pass on the uri if we are capturing file offsets
       opts[:filename] = uri.to_s if opts[:capture_offsets]
 
-      src, = read_remote_file(uri) # skip charset
+      src, = @options[:http_resource].read_remote_file(uri) # skip charset
 
       add_block!(src, opts) if src
     end
@@ -456,14 +448,15 @@ module CssParser
         opts[:media_types] = deprecated if deprecated
       end
 
-      file_name = File.expand_path(file_name, opts[:base_dir])
-      return unless File.readable?(file_name)
-      return unless circular_reference_check(file_name)
+      file_path = @options[:file_resource]
+                  .find_file(file_name, base_dir: opts[:base_dir])
+      # we we cant read the file it's nil
+      return if file_path.nil?
 
-      src = File.read(file_name)
+      src = File.read(file_path)
 
-      opts[:filename] = file_name if opts[:capture_offsets]
-      opts[:base_dir] = File.dirname(file_name)
+      opts[:filename] = file_path if opts[:capture_offsets]
+      opts[:base_dir] = File.dirname(file_path)
 
       add_block!(src, opts)
     end
@@ -480,112 +473,6 @@ module CssParser
       end
 
       add_block!(src, opts)
-    end
-
-  protected
-
-    # Check that a path hasn't been loaded already
-    #
-    # Raises a CircularReferenceError exception if io_exceptions are on,
-    # otherwise returns true/false.
-    def circular_reference_check(path)
-      path = path.to_s
-      if @loaded_uris.include?(path)
-        raise CircularReferenceError, "can't load #{path} more than once" if @options[:io_exceptions]
-
-        false
-      else
-        @loaded_uris << path
-        true
-      end
-    end
-
-    # Download a file into a string.
-    #
-    # Returns the file's data and character set in an array.
-    #--
-    # TODO: add option to fail silently or throw and exception on a 404
-    #++
-    def read_remote_file(uri) # :nodoc:
-      if @redirect_count.nil?
-        @redirect_count = 0
-      else
-        @redirect_count += 1
-      end
-
-      unless circular_reference_check(uri.to_s)
-        @redirect_count = nil
-        return nil, nil
-      end
-
-      if @redirect_count > MAX_REDIRECTS
-        @redirect_count = nil
-        return nil, nil
-      end
-
-      src = '', charset = nil
-
-      begin
-        uri = Addressable::URI.parse(uri.to_s)
-
-        if uri.scheme == 'file'
-          # local file
-          path = uri.path
-          path.gsub!(%r{^/}, '') if Gem.win_platform?
-          src = File.read(path, mode: 'rb')
-        else
-          # remote file
-          if uri.scheme == 'https'
-            uri.port = 443 unless uri.port
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.use_ssl = true
-            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-          else
-            http = Net::HTTP.new(uri.host, uri.port)
-          end
-
-          res = http.get(uri.request_uri, {'User-Agent' => @options[:user_agent], 'Accept-Encoding' => 'gzip'})
-          src = res.body
-          charset = res.respond_to?(:charset) ? res.encoding : 'utf-8'
-
-          if res.code.to_i >= 400
-            @redirect_count = nil
-            raise RemoteFileError, uri.to_s if @options[:io_exceptions]
-
-            return '', nil
-          elsif res.code.to_i >= 300 and res.code.to_i < 400
-            unless res['Location'].nil?
-              return read_remote_file Addressable::URI.parse(Addressable::URI.escape(res['Location']))
-            end
-          end
-
-          case res['content-encoding']
-          when 'gzip'
-            io = Zlib::GzipReader.new(StringIO.new(res.body))
-            src = io.read
-          when 'deflate'
-            io = Zlib::Inflate.new
-            src = io.inflate(res.body)
-          end
-        end
-
-        if charset
-          if String.method_defined?(:encode)
-            src.encode!('UTF-8', charset)
-          else
-            ic = Iconv.new('UTF-8//IGNORE', charset)
-            src = ic.iconv(src)
-          end
-        end
-      rescue
-        @redirect_count = nil
-        raise RemoteFileError, uri.to_s if @options[:io_exceptions]
-
-        return nil, nil
-      end
-
-      @redirect_count = nil
-      [src, charset]
     end
 
   private
