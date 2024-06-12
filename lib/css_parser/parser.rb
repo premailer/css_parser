@@ -398,11 +398,6 @@ module CssParser
       rules_by_media
     end
 
-    # Merge declarations with the same selector.
-    def compact! # :nodoc:
-      []
-    end
-
     # Load a remote CSS file.
     #
     # You can also pass in file://test.css
