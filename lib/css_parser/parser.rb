@@ -491,6 +491,8 @@ module CssParser
       if options.is_a? Hash
         opts.merge!(options)
       else
+        warn '[DEPRECATION] `load_uri!` with positional arguments is deprecated. ' \
+             'Please use keyword arguments instead.', uplevel: 1
         opts[:base_uri] = options if options.is_a? String
         opts[:media_types] = deprecated if deprecated
       end
@@ -517,6 +519,8 @@ module CssParser
       if options.is_a? Hash
         opts.merge!(options)
       else
+        warn '[DEPRECATION] `load_file!` with positional arguments is deprecated. ' \
+             'Please use keyword arguments instead.', uplevel: 1
         opts[:base_dir] = options if options.is_a? String
         opts[:media_types] = deprecated if deprecated
       end
@@ -540,6 +544,8 @@ module CssParser
       if options.is_a? Hash
         opts.merge!(options)
       else
+        warn '[DEPRECATION] `load_file!` with positional arguments is deprecated. ' \
+             'Please use keyword arguments instead.', uplevel: 1
         opts[:base_dir] = options if options.is_a? String
         opts[:media_types] = deprecated if deprecated
       end
