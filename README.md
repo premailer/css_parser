@@ -2,6 +2,8 @@
 
 Load, parse and cascade CSS rule sets in Ruby. 
 
+If you are looking for a pure css stylesheet parser/tokenizer/lexer have a look at [crass](https://rubygems.org/gems/crass) or [syntax_tree-css](https://rubygems.org/gems/syntax_tree-css)
+
 # Setup
 
 ```Bash
