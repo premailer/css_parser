@@ -53,12 +53,6 @@ module CssParser
   class Parser
     USER_AGENT = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)".freeze
 
-    #--
-    # Class variable? see http://www.oreillynet.com/ruby/blog/2007/01/nubygems_dont_use_class_variab_1.html
-    #++
-    @folded_declaration_cache = {}
-    class << self; attr_reader :folded_declaration_cache; end
-
     def initialize(options = {})
       @options = {
         absolute_paths: false,
@@ -473,18 +467,7 @@ module CssParser
         .map(&:to_sym)
     end
 
-    # Save a folded declaration block to the internal cache.
-    def save_folded_declaration(block_hash, folded_declaration) # :nodoc:
-      @folded_declaration_cache[block_hash] = folded_declaration
-    end
-
-    # Retrieve a folded declaration block from the internal cache.
-    def get_folded_declaration(block_hash) # :nodoc:
-      @folded_declaration_cache[block_hash] ||= nil
-    end
-
     def reset! # :nodoc:
-      @folded_declaration_cache = {}
       @css_source = ''
       @css_rules = []
       @css_warnings = []

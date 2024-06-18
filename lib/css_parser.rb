@@ -60,8 +60,6 @@ module CssParser
   # TODO: declaration_hashes should be able to contain a RuleSet
   #       this should be a Class method
   def self.merge(*rule_sets)
-    @folded_declaration_cache = {}
-
     # in case called like CssParser.merge([rule_set, rule_set])
     rule_sets.flatten! if rule_sets[0].is_a?(Array)
 
