@@ -40,5 +40,25 @@ module CssParser
           end
         end
     end
+
+    # expect tokens from crass
+    def self.split_media_query_by_or_condition(media_query_selector)
+      media_query_selector
+        .each_with_object([[]]) do |token, sum|
+          # comma is the same as or
+          # https://developer.mozilla.org/en-US/docs/Web/CSS/@media#logical_operators
+          case token
+          in node: :comma
+            sum << []
+          in node: :ident, value: 'or' # rubocop:disable Lint/DuplicateBranch
+            sum << []
+          else
+            sum.last << token
+          end
+        end # rubocop:disable Style/MultilineBlockChain
+        .map { Crass::Parser.stringify(_1).strip }
+        .reject(&:empty?)
+        .map(&:to_sym)
+    end
   end
 end

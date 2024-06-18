@@ -130,7 +130,7 @@ module CssParser
 
           add_rule!(**add_rule_options)
         in node: :at_rule, name: 'media'
-          new_media_queries = split_media_query_by_or_condition(node[:prelude])
+          new_media_queries = ParserFx.split_media_query_by_or_condition(node[:prelude])
           add_block!(node[:block], options.merge(media_types: new_media_queries))
 
         in node: :at_rule, name: 'page'
@@ -185,7 +185,7 @@ module CssParser
           media_query_section = []
           loop { media_query_section << prelude.next }
 
-          import_options[:media_types] = split_media_query_by_or_condition(media_query_section)
+          import_options[:media_types] = ParserFx.split_media_query_by_or_condition(media_query_section)
           if import_options[:media_types].empty?
             import_options[:media_types] = [:all]
           end
@@ -402,25 +402,6 @@ module CssParser
     end
 
   private
-
-    def split_media_query_by_or_condition(media_query_selector)
-      media_query_selector
-        .each_with_object([[]]) do |token, sum|
-          # comma is the same as or
-          # https://developer.mozilla.org/en-US/docs/Web/CSS/@media#logical_operators
-          case token
-          in node: :comma
-            sum << []
-          in node: :ident, value: 'or' # rubocop:disable Lint/DuplicateBranch
-            sum << []
-          else
-            sum.last << token
-          end
-        end # rubocop:disable Style/MultilineBlockChain
-        .map { Crass::Parser.stringify(_1).strip }
-        .reject(&:empty?)
-        .map(&:to_sym)
-    end
 
     # recurse through nested nodes and return them as Hashes nested in
     # passed hash
