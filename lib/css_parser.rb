@@ -155,11 +155,4 @@ module CssParser
       "url('#{uri}')"
     end
   end
-
-  def self.sanitize_media_query(raw)
-    mq = raw.to_s.gsub(/\s+/, ' ')
-    mq.strip!
-    mq = 'all' if mq.empty?
-    mq.to_sym
-  end
 end

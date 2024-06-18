@@ -180,9 +180,9 @@ class CssParserLoadingTests < Minitest::Test
 
     @cp.load_uri!("#{@uri_base}/import-with-media-types.css")
 
-    # from simple.css with :screen media type
-    assert_equal 'margin: 0px;', @cp.find_by_selector('p', :screen).join(' ')
-    assert_equal '', @cp.find_by_selector('p', :tty).join(' ')
+    # from simple.css with screen media type
+    assert_equal 'margin: 0px;', @cp.find_by_selector('p', "screen").join(' ')
+    assert_equal '', @cp.find_by_selector('p', "tty").join(' ')
   end
 
   def test_local_circular_reference_exception

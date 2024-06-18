@@ -58,7 +58,6 @@ module CssParser
         end # rubocop:disable Style/MultilineBlockChain
         .map { Crass::Parser.stringify(_1).strip }
         .reject(&:empty?)
-        .map(&:to_sym)
     end
   end
 end
