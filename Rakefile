@@ -31,15 +31,15 @@ task :benchmark do
   complex_css_path = fixtures_dir.join('complex.css').to_s.freeze
 
   Benchmark.ips do |x|
-    x.report('import1.css loading') { CssParser::Parser.new.load_file!(import_css_path) }
-    x.report('complex.css loading') { CssParser::Parser.new.load_file!(complex_css_path) }
+    x.report('import1.css loading') { CssParser::Document.new.load_file!(import_css_path) }
+    x.report('complex.css loading') { CssParser::Document.new.load_file!(complex_css_path) }
   end
 
   puts
 
-  report = MemoryProfiler.report { CssParser::Parser.new.load_file!(import_css_path) }
+  report = MemoryProfiler.report { CssParser::Document.new.load_file!(import_css_path) }
   puts "Loading `import1.css` allocated #{report.total_allocated} objects, #{report.total_allocated_memsize / 1024} KiB"
 
-  report = MemoryProfiler.report { CssParser::Parser.new.load_file!(complex_css_path) }
+  report = MemoryProfiler.report { CssParser::Document.new.load_file!(complex_css_path) }
   puts "Loading `complex.css` allocated #{report.total_allocated} objects, #{report.total_allocated_memsize / 1024} KiB"
 end

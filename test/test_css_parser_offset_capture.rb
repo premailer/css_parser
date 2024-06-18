@@ -7,7 +7,7 @@ class CssParserOffsetCaptureTests < Minitest::Test
   include CssParser
 
   def setup
-    @cp = Parser.new
+    @cp = Document.new
   end
 
   def test_capturing_offsets_for_local_file

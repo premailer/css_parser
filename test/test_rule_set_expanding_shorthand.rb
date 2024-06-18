@@ -6,7 +6,7 @@ class RuleSetExpandingShorthandTests < Minitest::Test
   include CssParser
 
   def setup
-    @cp = CssParser::Parser.new
+    @cp = Document.new
   end
 
   # Dimensions shorthand

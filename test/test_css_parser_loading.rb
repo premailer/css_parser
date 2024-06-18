@@ -7,7 +7,7 @@ class CssParserLoadingTests < Minitest::Test
   include CssParser
 
   def setup
-    @cp = Parser.new
+    @cp = Document.new
     @uri_base = 'http://localhost:12000'
   end
 
@@ -77,7 +77,7 @@ class CssParserLoadingTests < Minitest::Test
 
   def test_following_at_import_rules_local
     base_dir = File.expand_path('fixtures', __dir__)
-    @cp.load_file!('import1.css', base_dir)
+    @cp.load_file!('import1.css', base_dir: base_dir)
 
     # from '/import1.css'
     assert_equal 'color: lime;', @cp.find_by_selector('div').join(' ')
@@ -109,7 +109,7 @@ class CssParserLoadingTests < Minitest::Test
   def test_imports_disabled
     stub_request_file("import1.css")
 
-    cp = Parser.new(import: false)
+    cp = Document.new(import: false)
     cp.load_uri!("#{@uri_base}/import1.css")
 
     # from '/import1.css'
@@ -128,7 +128,7 @@ class CssParserLoadingTests < Minitest::Test
 
     css_block = '@import "http://example.com/css";'
 
-    assert_raises CssParser::RemoteFileError do
+    assert_raises HTTPReadURL::RemoteFileError do
       @cp.add_block!(css_block, base_uri: "#{@uri_base}/subdir/")
     end
   end
@@ -139,7 +139,7 @@ class CssParserLoadingTests < Minitest::Test
 
     css_block = '@import "http://example.com/css?family=Droid+Sans:regular,bold|Droid+Serif:regular,italic,bold,bolditalic&subset=latin";'
 
-    assert_raises CssParser::RemoteFileError do
+    assert_raises HTTPReadURL::RemoteFileError do
       @cp.add_block!(css_block, base_uri: "#{@uri_base}/subdir/")
     end
   end
@@ -180,13 +180,13 @@ class CssParserLoadingTests < Minitest::Test
 
     @cp.load_uri!("#{@uri_base}/import-with-media-types.css")
 
-    # from simple.css with :screen media type
-    assert_equal 'margin: 0px;', @cp.find_by_selector('p', :screen).join(' ')
-    assert_equal '', @cp.find_by_selector('p', :tty).join(' ')
+    # from simple.css with screen media type
+    assert_equal 'margin: 0px;', @cp.find_by_selector('p', "screen").join(' ')
+    assert_equal '', @cp.find_by_selector('p', "tty").join(' ')
   end
 
   def test_local_circular_reference_exception
-    assert_raises CircularReferenceError do
+    assert_raises FileResource::CircularReferenceError do
       @cp.load_file!(File.expand_path('fixtures/import-circular-reference.css', __dir__))
     end
   end
@@ -194,7 +194,7 @@ class CssParserLoadingTests < Minitest::Test
   def test_remote_circular_reference_exception
     stub_request_file("import-circular-reference.css")
 
-    assert_raises CircularReferenceError do
+    assert_raises HTTPReadURL::CircularReferenceError do
       @cp.load_uri!("#{@uri_base}/import-circular-reference.css")
     end
   end
@@ -202,7 +202,7 @@ class CssParserLoadingTests < Minitest::Test
   def test_suppressing_circular_reference_exceptions
     stub_request_file("import-circular-reference.css")
 
-    cp_without_exceptions = Parser.new(io_exceptions: false)
+    cp_without_exceptions = Document.new(io_exceptions: false)
 
     cp_without_exceptions.load_uri!("#{@uri_base}/import-circular-reference.css")
   end
@@ -211,15 +211,15 @@ class CssParserLoadingTests < Minitest::Test
     stub_request(:get, "http://localhost:12000/no-exist.xyz")
       .to_return(status: 404, body: "", headers: {})
 
-    cp_with_exceptions = Parser.new(io_exceptions: true)
+    cp_with_exceptions = Document.new(io_exceptions: true)
 
-    err = assert_raises RemoteFileError do
+    err = assert_raises HTTPReadURL::RemoteFileError do
       cp_with_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
     end
 
     assert_includes err.message, "#{@uri_base}/no-exist.xyz"
 
-    cp_without_exceptions = Parser.new(io_exceptions: false)
+    cp_without_exceptions = Document.new(io_exceptions: false)
 
     cp_without_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
   end

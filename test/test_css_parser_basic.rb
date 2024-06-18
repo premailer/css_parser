@@ -7,7 +7,7 @@ class CssParserBasicTests < Minitest::Test
   include CssParser
 
   def setup
-    @cp = CssParser::Parser.new
+    @cp = Document.new
     @css = <<-CSS
       html, body, p { margin: 0px; }
       p { padding: 0px; }
@@ -55,7 +55,7 @@ class CssParserBasicTests < Minitest::Test
 
   def test_toggling_uri_conversion
     # with conversion
-    cp_with_conversion = Parser.new(absolute_paths: true)
+    cp_with_conversion = Document.new(absolute_paths: true)
     cp_with_conversion.add_block!("body { background: url('../style/yellow.png?abc=123') };",
       base_uri: 'http://example.org/style/basic.css')
 
@@ -63,7 +63,7 @@ class CssParserBasicTests < Minitest::Test
       cp_with_conversion['body'].join(' ')
 
     # without conversion
-    cp_without_conversion = Parser.new(absolute_paths: false)
+    cp_without_conversion = Document.new(absolute_paths: false)
     cp_without_conversion.add_block!("body { background: url('../style/yellow.png?abc=123') };",
       base_uri: 'http://example.org/style/basic.css')
 
@@ -72,7 +72,7 @@ class CssParserBasicTests < Minitest::Test
   end
 
   def test_converting_to_hash
-    rs = CssParser::RuleSet.new(selectors: 'div', block: 'color: blue;')
+    rs = RuleSet.new(selectors: 'div', block: 'color: blue;')
     @cp.add_rule_set!(rs)
     hash = @cp.to_h
     assert_equal 'blue', hash['all']['div']['color']

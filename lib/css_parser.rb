@@ -10,10 +10,13 @@ require 'iconv' unless String.method_defined?(:encode)
 require 'crass'
 
 require 'css_parser/version'
+require 'css_parser/http_read_url'
+require 'css_parser/file_resource'
 require 'css_parser/rule_set'
 require 'css_parser/rule_set/declarations'
 require 'css_parser/regexps'
-require 'css_parser/parser'
+require 'css_parser/parser_fx'
+require 'css_parser/document'
 
 module CssParser
   class Error < StandardError; end
@@ -58,8 +61,6 @@ module CssParser
   # TODO: declaration_hashes should be able to contain a RuleSet
   #       this should be a Class method
   def self.merge(*rule_sets)
-    @folded_declaration_cache = {}
-
     # in case called like CssParser.merge([rule_set, rule_set])
     rule_sets.flatten! if rule_sets[0].is_a?(Array)
 
@@ -153,12 +154,5 @@ module CssParser
       end
       "url('#{uri}')"
     end
-  end
-
-  def self.sanitize_media_query(raw)
-    mq = raw.to_s.gsub(/\s+/, ' ')
-    mq.strip!
-    mq = 'all' if mq.empty?
-    mq.to_sym
   end
 end
