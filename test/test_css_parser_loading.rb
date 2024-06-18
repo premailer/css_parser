@@ -7,7 +7,7 @@ class CssParserLoadingTests < Minitest::Test
   include CssParser
 
   def setup
-    @cp = Parser.new
+    @cp = Document.new
     @uri_base = 'http://localhost:12000'
   end
 
@@ -109,7 +109,7 @@ class CssParserLoadingTests < Minitest::Test
   def test_imports_disabled
     stub_request_file("import1.css")
 
-    cp = Parser.new(import: false)
+    cp = Document.new(import: false)
     cp.load_uri!("#{@uri_base}/import1.css")
 
     # from '/import1.css'
@@ -202,7 +202,7 @@ class CssParserLoadingTests < Minitest::Test
   def test_suppressing_circular_reference_exceptions
     stub_request_file("import-circular-reference.css")
 
-    cp_without_exceptions = Parser.new(io_exceptions: false)
+    cp_without_exceptions = Document.new(io_exceptions: false)
 
     cp_without_exceptions.load_uri!("#{@uri_base}/import-circular-reference.css")
   end
@@ -211,7 +211,7 @@ class CssParserLoadingTests < Minitest::Test
     stub_request(:get, "http://localhost:12000/no-exist.xyz")
       .to_return(status: 404, body: "", headers: {})
 
-    cp_with_exceptions = Parser.new(io_exceptions: true)
+    cp_with_exceptions = Document.new(io_exceptions: true)
 
     err = assert_raises HTTPReadURL::RemoteFileError do
       cp_with_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
@@ -219,7 +219,7 @@ class CssParserLoadingTests < Minitest::Test
 
     assert_includes err.message, "#{@uri_base}/no-exist.xyz"
 
-    cp_without_exceptions = Parser.new(io_exceptions: false)
+    cp_without_exceptions = Document.new(io_exceptions: false)
 
     cp_without_exceptions.load_uri!("#{@uri_base}/no-exist.xyz")
   end

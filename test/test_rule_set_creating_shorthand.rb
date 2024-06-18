@@ -7,7 +7,7 @@ class RuleSetCreatingShorthandTests < Minitest::Test
   include CssParser
 
   def setup
-    @cp = CssParser::Parser.new
+    @cp = Document.new
   end
 
   def test_border_width

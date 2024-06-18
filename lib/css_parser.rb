@@ -16,7 +16,7 @@ require 'css_parser/rule_set'
 require 'css_parser/rule_set/declarations'
 require 'css_parser/regexps'
 require 'css_parser/parser_fx'
-require 'css_parser/parser'
+require 'css_parser/document'
 
 module CssParser
   class Error < StandardError; end

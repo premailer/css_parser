@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 module CssParser
-  # == Parser class
+  # == Document class
   #
   # All CSS is converted to UTF-8.
   #
-  # When calling Parser#new there are some configuaration options:
+  # When calling Document#new there are some configuaration options:
   # [<tt>absolute_paths</tt>] Convert relative paths to absolute paths (<tt>href</tt>, <tt>src</tt> and <tt>url('')</tt>. Boolean, default is <tt>false</tt>.
   # [<tt>import</tt>] Follow <tt>@import</tt> rules. Boolean, default is <tt>true</tt>.
   # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
-  class Parser
+  class Document
     module Util
       def self.ensure_media_types(media_types)
         Array(media_types)
@@ -37,6 +37,37 @@ module CssParser
 
       # array of RuleSets
       @rules = []
+    end
+
+    # Iterate through RuleSet objects.
+    #
+    # +media_types+ can be a symbol or an array of media queries (:all or string).
+    def each_rule_set(media_types = :all) # :yields: rule_set, media_types
+      return to_enum(__method__, media_types) unless block_given?
+
+      media_types = Util.ensure_media_types(media_types)
+      @rules.each do |block|
+        if media_types.include?(:all) or block[:media_types].any? { |mt| media_types.include?(mt) }
+          yield(block[:rules], block[:media_types])
+        end
+      end
+    end
+
+    # Iterate through CSS selectors.
+    #
+    # The difference between each_rule_set and this method is that this method
+    # exposes each selector to to the rule.
+    #
+    # +media_types+ can be a symbol or an array of media queries (:all or string).
+    # See RuleSet#each_selector for +options+.
+    def each_selector(all_media_types = :all, options = {}) # :yields: selectors, declarations, specificity, media_types
+      return to_enum(__method__, all_media_types, options) unless block_given?
+
+      each_rule_set(all_media_types) do |rule_set, media_types|
+        rule_set.each_selector(options) do |selectors, declarations, specificity|
+          yield selectors, declarations, specificity, media_types
+        end
+      end
     end
 
     # Get declarations by selector.
@@ -80,6 +111,73 @@ module CssParser
       rule_sets
     end
 
+    # A hash of { :media_query => rule_sets }
+    def rules_by_media_query
+      rules_by_media = {}
+      @rules.each do |block|
+        block[:media_types].each do |mt|
+          unless rules_by_media.key?(mt)
+            rules_by_media[mt] = []
+          end
+          rules_by_media[mt] << block[:rules]
+        end
+      end
+
+      rules_by_media
+    end
+
+    # Load a remote CSS file.
+    #
+    # You can also pass in file://test.css
+    #
+    # See add_block! for options.
+    def load_uri!(uri, options = {})
+      uri = Addressable::URI.parse(uri) unless uri.respond_to? :scheme
+
+      opts = {base_uri: nil, media_types: :all}
+      opts.merge!(options)
+
+      if uri.scheme == 'file' or uri.scheme.nil?
+        uri.path = File.expand_path(uri.path)
+        uri.scheme = 'file'
+      end
+
+      opts[:base_uri] = uri if opts[:base_uri].nil?
+
+      # pass on the uri if we are capturing file offsets
+      opts[:filename] = uri.to_s if opts[:capture_offsets]
+
+      src, = @options[:http_resource].read_remote_file(uri) # skip charset
+
+      add_block!(src, opts) if src
+    end
+
+    # Load a local CSS file.
+    def load_file!(file_name, options = {})
+      opts = {base_dir: nil, media_types: :all}
+      opts.merge!(options)
+
+      file_path = @options[:file_resource]
+                  .find_file(file_name, base_dir: opts[:base_dir])
+      # we we cant read the file it's nil
+      return if file_path.nil?
+
+      src = File.read(file_path)
+
+      opts[:filename] = file_path if opts[:capture_offsets]
+      opts[:base_dir] = File.dirname(file_path)
+
+      add_block!(src, opts)
+    end
+
+    # Load a local CSS string.
+    def load_string!(src, options = {})
+      opts = {base_dir: nil, media_types: :all}
+      opts.merge!(options)
+
+      add_block!(src, opts)
+    end
+
     # Add a raw block of CSS.
     #
     # In order to follow +@import+ rules you must supply either a
@@ -98,7 +196,7 @@ module CssParser
     #     }
     #   EOT
     #
-    #   parser = CssParser::Parser.new
+    #   parser = CssParser::Document.new
     #   parser.add_block!(css)
     def add_block!(block, options = {})
       options = {base_uri: nil, base_dir: nil, charset: nil, media_types: [:all], only_media_types: [:all]}.merge(options)
@@ -255,19 +353,6 @@ module CssParser
       end
     end
 
-    # Iterate through RuleSet objects.
-    #
-    # +media_types+ can be a symbol or an array of media queries (:all or string).
-    def each_rule_set(media_types = :all) # :yields: rule_set, media_types
-      media_types = Util.ensure_media_types(media_types)
-
-      @rules.each do |block|
-        if media_types.include?(:all) or block[:media_types].any? { |mt| media_types.include?(mt) }
-          yield(block[:rules], block[:media_types])
-        end
-      end
-    end
-
     # Output all CSS rules as a Hash
     def to_h(which_media = :all)
       out = {}
@@ -287,20 +372,6 @@ module CssParser
         out[media_type.to_s] = ms
       end
       out
-    end
-
-    # Iterate through CSS selectors.
-    #
-    # +media_types+ can be a symbol or an array of media queries (:all or string).
-    # See RuleSet#each_selector for +options+.
-    def each_selector(all_media_types = :all, options = {}) # :yields: selectors, declarations, specificity, media_types
-      return to_enum(__method__, all_media_types, options) unless block_given?
-
-      each_rule_set(all_media_types) do |rule_set, media_types|
-        rule_set.each_selector(options) do |selectors, declarations, specificity|
-          yield selectors, declarations, specificity, media_types
-        end
-      end
     end
 
     # Output all CSS rules as a single stylesheet.
@@ -332,73 +403,6 @@ module CssParser
 
       out << ''
       out.join("\n")
-    end
-
-    # A hash of { :media_query => rule_sets }
-    def rules_by_media_query
-      rules_by_media = {}
-      @rules.each do |block|
-        block[:media_types].each do |mt|
-          unless rules_by_media.key?(mt)
-            rules_by_media[mt] = []
-          end
-          rules_by_media[mt] << block[:rules]
-        end
-      end
-
-      rules_by_media
-    end
-
-    # Load a remote CSS file.
-    #
-    # You can also pass in file://test.css
-    #
-    # See add_block! for options.
-    def load_uri!(uri, options = {})
-      uri = Addressable::URI.parse(uri) unless uri.respond_to? :scheme
-
-      opts = {base_uri: nil, media_types: :all}
-      opts.merge!(options)
-
-      if uri.scheme == 'file' or uri.scheme.nil?
-        uri.path = File.expand_path(uri.path)
-        uri.scheme = 'file'
-      end
-
-      opts[:base_uri] = uri if opts[:base_uri].nil?
-
-      # pass on the uri if we are capturing file offsets
-      opts[:filename] = uri.to_s if opts[:capture_offsets]
-
-      src, = @options[:http_resource].read_remote_file(uri) # skip charset
-
-      add_block!(src, opts) if src
-    end
-
-    # Load a local CSS file.
-    def load_file!(file_name, options = {})
-      opts = {base_dir: nil, media_types: :all}
-      opts.merge!(options)
-
-      file_path = @options[:file_resource]
-                  .find_file(file_name, base_dir: opts[:base_dir])
-      # we we cant read the file it's nil
-      return if file_path.nil?
-
-      src = File.read(file_path)
-
-      opts[:filename] = file_path if opts[:capture_offsets]
-      opts[:base_dir] = File.dirname(file_path)
-
-      add_block!(src, opts)
-    end
-
-    # Load a local CSS string.
-    def load_string!(src, options = {})
-      opts = {base_dir: nil, media_types: :all}
-      opts.merge!(options)
-
-      add_block!(src, opts)
     end
 
   private

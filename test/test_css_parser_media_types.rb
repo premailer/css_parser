@@ -7,7 +7,7 @@ class CssParserMediaTypesTests < Minitest::Test
   include CssParser
 
   def setup
-    @cp = Parser.new
+    @cp = Document.new
   end
 
   def test_that_media_types_dont_include_all

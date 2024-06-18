@@ -10,7 +10,10 @@ gem install css_parser
 
 # Usage
 
-You initiate a document `CssParser::Document.new` and you can start to load it with css. Main methods to add css are: load_uri! (load url and follows @imports based on the full url), load_file! (loads file and follows @imports based on path from file imported) and load_string! (load a block of css). All of these apis tries to absolute all urls
+You initiate a document `CssParser::Document.new` and you can start to load it with css. Main methods to add css are: load_uri! (load url and follows @imports based on the full url), load_file! (loads file and follows @imports based on path from file imported) and load_string! (load a block of css). All of these apis tries to absolute all urls.
+
+CssParser::Document -> Wrapper to holds all the rules on one block  
+CssParser::RuleSet -> Wrapper to hold each use like `.a, .b { color: hotpink; }`. notice this example has two selectors `.a` and `.b`
 
 
 ```Ruby

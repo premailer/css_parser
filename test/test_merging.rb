@@ -6,7 +6,7 @@ class MergingTests < Minitest::Test
   include CssParser
 
   def setup
-    @cp = CssParser::Parser.new
+    @cp = Document.new
   end
 
   def test_simple_merge
@@ -32,7 +32,7 @@ class MergingTests < Minitest::Test
     rules = @cp.find_rule_sets(["body", "h2"])
     assert_equal "margin: 5px;", CssParser.merge(rules).declarations_to_s
 
-    @cp = CssParser::Parser.new
+    @cp = Document.new
     @cp.add_block! "body { margin: 0; }"
     @cp.add_block! "h2,h1 { margin: 5px; }"
 

@@ -7,7 +7,7 @@ class CssParserTests < Minitest::Test
   include CssParser
 
   def setup
-    @cp = Parser.new
+    @cp = Document.new
   end
 
   def test_utf8
