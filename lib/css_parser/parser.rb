@@ -352,8 +352,6 @@ module CssParser
     # You can also pass in file://test.css
     #
     # See add_block! for options.
-    #
-    # Deprecated: originally accepted three params: `uri`, `base_uri` and `media_types`
     def load_uri!(uri, options = {})
       uri = Addressable::URI.parse(uri) unless uri.respond_to? :scheme
 
