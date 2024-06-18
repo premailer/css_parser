@@ -71,10 +71,6 @@ module CssParser
 
       # array of RuleSets
       @rules = []
-
-      # unprocessed blocks of CSS
-      @blocks = []
-      reset!
     end
 
     # Get declarations by selector.
@@ -465,12 +461,6 @@ module CssParser
         .map { Crass::Parser.stringify(_1).strip }
         .reject(&:empty?)
         .map(&:to_sym)
-    end
-
-    def reset! # :nodoc:
-      @css_source = ''
-      @css_rules = []
-      @css_warnings = []
     end
 
     # recurse through nested nodes and return them as Hashes nested in
