@@ -15,6 +15,7 @@ require 'css_parser/file_resource'
 require 'css_parser/rule_set'
 require 'css_parser/rule_set/declarations'
 require 'css_parser/regexps'
+require 'css_parser/parser_fx'
 require 'css_parser/parser'
 
 module CssParser
