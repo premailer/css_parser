@@ -6,6 +6,7 @@
 * Deprecate `add_rule!` (positional arguments)and `add_rule_with_offsets!` for `add_rule!` (keyword argument)
 * RuleSet initialize now takes keyword argument, positional arguments are still supported but deprecated
 * Removed OffsetAwareRuleSet, it's a RuleSet with optional attributes filename and offset
+* Improved performance of block parsing by using StringScanner
 
 ### Version v1.18.0
 

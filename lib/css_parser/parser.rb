@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'strscan'
+
 module CssParser
   # Exception class used for any errors encountered while downloading remote files.
   class RemoteFileError < IOError; end
@@ -17,6 +19,7 @@ module CssParser
   # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
   class Parser
     USER_AGENT = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)".freeze
+    RULESET_TOKENIZER_RX = /\s+|\\{2,}|\\?[{}\s"]|[()]|.[^\s"{}()\\]*/.freeze
     STRIP_CSS_COMMENTS_RX = %r{/\*.*?\*/}m.freeze
     STRIP_HTML_COMMENTS_RX = /<!--|-->/m.freeze
 
@@ -362,11 +365,15 @@ module CssParser
 
       # once we are in a rule, we will use this to store where we started if we are capturing offsets
       rule_start = nil
-      offset = nil
+      start_offset = nil
+      end_offset = nil
 
-      block.scan(/\s+|\\{2,}|\\?[{}\s"]|[()]|.[^\s"{}()\\]*/) do |token|
+      scanner = StringScanner.new(block)
+      until scanner.eos?
         # save the regex offset so that we know where in the file we are
-        offset = Regexp.last_match.offset(0) if options[:capture_offsets]
+        start_offset = scanner.pos
+        token = scanner.scan(RULESET_TOKENIZER_RX)
+        end_offset = scanner.pos
 
         if token.start_with?('"') # found un-escaped double quote
           in_string = !in_string
@@ -398,7 +405,7 @@ module CssParser
                 media_types: current_media_queries
               }
               if options[:capture_offsets]
-                add_rule_options.merge!(filename: options[:filename], offset: rule_start..offset.last)
+                add_rule_options.merge!(filename: options[:filename], offset: rule_start..end_offset)
               end
               add_rule!(**add_rule_options)
             end
@@ -459,7 +466,7 @@ module CssParser
           current_selectors << token
 
           # mark this as the beginning of the selector unless we have already marked it
-          rule_start = offset.first if options[:capture_offsets] && rule_start.nil? && token =~ /^[^\s]+$/
+          rule_start = start_offset if options[:capture_offsets] && rule_start.nil? && token =~ /^[^\s]+$/
         end
       end
 
@@ -471,7 +478,7 @@ module CssParser
         media_types: current_media_queries
       }
       if options[:capture_offsets]
-        add_rule_options.merge!(filename: options[:filename], offset: rule_start..offset.last)
+        add_rule_options.merge!(filename: options[:filename], offset: rule_start..end_offset)
       end
       add_rule!(**add_rule_options)
     end
