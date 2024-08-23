@@ -78,6 +78,19 @@ class RuleSetTests < Minitest::Test
     assert_equal('no-repeat;', rs['background-repeat'])
   end
 
+  def test_each_declaration_with_newlines
+    expected = Set[
+      {property: 'background-image', value: 'url(foo;bar)', is_important: false},
+      {property: 'font-weight', value: 'bold', is_important: true},
+    ]
+    rs = RuleSet.new(block: "background-image\n:\nurl(foo;bar);\n\n\n\n\n;;font-weight\n\n\n:bold\n\n\n!important")
+    actual = Set.new
+    rs.each_declaration do |prop, val, imp|
+      actual << {property: prop, value: val, is_important: imp}
+    end
+    assert_equal(expected, actual)
+  end
+
   def test_selector_sanitization
     selectors = "h1, h2,\nh3 "
     rs = RuleSet.new(selectors: selectors, block: "color: #fff;")

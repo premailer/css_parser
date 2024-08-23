@@ -26,6 +26,11 @@ module CssParser
 
     WHITESPACE_REPLACEMENT = '___SPACE___'
 
+    # Tokens for parse_declarations!
+    COLON = ':'.freeze
+    SEMICOLON = ';'.freeze
+    LPAREN = '('.freeze
+    RPAREN = ')'.freeze
     class Declarations
       class Value
         attr_reader :value
@@ -647,18 +652,30 @@ module CssParser
       return unless block
 
       continuation = nil
-      block.split(/[;$]+/m).each do |decs|
-        decs = (continuation ? continuation + decs : decs)
-        if decs =~ /\([^)]*\Z/ # if it has an unmatched parenthesis
-          continuation = "#{decs};"
-        elsif (matches = decs.match(/\s*(.[^:]*)\s*:\s*(?m:(.+))(?:;?\s*\Z)/i))
-          # skip end_of_declaration
-          property = matches[1]
-          value = matches[2]
-          add_declaration!(property, value)
-          continuation = nil
+      block.split(SEMICOLON) do |decs|
+        decs = (continuation ? "#{continuation};#{decs}" : decs)
+        if unmatched_open_parenthesis?(decs)
+          # Semicolon happened within parenthesis, so it is a part of the value
+          # the rest of the value is in the next segment
+          continuation = decs
+          next
         end
+
+        next unless (colon = decs.index(COLON))
+
+        property = decs[0, colon]
+        value = decs[(colon + 1)..]
+        property.strip!
+        value.strip!
+        next if property.empty? || value.empty?
+
+        add_declaration!(property, value)
+        continuation = nil
       end
+    end
+
+    def unmatched_open_parenthesis?(declarations)
+      (lparen_index = declarations.index(LPAREN)) && !declarations.index(RPAREN, lparen_index)
     end
 
     #--

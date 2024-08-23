@@ -7,6 +7,7 @@
 * RuleSet initialize now takes keyword argument, positional arguments are still supported but deprecated
 * Removed OffsetAwareRuleSet, it's a RuleSet with optional attributes filename and offset
 * Improved performance of block parsing by using StringScanner
+* Improve `RuleSet#parse_declarations!` performance by using substring search istead of regexps
 
 ### Version v1.18.0
 
