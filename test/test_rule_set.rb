@@ -122,6 +122,12 @@ class RuleSetTests < Minitest::Test
     end
   end
 
+  def test_important_without_value
+    declarations = 'color: !important; background-color: #fff'
+    rs = RuleSet.new(selectors: '#content p, a', block: declarations)
+    assert_equal('background-color: #fff;', rs.declarations_to_s)
+  end
+
   def test_not_raised_issue68
     ok = true
     begin

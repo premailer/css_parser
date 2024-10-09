@@ -10,6 +10,7 @@
 * Removed OffsetAwareRuleSet, it's a RuleSet with optional attributes filename and offset
 * Improved performance of block parsing by using StringScanner
 * Improve `RuleSet#parse_declarations!` performance by using substring search istead of regexps
+* Fix error when parsing values consisting of `!important` only
 
 ### Version v1.18.0
 
