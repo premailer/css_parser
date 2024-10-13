@@ -31,6 +31,7 @@ module CssParser
     SEMICOLON = ';'.freeze
     LPAREN = '('.freeze
     RPAREN = ')'.freeze
+    IMPORTANT = '!important'.freeze
     class Declarations
       class Value
         attr_reader :value
@@ -667,7 +668,7 @@ module CssParser
         value = decs[(colon + 1)..]
         property.strip!
         value.strip!
-        next if property.empty? || value.empty?
+        next if property.empty? || value.empty? || value.casecmp?(IMPORTANT)
 
         add_declaration!(property, value)
         continuation = nil
