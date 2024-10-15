@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### Version v1.19.1
+
+* Fix error when parsing values consisting of `!important` only
+
 ### Version v1.19.0
 
 * Deprecate `load_uri!`, `load_file!` and `load_string!` positional arguments over keyword argument
