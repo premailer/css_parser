@@ -677,12 +677,7 @@ module CssParser
         end
 
         if charset
-          if String.method_defined?(:encode)
-            src.encode!('UTF-8', charset)
-          else
-            ic = Iconv.new('UTF-8//IGNORE', charset)
-            src = ic.iconv(src)
-          end
+          src.encode!('UTF-8', charset)
         end
       rescue
         @redirect_count = nil

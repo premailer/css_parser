@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+* Remove `iconv` conditional require
+
 ### Version v1.19.1
 
 * Fix error when parsing values consisting of `!important` only
