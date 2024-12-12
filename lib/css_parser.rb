@@ -6,7 +6,6 @@ require 'net/https'
 require 'digest/md5'
 require 'zlib'
 require 'stringio'
-require 'iconv' unless String.method_defined?(:encode)
 
 require 'css_parser/version'
 require 'css_parser/rule_set'
