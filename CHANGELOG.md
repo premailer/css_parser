@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### Version v1.20.0
+
 * Remove `iconv` conditional require
 
 ### Version v1.19.1
