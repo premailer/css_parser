@@ -11,8 +11,10 @@ module CssParser
     BACKGROUND_PROPERTIES = ['background-color', 'background-image', 'background-repeat', 'background-position', 'background-size', 'background-attachment'].freeze
     LIST_STYLE_PROPERTIES = ['list-style-type', 'list-style-position', 'list-style-image'].freeze
     FONT_STYLE_PROPERTIES = ['font-style', 'font-variant', 'font-weight', 'font-size', 'line-height', 'font-family'].freeze
+    FONT_WEIGHT_PROPERTIES = ['font-style', 'font-weight', 'font-variant'].freeze
     BORDER_STYLE_PROPERTIES = ['border-width', 'border-style', 'border-color'].freeze
     BORDER_PROPERTIES = ['border', 'border-left', 'border-right', 'border-top', 'border-bottom'].freeze
+    DIMENSION_DIRECTIONS = [:top, :right, :bottom, :left].freeze
 
     NUMBER_OF_DIMENSIONS = 4
 
@@ -196,7 +198,7 @@ module CssParser
       end
 
       def to_s(options = {})
-        str = declarations.reduce(String.new) do |memo, (prop, value)|
+        str = declarations.reduce(+'') do |memo, (prop, value)|
           importance = options[:force_important] || value.important ? ' !important' : ''
           memo << "#{prop}: #{value.value}#{importance}; "
         end
@@ -456,7 +458,7 @@ module CssParser
             font_props['font-family'] = m
           end
         elsif /normal|inherit/i.match?(m)
-          ['font-style', 'font-weight', 'font-variant'].each do |font_prop|
+          FONT_WEIGHT_PROPERTIES.each do |font_prop|
             font_props[font_prop] ||= m
           end
         elsif /italic|oblique/i.match?(m)
@@ -554,7 +556,7 @@ module CssParser
     #
     # TODO: this is extremely similar to create_background_shorthand! and should be combined
     def create_border_shorthand! # :nodoc:
-      values = BORDER_STYLE_PROPERTIES.map do |property|
+      values = BORDER_STYLE_PROPERTIES.filter_map do |property|
         next unless (declaration = declarations[property])
         next if declaration.important
         # can't merge if any value contains a space (i.e. has multiple values)
@@ -562,7 +564,7 @@ module CssParser
         next if /\s/.match?(declaration.value.gsub(/,\s/, ',').strip)
 
         declaration.value
-      end.compact
+      end
 
       return if values.size != BORDER_STYLE_PROPERTIES.size
 
@@ -579,7 +581,7 @@ module CssParser
       return if declarations.size < NUMBER_OF_DIMENSIONS
 
       DIMENSIONS.each do |property, dimensions|
-        values = [:top, :right, :bottom, :left].each_with_index.with_object({}) do |(side, index), result|
+        values = DIMENSION_DIRECTIONS.each_with_index.with_object({}) do |(side, index), result|
           next unless (declaration = declarations[dimensions[index]])
 
           result[side] = declaration.value
@@ -602,7 +604,7 @@ module CssParser
     def create_font_shorthand! # :nodoc:
       return unless FONT_STYLE_PROPERTIES.all? { |prop| declarations.key?(prop) }
 
-      new_value = String.new
+      new_value = +''
       ['font-style', 'font-variant', 'font-weight'].each do |property|
         unless declarations[property].value == 'normal'
           new_value << declarations[property].value << ' '
@@ -639,7 +641,7 @@ module CssParser
       return [:top] if values.values.uniq.count == 1
 
       # `/* top | right | bottom | left */`
-      return [:top, :right, :bottom, :left] if values[:left] != values[:right]
+      return DIMENSION_DIRECTIONS if values[:left] != values[:right]
 
       # Vertical are the same & horizontal are the same, `/* vertical | horizontal */`
       return [:top, :left] if values[:top] == values[:bottom]
