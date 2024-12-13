@@ -43,6 +43,9 @@ GEM
       unicode-display_width (>= 2.4.0, < 3.0)
     rubocop-ast (1.31.2)
       parser (>= 3.3.0.4)
+    rubocop-performance (1.23.0)
+      rubocop (>= 1.48.1, < 2.0)
+      rubocop-ast (>= 1.31.1, < 2.0)
     rubocop-rake (0.6.0)
       rubocop (~> 1.0)
     ruby-progressbar (1.13.0)
@@ -61,6 +64,7 @@ DEPENDENCIES
   memory_profiler
   rake
   rubocop
+  rubocop-performance
   rubocop-rake
   webrick
 

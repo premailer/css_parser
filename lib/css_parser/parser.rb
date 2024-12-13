@@ -416,7 +416,7 @@ module CssParser
             # restart our search for selectors and declarations
             rule_start = nil if options[:capture_offsets]
           end
-        elsif token =~ /@media/i
+        elsif /@media/i.match?(token)
           # found '@media', reset current media_types
           in_at_media_rule = true
           current_media_queries = []
@@ -718,7 +718,7 @@ module CssParser
       nodes = {}
       lines.each do |line|
         parts = line.split(':', 2)
-        if parts[1] =~ /:/
+        if /:/.match?(parts[1])
           nodes[parts[0]] = css_node_to_h(hash, parts[0], parts[1])
         else
           nodes[parts[0].to_s.strip] = parts[1].to_s.strip

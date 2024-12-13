@@ -138,7 +138,7 @@ module CssParser
     css.gsub(URI_RX) do
       uri = Regexp.last_match(1).to_s.gsub(/["']+/, '')
       # Don't process URLs that are already absolute
-      unless uri.match(%r{^[a-z]+://}i)
+      unless uri.match?(%r{^[a-z]+://}i)
         begin
           uri = base_uri.join(uri)
         rescue
