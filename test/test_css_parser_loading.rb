@@ -141,7 +141,7 @@ class CssParserLoadingTests < Minitest::Test
     file_name = File.expand_path('fixtures/import-malformed.css', __dir__)
     @cp.load_file!(file_name)
     @cp.each_selector do |_sel, dec, _spec|
-      assert_nil dec =~ /wellformed/
+      assert_equal false, dec.include?('wellformed')
     end
   end
 

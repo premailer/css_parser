@@ -359,9 +359,9 @@ module CssParser
       in_at_media_rule = false
       in_media_block = false
 
-      current_selectors = String.new
-      current_media_query = String.new
-      current_declarations = String.new
+      current_selectors = +''
+      current_media_query = +''
+      current_declarations = +''
 
       # once we are in a rule, we will use this to store where we started if we are capturing offsets
       rule_start = nil
@@ -405,13 +405,14 @@ module CssParser
                 media_types: current_media_queries
               }
               if options[:capture_offsets]
-                add_rule_options.merge!(filename: options[:filename], offset: rule_start..end_offset)
+                add_rule_options[:filename] = options[:filename]
+                add_rule_options[:offset] = rule_start..end_offset
               end
               add_rule!(**add_rule_options)
             end
 
-            current_selectors = String.new
-            current_declarations = String.new
+            current_selectors = +''
+            current_declarations = +''
 
             # restart our search for selectors and declarations
             rule_start = nil if options[:capture_offsets]
@@ -426,14 +427,14 @@ module CssParser
             in_at_media_rule = false
             in_media_block = true
             current_media_queries << CssParser.sanitize_media_query(current_media_query)
-            current_media_query = String.new
+            current_media_query = +''
           elsif token.include?(',')
             # new media query begins
             token.tr!(',', ' ')
             token.strip!
             current_media_query << token << ' '
             current_media_queries << CssParser.sanitize_media_query(current_media_query)
-            current_media_query = String.new
+            current_media_query = +''
           else
             token.strip!
             # special-case the ( and ) tokens to remove inner-whitespace
@@ -478,7 +479,8 @@ module CssParser
         media_types: current_media_queries
       }
       if options[:capture_offsets]
-        add_rule_options.merge!(filename: options[:filename], offset: rule_start..end_offset)
+        add_rule_options[:filename] = options[:filename]
+        add_rule_options[:offset] = rule_start..end_offset
       end
       add_rule!(**add_rule_options)
     end
@@ -718,7 +720,7 @@ module CssParser
       nodes = {}
       lines.each do |line|
         parts = line.split(':', 2)
-        if /:/.match?(parts[1])
+        if parts[1].include?(':')
           nodes[parts[0]] = css_node_to_h(hash, parts[0], parts[1])
         else
           nodes[parts[0].to_s.strip] = parts[1].to_s.strip

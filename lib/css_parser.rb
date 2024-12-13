@@ -57,7 +57,7 @@ module CssParser
     # in case called like CssParser.merge([rule_set, rule_set])
     rule_sets.flatten! if rule_sets[0].is_a?(Array)
 
-    unless rule_sets.all? { |rs| rs.is_a?(CssParser::RuleSet) }
+    unless rule_sets.all?(CssParser::RuleSet)
       raise ArgumentError, 'all parameters must be CssParser::RuleSets.'
     end
 
@@ -70,7 +70,7 @@ module CssParser
       rule_set.expand_shorthand!
 
       specificity = rule_set.specificity
-      specificity ||= rule_set.selectors.map { |s| calculate_specificity(s) }.compact.max || 0
+      specificity ||= rule_set.selectors.filter_map { |s| calculate_specificity(s) }.max || 0
 
       rule_set.each_declaration do |property, value, is_important|
         # Add the property to the list to be folded per http://www.w3.org/TR/CSS21/cascade.html#cascading-order
