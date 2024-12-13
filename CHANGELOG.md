@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+* Minor performance improvements
+
 ### Version v1.20.0
 
 * Remove `iconv` conditional require

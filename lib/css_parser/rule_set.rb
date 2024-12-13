@@ -455,17 +455,17 @@ module CssParser
           else
             font_props['font-family'] = m
           end
-        elsif m =~ /normal|inherit/i
+        elsif /normal|inherit/i.match?(m)
           ['font-style', 'font-weight', 'font-variant'].each do |font_prop|
             font_props[font_prop] ||= m
           end
-        elsif m =~ /italic|oblique/i
+        elsif /italic|oblique/i.match?(m)
           font_props['font-style'] = m
-        elsif m =~ /small-caps/i
+        elsif /small-caps/i.match?(m)
           font_props['font-variant'] = m
-        elsif m =~ /[1-9]00$|bold|bolder|lighter/i
+        elsif /[1-9]00$|bold|bolder|lighter/i.match?(m)
           font_props['font-weight'] = m
-        elsif m =~ CssParser::FONT_UNITS_RX
+        elsif CssParser::FONT_UNITS_RX.match?(m)
           if m.include?('/')
             font_props['font-size'], font_props['line-height'] = m.split('/', 2)
           else
@@ -488,7 +488,7 @@ module CssParser
       value = declaration.value.dup
 
       replacement =
-        if value =~ CssParser::RE_INHERIT
+        if CssParser::RE_INHERIT.match?(value)
           LIST_STYLE_PROPERTIES.to_h { |key| [key, 'inherit'] }
         else
           {
@@ -559,7 +559,7 @@ module CssParser
         next if declaration.important
         # can't merge if any value contains a space (i.e. has multiple values)
         # we temporarily remove any spaces after commas for the check (inside rgba, etc...)
-        next if declaration.value.gsub(/,\s/, ',').strip =~ /\s/
+        next if /\s/.match?(declaration.value.gsub(/,\s/, ',').strip)
 
         declaration.value
       end.compact
