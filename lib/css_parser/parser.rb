@@ -448,7 +448,7 @@ module CssParser
               current_media_query << token << ' '
             end
           end
-        elsif in_charset or token =~ /@charset/i
+        elsif in_charset or /@charset/i.match?(token)
           # iterate until we are out of the charset declaration
           in_charset = !token.include?(';')
         elsif !in_string && token.include?('}')
@@ -467,7 +467,7 @@ module CssParser
           current_selectors << token
 
           # mark this as the beginning of the selector unless we have already marked it
-          rule_start = start_offset if options[:capture_offsets] && rule_start.nil? && token =~ /^[^\s]+$/
+          rule_start = start_offset if options[:capture_offsets] && rule_start.nil? && /^[^\s]+$/.match?(token)
         end
       end
 

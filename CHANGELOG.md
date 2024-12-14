@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+* Minor performance improvements
+
 ### Version v1.21.0
 
 * Minor performance improvements
