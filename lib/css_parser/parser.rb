@@ -668,6 +668,12 @@ module CssParser
             end
           end
 
+          unless res.content_type == "text/css"
+            @redirect_count = nil
+            raise RemoteFileError.new(uri.to_s) if @options[:io_exceptions]
+            return '', nil
+          end
+
           case res['content-encoding']
           when 'gzip'
             io = Zlib::GzipReader.new(StringIO.new(res.body))
@@ -677,6 +683,7 @@ module CssParser
             src = io.inflate(res.body)
           end
         end
+
 
         if charset
           src.encode!('UTF-8', charset)
