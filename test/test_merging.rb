@@ -109,6 +109,18 @@ class MergingTests < Minitest::Test
     assert_equal 'black !important;', merged['color']
   end
 
+  def test_prioritising_important_over_non_important_in_the_same_block
+    rs1 = RuleSet.new(block: 'color: black !important; color: red;')
+    merged = CssParser.merge(rs1)
+    assert_equal 'black !important;', merged['color']
+  end
+
+  def test_prioritising_two_important_declarations_in_the_same_block
+    rs1 = RuleSet.new(block: 'color: black !important; color: red !important;')
+    merged = CssParser.merge(rs1)
+    assert_equal 'red !important;', merged['color']
+  end
+
   def test_merging_multiple_important
     rs1 = RuleSet.new(block: 'color: black !important;', specificity: 1000)
     rs2 = RuleSet.new(block: 'color: red !important;', specificity: 1)
