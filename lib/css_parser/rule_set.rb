@@ -89,17 +89,20 @@ module CssParser
       #   puts declarations['margin']
       #   => #<CssParser::RuleSet::Declarations::Value:0x00000000030c1838 @important=true, @order=2, @value="0px auto">
       #
-      # If the property already exists its value will be over-written.
+      # If the property already exists its value will be over-written unless it was !important and the new value
+      # is not !important.
       # If the value is empty - property will be deleted
       def []=(property, value)
         property = normalize_property(property)
+        currently_important = declarations[property]&.important
 
-        if value.is_a?(Value)
+        if value.is_a?(Value) && (!currently_important || value.important)
           declarations[property] = value
         elsif value.to_s.strip.empty?
           delete property
         else
-          declarations[property] = Value.new(value)
+          value = Value.new(value)
+          declarations[property] = value if !currently_important || value.important
         end
       rescue ArgumentError => e
         raise e.exception, "#{property} #{e.message}"
