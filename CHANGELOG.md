@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### Version v1.21.1
+
 * Prefer `!important` rules over non-`!important` rules in the same ruleset
 * Minor performance improvements
 
