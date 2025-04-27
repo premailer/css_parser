@@ -302,6 +302,7 @@ module CssParser
       each_selector(which_media) do |selectors, declarations, _specificity, media_types|
         media_types.each do |media_type|
           styles_by_media_types[media_type] ||= []
+          next if styles_by_media_types[media_type].include?([selectors, declarations])
           styles_by_media_types[media_type] << [selectors, declarations]
         end
       end
