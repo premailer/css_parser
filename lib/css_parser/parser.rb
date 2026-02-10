@@ -245,6 +245,17 @@ module CssParser
       end
     end
 
+    # Remove all rule sets and loaded URIs, restoring the parser to a
+    # clean state while keeping the same configuration options. Useful for
+    # reusing a parser instance to avoid unnecessary allocations.
+    def clear!
+      @rules.clear
+      @loaded_uris.clear
+      @blocks.clear
+      @redirect_count = nil
+      reset!
+    end
+
     # Iterate through RuleSet objects.
     #
     # +media_types+ can be a symbol or an array of symbols.
