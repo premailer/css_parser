@@ -31,12 +31,6 @@ module CssParser
     # Array of CSS files that have been loaded.
     attr_reader   :loaded_uris
 
-    #--
-    # Class variable? see http://www.oreillynet.com/ruby/blog/2007/01/nubygems_dont_use_class_variab_1.html
-    #++
-    @folded_declaration_cache = {}
-    class << self; attr_reader :folded_declaration_cache; end
-
     def initialize(options = {})
       @options = {
         absolute_paths: false,
