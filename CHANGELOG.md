@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+### Version 2.0.0
+* Drop ruby <3.2, fix a memory leak
+
 ### Version v1.21.1
 
 * Prefer `!important` rules over non-`!important` rules in the same ruleset
