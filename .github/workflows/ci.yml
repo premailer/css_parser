@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby-version: ['3.3', '3.4', 'jruby']
+        ruby-version: ['3.3', '3.4', '4.0', 'jruby']
 
     steps:
       - uses: actions/checkout@v4
