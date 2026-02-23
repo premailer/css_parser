@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    css_parser (1.21.1)
+    css_parser (2.0.0)
       addressable
 
 GEM

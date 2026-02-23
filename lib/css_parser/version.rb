@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module CssParser
-  VERSION = '1.21.1'.freeze
+  VERSION = '2.0.0'.freeze
 end
