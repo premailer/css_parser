@@ -143,7 +143,7 @@ module CssParser
             media_types = [:all]
           end
 
-          next unless options[:only_media_types].include?(:all) or media_types.empty? or !(media_types & options[:only_media_types]).empty?
+          next unless options[:only_media_types].include?(:all) or media_types.empty? or media_types.intersect?(options[:only_media_types])
 
           import_path = import_rule[0].to_s.gsub(/['"]*/, '').strip
 
@@ -568,7 +568,8 @@ module CssParser
     #
     # Raises a CircularReferenceError exception if io_exceptions are on,
     # otherwise returns true/false.
-    def circular_reference_check(path)
+    # TODO: fix rubocop
+    def circular_reference_check(path) # rubocop:disable Naming/PredicateMethod
       path = path.to_s
       if @loaded_uris.include?(path)
         raise CircularReferenceError, "can't load #{path} more than once" if @options[:io_exceptions]

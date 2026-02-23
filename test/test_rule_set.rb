@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'test_helper'
-require "set"
 
 # Test cases for parsing CSS blocks
 class RuleSetTests < Minitest::Test
@@ -81,7 +80,7 @@ class RuleSetTests < Minitest::Test
   def test_each_declaration_with_newlines
     expected = Set[
       {property: 'background-image', value: 'url(foo;bar)', is_important: false},
-      {property: 'font-weight', value: 'bold', is_important: true},
+      {property: 'font-weight', value: 'bold', is_important: true}
     ]
     rs = RuleSet.new(block: "background-image\n:\nurl(foo;bar);\n\n\n\n\n;;font-weight\n\n\n:bold\n\n\n!important")
     actual = Set.new
