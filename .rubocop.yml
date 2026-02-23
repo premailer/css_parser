@@ -3,7 +3,7 @@ require:
   - rubocop-rake
 
 AllCops:
-  TargetRubyVersion: 3.0 # lowest supported version
+  TargetRubyVersion: 3.3 # lowest supported version
   NewCops: enable
 
 Layout/ArgumentAlignment:
@@ -79,3 +79,12 @@ Style/WordArray:
 
 Style/SymbolArray:
   EnforcedStyle: brackets
+
+Style/HashSyntax:
+  EnforcedShorthandSyntax: never
+
+Naming/BlockForwarding:
+  EnforcedStyle: explicit
+
+Style/CollectionQuerying:
+  Enabled: false

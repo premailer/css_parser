@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../test_helper'
-require 'minitest/spec'
 
 class RuleSetDeclarationsTest < Minitest::Test
   describe '.new' do
@@ -382,14 +381,12 @@ class RuleSetDeclarationsTest < Minitest::Test
 
         declarations = CssParser::RuleSet::Declarations.new({foo: foo_value, bar: bar_value, baz: baz_value})
 
-        mock = Minitest::Mock.new
-        mock.expect :call, true, ['foo', foo_value]
-        mock.expect :call, true, ['bar', bar_value]
-        mock.expect :call, true, ['baz', baz_value]
+        mock = stub("Fake")
+        mock.expects(:call).with('foo', foo_value).returns(true)
+        mock.expects(:call).with('bar', bar_value).returns(true)
+        mock.expects(:call).with('baz', baz_value).returns(true)
 
         declarations.each { |name, value| mock.call(name, value) }
-
-        assert_mock mock
       end
     end
   end

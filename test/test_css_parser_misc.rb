@@ -227,9 +227,10 @@ class CssParserTests < Minitest::Test
     end
   end
 
-  def with_value_exception(&block)
+  def with_value_exception
     # Raise synthetic exception to test error handling because there is no known way to cause it naturally
-    CssParser::RuleSet::Declarations::Value.stub :new, -> { raise ArgumentError.new, 'stub' }, &block
+    CssParser::RuleSet::Declarations::Value.stubs(:new).raises(ArgumentError.new('stub'))
+    yield # TODO: do not pass a block instead
   end
 
   def test_catching_argument_exceptions_for_add_rule
