@@ -684,15 +684,43 @@ module CssParser
       (lparen_index = declarations.index(LPAREN)) && !declarations.index(RPAREN, lparen_index)
     end
 
-    #--
-    # TODO: way too simplistic
-    #++
+    # Split selector string on commas, but not commas inside parentheses
+    # (e.g. :is(rect, circle) or :where(.a, .b) should not be split).
     def parse_selectors!(selectors) # :nodoc:
-      @selectors = selectors.split(',').map do |s|
+      @selectors = split_selectors(selectors).map do |s|
         s.gsub!(/\s+/, ' ')
         s.strip!
         s
       end
+    end
+
+    def split_selectors(selectors)
+      result = []
+      current = +''
+      depth = 0
+
+      selectors.each_char do |char|
+        case char
+        when '('
+          depth += 1
+          current << char
+        when ')'
+          depth -= 1
+          current << char
+        when ','
+          if depth > 0
+            current << char
+          else
+            result << current
+            current = +''
+          end
+        else
+          current << char
+        end
+      end
+
+      result << current unless current.empty?
+      result
     end
 
     def split_value_preserving_function_whitespace(value)

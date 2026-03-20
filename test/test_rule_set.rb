@@ -96,6 +96,27 @@ class RuleSetTests < Minitest::Test
     assert rs.selectors.member?("h3")
   end
 
+  def test_selector_splitting_preserves_functional_pseudo_classes
+    # :is() and :where() can contain comma-separated selector lists
+    rs = RuleSet.new(selectors: ':is(rect, circle)', block: 'fill: red;')
+    assert_equal [':is(rect, circle)'], rs.selectors
+  end
+
+  def test_selector_splitting_preserves_where_pseudo_class
+    rs = RuleSet.new(selectors: ':where(.a, .b)', block: 'color: blue;')
+    assert_equal [':where(.a, .b)'], rs.selectors
+  end
+
+  def test_selector_splitting_with_functional_pseudo_class_and_other_selectors
+    rs = RuleSet.new(selectors: ':is(h1, h2, h3), .other', block: 'color: red;')
+    assert_equal [':is(h1, h2, h3)', '.other'], rs.selectors
+  end
+
+  def test_selector_splitting_with_nested_functional_pseudo_classes
+    rs = RuleSet.new(selectors: ':is(:not(.a), .b)', block: 'color: red;')
+    assert_equal [':is(:not(.a), .b)'], rs.selectors
+  end
+
   def test_multiple_selectors_to_s
     selectors = "#content p, a"
     rs = RuleSet.new(selectors: selectors, block: "color: #fff;")
