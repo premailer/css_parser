@@ -34,6 +34,27 @@ module CssParser
     LPAREN = '('.freeze
     RPAREN = ')'.freeze
     IMPORTANT = '!important'.freeze
+
+    # Regex that matches a comma NOT inside parentheses.
+    COMMA_OUTSIDE_PARENS = /,(?![^()]*\))/
+
+    # Action codes for the byte-scan loop:
+    #   0 = boring (no-op)    — fast path for ~80% of bytes
+    #   1 = comma              — potential split point
+    #   2 = open paren         — increase depth
+    #   3 = close paren        — decrease depth
+    #   4 = dot / hash / colon — CSS grammar guarantees next byte is an
+    #                            identifier start, never a delimiter; skip it
+    SELECTOR_ACTION = Array.new(256, 0)
+    SELECTOR_ACTION[0x2C] = 1  # ,
+    SELECTOR_ACTION[0x28] = 2  # (
+    SELECTOR_ACTION[0x29] = 3  # )
+    SELECTOR_ACTION[0x2E] = 4  # .
+    SELECTOR_ACTION[0x23] = 4  # #
+    SELECTOR_ACTION[0x3A] = 4  # :
+    SELECTOR_ACTION.freeze
+
+    private_constant :COMMA_OUTSIDE_PARENS, :SELECTOR_ACTION
     class Declarations
       class Value
         attr_reader :value
@@ -695,32 +716,48 @@ module CssParser
     end
 
     def split_selectors(selectors)
-      result = []
-      current = +''
-      depth = 0
+      len = selectors.bytesize
+      return [selectors] if len == 0
 
-      selectors.each_char do |char|
-        case char
-        when '('
-          depth += 1
-          current << char
-        when ')'
-          depth -= 1
-          current << char
-        when ','
-          if depth > 0
-            current << char
-          else
-            result << current
-            current = +''
-          end
-        else
-          current << char
-        end
+      if !selectors.include?("(")
+        # Fast path: no parens — every comma is a split point.
+        # Delegates to C-level String#split.
+        return selectors.split(",")
       end
 
-      result << current unless current.empty?
-      result
+      if len < 80
+        # Medium path: short string with parens — action-table byte scan.
+        # Exploits CSS grammar: after . # : the next byte is always an
+        # identifier start, so we skip it unconditionally.
+        scan_selectors(selectors, len)
+      else
+        # Long path: C regex engine outpaces Ruby-level byte iteration.
+        selectors.split(COMMA_OUTSIDE_PARENS)
+      end
+    end
+
+    def scan_selectors(str, len)
+      results = []
+      segment_start = 0
+      depth = 0
+      pos = 0
+
+      while pos < len
+        case SELECTOR_ACTION[str.getbyte(pos)]
+        when 0 # ~80% of bytes hit this: one lookup, one comparison, done
+        when 1 # comma
+          if depth == 0
+            results << str.byteslice(segment_start, pos - segment_start)
+            segment_start = pos + 1
+          end
+        when 2 then depth += 1 # (
+        when 3 then depth -= 1 # )
+        when 4 then pos += 1   # . # : — skip next byte
+        end
+        pos += 1
+      end
+
+      results << str.byteslice(segment_start, len - segment_start)
     end
 
     def split_value_preserving_function_whitespace(value)

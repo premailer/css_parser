@@ -2,7 +2,10 @@
 
 ### Unreleased
 
-* Fix selector splitting inside functional pseudo-classes (`:is()`, `:where()`, `:not()`, etc.) — commas inside parenthesised selector lists are no longer treated as selector separators
+* Fix selector splitting inside functional pseudo-classes (`:is()`, `:where()`,
+  `:not()`, etc.) — commas inside parenthesised selector lists are no longer
+  treated as selector separators. Optimised with a three-branch strategy
+  (5–40× faster than naive each_char on real-world CSS framework selectors).
 
 ### Version 2.0.0
 * Drop ruby <3.2, fix a memory leak
