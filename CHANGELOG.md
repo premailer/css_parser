@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+### Version 2.1.0
+* Validate ssl when pulling files via https
+
 ### Version 2.0.0
 * Drop ruby <3.2, fix a memory leak
 
