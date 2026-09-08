@@ -8,6 +8,13 @@ module CssParser
   # Exception class used for any errors encountered while downloading remote files.
   class RemoteFileError < IOError; end
 
+  # Exception class used when a fetched remote file fails Subresource Integrity
+  # verification (see the `:integrity` option on `Parser#load_uri!`). A subclass of
+  # `RemoteFileError` so existing `rescue RemoteFileError` callers are unaffected;
+  # callers that want to distinguish an integrity failure from other fetch failures
+  # (404, SSRF rejection, timeout, etc.) can rescue this class specifically.
+  class IntegrityError < RemoteFileError; end
+
   # Exception class used if a request is made to load a CSS file more than once.
   class CircularReferenceError < StandardError; end
 
@@ -42,12 +49,17 @@ module CssParser
     # was GHSA-9pmc-p236-855h.
     REMOTE_ALLOWED_SCHEMES = %w[http https].freeze
 
-    # Subresource Integrity hash algorithms this library can verify,
-    # strongest first. Mirrors the SRI spec's "agility" rule
-    # (https://www.w3.org/TR/SRI/#agility): when a caller-supplied
-    # `integrity` value lists more than one algorithm, only the
-    # strongest one present is checked.
-    INTEGRITY_ALGORITHM_PRIORITY = %w[sha512 sha384 sha256].freeze
+    # Subresource Integrity hash algorithms this library can verify, mapped to their
+    # Digest class, ordered strongest first. A single structure (rather than a
+    # separate priority list and digest-class lookup) so the two can't drift out of
+    # sync. Mirrors the SRI spec's "agility" rule (https://www.w3.org/TR/SRI/#agility):
+    # when a caller-supplied `integrity` value lists more than one algorithm, only
+    # the strongest one present is checked.
+    INTEGRITY_ALGORITHMS = {
+      'sha512' => Digest::SHA512,
+      'sha384' => Digest::SHA384,
+      'sha256' => Digest::SHA256
+    }.freeze
 
     # Array of CSS files that have been loaded.
     attr_reader :loaded_uris
@@ -508,8 +520,9 @@ module CssParser
     # Subresource Integrity value (https://www.w3.org/TR/SRI/) -- e.g. the value of an
     # HTML <tt><link integrity="..."></tt> attribute -- and, for http(s) URIs, verifies the
     # fetched response body against it before the CSS is parsed. When the digest does not
-    # match, the fetch is treated as a failure: an exception is raised if <tt>io_exceptions</tt>
-    # is enabled, otherwise nothing is loaded. Ignored for <tt>file://</tt> URIs.
+    # match, <tt>CssParser::IntegrityError</tt> (a subclass of <tt>RemoteFileError</tt>) is
+    # raised if <tt>io_exceptions</tt> is enabled, otherwise nothing is loaded. Ignored for
+    # <tt>file://</tt> URIs.
     #
     # Deprecated: originally accepted three params: `uri`, `base_uri` and `media_types`
     def load_uri!(uri, options = {}, deprecated = nil)
@@ -733,7 +746,7 @@ module CssParser
         end
 
         if integrity && !integrity_matches?(res.body, integrity)
-          raise RemoteFileError, uri.to_s if @options[:io_exceptions]
+          raise IntegrityError, uri.to_s if @options[:io_exceptions]
 
           return nil, nil
         end
@@ -743,6 +756,16 @@ module CssParser
         src.encode!('UTF-8', charset) if charset
 
         [src, charset]
+      rescue IntegrityError
+        # Let the IntegrityError raised above propagate with its specific
+        # class intact, rather than being downgraded to a generic
+        # RemoteFileError by the catch-all below. Other RemoteFileErrors
+        # raised within this method (e.g. from fetch_via_net_http on a
+        # cross-scheme redirect) are intentionally still caught by the
+        # catch-all: it discards their (potentially redirect-target-scoped)
+        # message in favor of this method's own `uri`, which several
+        # existing tests depend on.
+        raise
       rescue
         raise RemoteFileError, uri.to_s if @options[:io_exceptions]
 
@@ -761,18 +784,14 @@ module CssParser
     def integrity_matches?(body, integrity) # :nodoc:
       candidates = integrity.to_s.split.filter_map do |token|
         algorithm, value = token.split('-', 2)
-        [algorithm, value] if algorithm && value && INTEGRITY_ALGORITHM_PRIORITY.include?(algorithm)
+        [algorithm, value] if algorithm && value && INTEGRITY_ALGORITHMS.key?(algorithm)
       end
       return true if candidates.empty?
 
-      algorithm = candidates.map(&:first).min_by { |a| INTEGRITY_ALGORITHM_PRIORITY.index(a) }
+      algorithms_present = candidates.map(&:first)
+      algorithm = INTEGRITY_ALGORITHMS.each_key.find { |a| algorithms_present.include?(a) }
       expected_values = candidates.select { |a, _v| a == algorithm }.map { |_a, v| v }
-
-      digest_class = {
-        'sha512' => Digest::SHA512,
-        'sha384' => Digest::SHA384,
-        'sha256' => Digest::SHA256
-      }.fetch(algorithm)
+      digest_class = INTEGRITY_ALGORITHMS.fetch(algorithm)
 
       expected_values.include?(Base64.strict_encode64(digest_class.digest(body)))
     end

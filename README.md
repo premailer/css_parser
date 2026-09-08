@@ -23,26 +23,6 @@ parser.load_uri!('file://home/user/styles/style.css')
 # load a remote file, setting the base_uri and media_types
 parser.load_uri!('../style.css', {base_uri: 'http://example.com/styles/inc/', media_types: [:screen, :handheld]})
 
-# load a remote file, verifying it against a Subresource Integrity value
-# (https://www.w3.org/TR/SRI/) before parsing -- e.g. the value of an
-# HTML <link integrity="..."> attribute. Raises CssParser::RemoteFileError
-# (or, with io_exceptions: false, loads nothing) when the fetched body
-# doesn't match.
-parser.load_uri!('http://example.com/styles/style.css', integrity: 'sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC')
-
-# `integrity:` also accepts several space-separated values, exactly like the
-# HTML attribute does. When more than one hash algorithm is present, only the
-# strongest one is checked (sha512 > sha384 > sha256) and every weaker value is
-# ignored; multiple values for that same strongest algorithm are treated as
-# alternatives -- matching any one of them is enough.
-parser.load_uri!(
-  'http://example.com/styles/style.css',
-  integrity: 'sha256-Br6tO8uuFyBAw2O0eUNdXVyuS/POLb5jpHxXaxIq6Q0= sha384-0gCPKBW0n+VzQzZu5gzP+YMxy9QTLyn1y/O/TMvLTpVajzRKAx6d7TiPB5W7DnDn'
-)
-# ^ only the sha384 value is actually checked here; the sha256 one is present
-# (e.g. for browsers/tools that only understand sha256) but ignored by this
-# library since a stronger algorithm is also listed.
-
 # load a local file, setting the base_dir and media_types
 parser.load_file!('print.css', '~/styles/', :print)
 
@@ -89,6 +69,39 @@ content_rule.filename
 #=> 'index.html'
 content_rule.offset
 #=> 0..21
+```
+
+# Subresource Integrity
+
+`Parser#load_uri!` accepts an `integrity:` option that verifies a fetched remote stylesheet
+against a [Subresource Integrity](https://www.w3.org/TR/SRI/) value before it's parsed -- the
+same value an HTML `<link integrity="...">` attribute carries.
+
+```Ruby
+parser.load_uri!(
+  'http://example.com/styles/style.css',
+  integrity: 'sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC'
+)
+```
+
+When the fetched body doesn't match, `CssParser::IntegrityError` (a subclass of
+`CssParser::RemoteFileError`, so existing `rescue RemoteFileError` code is unaffected) is
+raised if `io_exceptions` is enabled, or nothing is loaded otherwise.
+
+`integrity:` also accepts several space-separated values, exactly like the HTML attribute
+does. When more than one hash algorithm is present, only the strongest one is checked
+(sha512 > sha384 > sha256) and every weaker value is ignored; multiple values for that same
+strongest algorithm are treated as alternatives -- matching any one of them is enough (useful
+during a stylesheet rotation, when a CDN may still serve the old version for a while):
+
+```Ruby
+parser.load_uri!(
+  'http://example.com/styles/style.css',
+  integrity: 'sha256-Br6tO8uuFyBAw2O0eUNdXVyuS/POLb5jpHxXaxIq6Q0= sha384-0gCPKBW0n+VzQzZu5gzP+YMxy9QTLyn1y/O/TMvLTpVajzRKAx6d7TiPB5W7DnDn'
+)
+# only the sha384 value is actually checked here; the sha256 one is present
+# (e.g. for browsers/tools that only understand sha256) but ignored by this
+# library since a stronger algorithm is also listed.
 ```
 
 # Testing

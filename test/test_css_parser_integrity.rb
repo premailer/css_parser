@@ -78,6 +78,15 @@ class CssParserIntegrityTests < Minitest::Test
 
   def test_mismatched_integrity_is_refused
     tampered = "#{sha('sha384')[0, 15]}not-the-real-digest-at-all=="
+    assert_raises(CssParser::IntegrityError) do
+      cp.load_uri!("#{@uri_base}/simple.css", integrity: tampered)
+    end
+  end
+
+  def test_mismatched_integrity_raises_a_subclass_of_remote_file_error
+    # CssParser::IntegrityError must remain catchable by existing
+    # `rescue RemoteFileError` callers.
+    tampered = "#{sha('sha384')[0, 15]}not-the-real-digest-at-all=="
     assert_raises(CssParser::RemoteFileError) do
       cp.load_uri!("#{@uri_base}/simple.css", integrity: tampered)
     end
@@ -96,7 +105,7 @@ class CssParserIntegrityTests < Minitest::Test
     # here) is authoritative, so a right-but-weaker value must not mask
     # a wrong-but-stronger one.
     value = "#{sha('sha256')} sha512-#{Base64.strict_encode64('not the real digest')}"
-    assert_raises(CssParser::RemoteFileError) do
+    assert_raises(CssParser::IntegrityError) do
       cp.load_uri!("#{@uri_base}/simple.css", integrity: value)
     end
   end
@@ -122,7 +131,7 @@ class CssParserIntegrityTests < Minitest::Test
   end
 
   def test_unrecognized_algorithm_only_value_is_unverifiable_and_passes
-    # md5 is not in INTEGRITY_ALGORITHM_PRIORITY. A value naming only an
+    # md5 is not in INTEGRITY_ALGORITHMS. A value naming only an
     # unsupported algorithm can't be checked either way, so it's treated
     # as unverifiable rather than failing every such fetch.
     parser = cp
