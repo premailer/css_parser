@@ -1,6 +1,8 @@
 ## Ruby CSS Parser CHANGELOG
 
 ### Unreleased
+
+### Version 3.1.0
 * `Parser#load_uri!` accepts an `integrity:` option (Subresource Integrity, https://www.w3.org/TR/SRI/) to verify a fetched remote stylesheet before it is parsed
 
 ### Version 3.0.0
