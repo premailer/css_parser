@@ -71,7 +71,7 @@ content_rule.offset
 #=> 0..21
 ```
 
-# Subresource Integrity
+## Subresource Integrity
 
 `Parser#load_uri!` accepts an `integrity:` option that verifies a fetched remote stylesheet
 against a [Subresource Integrity](https://www.w3.org/TR/SRI/) value before it's parsed -- the

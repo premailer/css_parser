@@ -8,11 +8,7 @@ module CssParser
   # Exception class used for any errors encountered while downloading remote files.
   class RemoteFileError < IOError; end
 
-  # Exception class used when a fetched remote file fails Subresource Integrity
-  # verification (see the `:integrity` option on `Parser#load_uri!`). A subclass of
-  # `RemoteFileError` so existing `rescue RemoteFileError` callers are unaffected;
-  # callers that want to distinguish an integrity failure from other fetch failures
-  # (404, SSRF rejection, timeout, etc.) can rescue this class specifically.
+  # Exception class used when a fetched remote file fails Subresource Integrity verification.
   class IntegrityError < RemoteFileError; end
 
   # Exception class used if a request is made to load a CSS file more than once.
@@ -28,9 +24,6 @@ module CssParser
   # [<tt>io_exceptions</tt>] Throw an exception if a link can not be found. Boolean, default is <tt>true</tt>.
   # [<tt>allow_local_network</tt>] Permit http(s) fetches against loopback / private / link-local / cloud-metadata addresses. Boolean, default is <tt>false</tt>. When <tt>false</tt> (the default), outbound HTTP requests are routed through <tt>ssrf_filter</tt>, which resolves the host and rejects unsafe IP ranges. Set to <tt>true</tt> only when the destination is known to be safe (e.g. local fixture servers in tests). Independent of <tt>allow_file_uris</tt>.
   # [<tt>allow_file_uris</tt>] Permit <tt>file://</tt> URIs via <tt>load_uri!</tt>. Boolean, default is <tt>false</tt>. When <tt>false</tt> (the default), a caller that passes a <tt>file://</tt> URI to <tt>load_uri!</tt> — directly or via a CSS <tt>@import</tt> resolved against a <tt>file://</tt> base_uri — is refused, closing the local-file-disclosure vector when the URI is influenced by user input. <tt>load_file!</tt> is unaffected: it is the explicit local-file API and takes a caller-supplied path. Independent of <tt>allow_local_network</tt>.
-  #
-  # <tt>load_uri!</tt> also accepts a per-call <tt>:integrity</tt> option (see its documentation) for
-  # verifying a remote stylesheet against a Subresource Integrity value before it is parsed.
   class Parser
     USER_AGENT = "Ruby CSS Parser/#{CssParser::VERSION} (https://github.com/premailer/css_parser)".freeze
     RULESET_TOKENIZER_RX = /\s+|\\{2,}|\\?[{}\s"]|[()]|.[^\s"{}()\\]*/.freeze
@@ -49,12 +42,9 @@ module CssParser
     # was GHSA-9pmc-p236-855h.
     REMOTE_ALLOWED_SCHEMES = %w[http https].freeze
 
-    # Subresource Integrity hash algorithms this library can verify, mapped to their
-    # Digest class, ordered strongest first. A single structure (rather than a
-    # separate priority list and digest-class lookup) so the two can't drift out of
-    # sync. Mirrors the SRI spec's "agility" rule (https://www.w3.org/TR/SRI/#agility):
-    # when a caller-supplied `integrity` value lists more than one algorithm, only
-    # the strongest one present is checked.
+    # Subresource Integrity hash algorithms this library can verify, strongest first.
+    # Mirrors the SRI spec's "agility" rule (https://www.w3.org/TR/SRI/#agility):
+    #   if `integrity` lists multiple algorithms, only the strongest is checked.
     INTEGRITY_ALGORITHMS = {
       'sha512' => Digest::SHA512,
       'sha384' => Digest::SHA384,
@@ -516,15 +506,7 @@ module CssParser
     #
     # You can also pass in file://test.css
     #
-    # See add_block! for options. In addition to those, <tt>:integrity</tt> accepts a
-    # Subresource Integrity value (https://www.w3.org/TR/SRI/) -- e.g. the value of an
-    # HTML <tt><link integrity="..."></tt> attribute -- and, for http(s) URIs, verifies the
-    # fetched response body against it before the CSS is parsed. When the digest does not
-    # match, <tt>CssParser::IntegrityError</tt> (a subclass of <tt>RemoteFileError</tt>) is
-    # raised if <tt>io_exceptions</tt> is enabled, otherwise nothing is loaded. Ignored for
-    # <tt>file://</tt> URIs.
-    #
-    # Deprecated: originally accepted three params: `uri`, `base_uri` and `media_types`
+    # See add_block! for options and integrity_matches? for integrity
     def load_uri!(uri, options = {}, deprecated = nil)
       uri = Addressable::URI.parse(uri) unless uri.respond_to? :scheme
 
@@ -532,7 +514,7 @@ module CssParser
 
       if options.is_a? Hash
         opts.merge!(options)
-      else
+      else # TODO: start raising
         warn '[DEPRECATION] `load_uri!` with positional arguments is deprecated. ' \
              'Please use keyword arguments instead.', uplevel: 1
         opts[:base_uri] = options if options.is_a? String
@@ -756,15 +738,7 @@ module CssParser
         src.encode!('UTF-8', charset) if charset
 
         [src, charset]
-      rescue IntegrityError
-        # Let the IntegrityError raised above propagate with its specific
-        # class intact, rather than being downgraded to a generic
-        # RemoteFileError by the catch-all below. Other RemoteFileErrors
-        # raised within this method (e.g. from fetch_via_net_http on a
-        # cross-scheme redirect) are intentionally still caught by the
-        # catch-all: it discards their (potentially redirect-target-scoped)
-        # message in favor of this method's own `uri`, which several
-        # existing tests depend on.
+      rescue IntegrityError # already is a RemoteFileError
         raise
       rescue
         raise RemoteFileError, uri.to_s if @options[:io_exceptions]
@@ -774,13 +748,12 @@ module CssParser
     end
 
     # Verifies +body+ (raw response bytes, not yet charset-decoded) against a
-    # Subresource Integrity value -- a single `<algorithm>-<base64 digest>` token, or
+    # Subresource Integrity value -- a `<algorithm>-<base64 digest>` token, or
     # several whitespace-separated tokens (https://www.w3.org/TR/SRI/#the-integrity-attribute).
-    # Tokens using an algorithm this library doesn't recognize are ignored; per the spec's
-    # "agility" rule, when multiple recognized algorithms are present only the strongest one
-    # is checked. A value containing no recognized algorithm is treated as unverifiable and
-    # matches by default, rather than failing every fetch whenever a caller passes a stronger
-    # or newer algorithm than this library currently supports.
+    #
+    # - Tokens using an algorithm this library doesn't recognize are ignored
+    # - Multiple recognized algorithms only check the strongest one is checked
+    # - Value containing no recognized algorithm is treated as unverifiable and matches by default
     def integrity_matches?(body, integrity) # :nodoc:
       candidates = integrity.to_s.split.filter_map do |token|
         algorithm, value = token.split('-', 2)
