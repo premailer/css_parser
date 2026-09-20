@@ -360,6 +360,32 @@ class RuleSetExpandingShorthandTests < Minitest::Test
     assert_equal expected_declarations, declarations
   end
 
+  def test_nested_functions
+    shorthand = 'margin: calc(min(1px, 2px) + 3px);'
+    declarations = expand_declarations(shorthand)
+    expected_declarations = {
+      'margin-top' => 'calc(min(1px, 2px) + 3px)',
+      'margin-bottom' => 'calc(min(1px, 2px) + 3px)',
+      'margin-left' => 'calc(min(1px, 2px) + 3px)',
+      'margin-right' => 'calc(min(1px, 2px) + 3px)'
+    }
+    assert_equal expected_declarations, declarations
+  end
+
+  def test_unclosed_function_does_not_hang
+    # the balanced x() gets the value past the unmatched-parenthesis check in parse_declarations!
+    padding = 'a' * 10_000
+    shorthand = "margin: x() calc(#{padding};"
+    declarations = expand_declarations(shorthand)
+    expected_declarations = {
+      'margin-top' => 'x()',
+      'margin-bottom' => 'x()',
+      'margin-left' => "calc(#{padding}",
+      'margin-right' => "calc(#{padding}"
+    }
+    assert_equal expected_declarations, declarations
+  end
+
 protected
 
   def expand_declarations(declarations)

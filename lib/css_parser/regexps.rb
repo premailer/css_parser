@@ -61,20 +61,27 @@ module CssParser
   RE_BORDER_UNITS = Regexp.union(BOX_MODEL_UNITS_RX, /(thin|medium|thick)/i)
 
   # Functions like calc, var, clamp, etc.
-  RE_FUNCTIONS = /
-    (
-      [a-z0-9-]+        # function name
-    )
-    (?>
-      \(                # opening parenthesis
-        (?:
-          ([^()]+)
-          |             # recursion via subexpression
-          \g<0>
-        )*
-      \)                # closing parenthesis
-    )
-  /imx.freeze
+  # Possessive quantifiers + recursion-first alternation avoid exponential
+  # backtracking on unclosed functions, the timeout is a backstop.
+  RE_FUNCTIONS = Regexp.new(
+    /
+      (
+        [a-z0-9-]+        # function name
+      )
+      (?>
+        \(                # opening parenthesis
+          (?:
+            \g<0>         # nested function
+            |
+            [^()a-z0-9]++
+            |
+            [a-z0-9-]++ (?!\()
+          )*
+        \)                # closing parenthesis
+      )
+    /imx,
+    timeout: 0.01
+  ).freeze
 
   # Patterns for specificity calculations
   NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX_NC = /
