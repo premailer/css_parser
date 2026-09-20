@@ -696,10 +696,16 @@ module CssParser
     end
 
     def split_value_preserving_function_whitespace(value)
-      split_value = value.gsub(RE_FUNCTIONS) do |c|
-        c.gsub!(/\s+/, WHITESPACE_REPLACEMENT)
-        c
-      end
+      # hostile values can still hit the regexp timeout, then split without protecting functions
+      split_value =
+        begin
+          value.gsub(RE_FUNCTIONS) do |c|
+            c.gsub!(/\s+/, WHITESPACE_REPLACEMENT)
+            c
+          end
+        rescue Regexp::TimeoutError
+          value
+        end
 
       matches = split_value.strip.split(/\s+/)
 

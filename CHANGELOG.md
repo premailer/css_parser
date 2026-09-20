@@ -1,6 +1,7 @@
 ## Ruby CSS Parser CHANGELOG
 
 ### Unreleased
+* Fix ReDoS hang when expanding dimension shorthands containing unclosed CSS functions (e.g. `margin: x() calc(aaaa...)`): RE_FUNCTIONS now uses possessive quantifiers plus a 10ms regexp timeout with fallback to plain whitespace splitting
 
 ### Version 3.1.0
 * `Parser#load_uri!` accepts an `integrity:` option (Subresource Integrity, https://www.w3.org/TR/SRI/) to verify a fetched remote stylesheet before it is parsed
