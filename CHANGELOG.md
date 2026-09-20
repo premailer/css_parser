@@ -1,6 +1,8 @@
 ## Ruby CSS Parser CHANGELOG
 
 ### Unreleased
+
+### Version 3.2.0
 * Fix ReDoS hang when expanding dimension shorthands containing unclosed CSS functions (e.g. `margin: x() calc(aaaa...)`): RE_FUNCTIONS now uses possessive quantifiers plus a 10ms regexp timeout with fallback to plain whitespace splitting
 
 ### Version 3.1.0
