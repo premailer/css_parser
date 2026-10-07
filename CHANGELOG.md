@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+### Version 3.3.0
+* Fix Arbitrary local-file read via attacker-controlled `@import`
+
 ### Version 3.2.0
 * Fix ReDoS hang when expanding dimension shorthands containing unclosed CSS functions (e.g. `margin: x() calc(aaaa...)`): RE_FUNCTIONS now uses possessive quantifiers plus a 10ms regexp timeout with fallback to plain whitespace splitting
 
