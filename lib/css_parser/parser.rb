@@ -173,6 +173,21 @@ module CssParser
             load_uri!(import_uri, import_options)
           elsif options[:base_dir]
             import_options[:base_dir] = options[:base_dir]
+            # The import path comes from (potentially untrusted) CSS
+            # content, not from the caller. Flag this load so load_file!
+            # keeps it contained within the import root and refuses
+            # absolute paths / `..` traversal that escape it -- otherwise
+            # @import turns into arbitrary local file disclosure. This is
+            # the base_dir sibling of the file://-via-base_uri hole closed
+            # in GHSA-9pmc-p236-855h, which left this arm untouched.
+            #
+            # import_root is the top-level base_dir, threaded through
+            # nested imports so containment is always checked against it.
+            # That still allows legitimate `../` imports that stay inside
+            # the tree (e.g. subdir/import2.css -> ../simple.css) while
+            # rejecting anything that leaves it.
+            import_options[:from_import] = true
+            import_options[:import_root] = options[:import_root] || options[:base_dir]
             load_file!(import_path, import_options)
           end
         end
@@ -558,8 +573,18 @@ module CssParser
     end
 
     # Load a local CSS file.
+    #
+    # +from_import+ (internal) marks a load whose +file_name+ originates
+    # from an @import rule in parsed CSS rather than from the caller. Such
+    # a path is attacker-influenced, so it is contained within the import
+    # root (+import_root+, the top-level +base_dir+): absolute paths and
+    # `..` traversal that escape the root are refused (raising
+    # RemoteFileError when io_exceptions are on, otherwise a silent no-op).
+    # Direct callers (the default, +from_import: false+) are unaffected --
+    # load_file! remains the explicit, trusted local-file API and may load
+    # any readable path.
     def load_file!(file_name, options = {}, deprecated = nil)
-      opts = {base_dir: nil, media_types: :all}
+      opts = {base_dir: nil, media_types: :all, from_import: false, import_root: nil}
 
       if options.is_a? Hash
         opts.merge!(options)
@@ -570,7 +595,29 @@ module CssParser
         opts[:media_types] = deprecated if deprecated
       end
 
+      # Pin the containment root to the first base_dir seen in the chain.
+      # load_file! resets base_dir to each file's own directory as it
+      # recurses, so without this a file loaded from a subdirectory would
+      # shrink the sandbox and reject a legitimate `..` back toward the
+      # caller's original base_dir.
+      opts[:import_root] ||= opts[:base_dir]
+
       file_name = File.expand_path(file_name, opts[:base_dir])
+
+      # Containment check for @import-sourced paths: the resolved file must
+      # stay inside the import root. Rejects both `@import "/etc/passwd"`
+      # (absolute) and `@import "../../secret"` (traversal escaping the
+      # tree) from untrusted CSS, while leaving direct load_file! callers
+      # untouched and still permitting `..` that stays within the root.
+      if opts[:from_import] && (opts[:import_root] || opts[:base_dir])
+        root = File.expand_path((opts[:import_root] || opts[:base_dir]).to_s)
+        unless file_name == root || file_name.start_with?(root + File::SEPARATOR)
+          raise RemoteFileError, file_name if @options[:io_exceptions]
+
+          return
+        end
+      end
+
       return unless File.readable?(file_name)
       return unless circular_reference_check(file_name)
 
