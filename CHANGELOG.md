@@ -1,6 +1,7 @@
 ## Ruby CSS Parser CHANGELOG
 
 ### Unreleased
+* Speed up `RuleSet::Declarations#to_s` ~20x: its clean-up regexp matched the empty string at every character (`[\n\r\f\t]*`), making `gsub!` replace at every position; the unreachable `\s+$` branch is dropped, output unchanged
 
 ### Version 3.3.0
 * Fix Arbitrary local-file read via attacker-controlled `@import`

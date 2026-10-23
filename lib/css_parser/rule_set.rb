@@ -205,8 +205,7 @@ module CssParser
           importance = options[:force_important] || value.important ? ' !important' : ''
           memo << "#{prop}: #{value.value}#{importance}; "
         end
-        # TODO: Clean-up regexp doesn't seem to work
-        str.gsub!(/^[\s^({)]+|[\n\r\f\t]*|\s+$/mx, '')
+        str.gsub!(/^[\s^({)]+|[\n\r\f\t]+/, '')
         str.strip!
         str
       end
