@@ -18,6 +18,8 @@ module CssParser
 
     NUMBER_OF_DIMENSIONS = 4
 
+    NORMALIZED_PROPERTY_RX = /\A[-a-z0-9_]+\z/.freeze
+
     DIMENSIONS = [
       ['margin', %w[margin-top margin-right margin-bottom margin-left]],
       ['padding', %w[padding-top padding-right padding-bottom padding-left]],
@@ -225,6 +227,8 @@ module CssParser
       attr_writer :declarations
 
       def normalize_property(property)
+        return property if property.is_a?(String) && property.match?(NORMALIZED_PROPERTY_RX)
+
         property = property.to_s.downcase
         property.strip!
         property
@@ -583,10 +587,11 @@ module CssParser
       return if declarations.size < NUMBER_OF_DIMENSIONS
 
       DIMENSIONS.each do |property, dimensions|
-        values = DIMENSION_DIRECTIONS.each_with_index.with_object({}) do |(side, index), result|
+        values = {}
+        DIMENSION_DIRECTIONS.each_with_index do |side, index|
           next unless (declaration = declarations[dimensions[index]])
 
-          result[side] = declaration.value
+          values[side] = declaration.value
         end
 
         # All four dimensions must be present
