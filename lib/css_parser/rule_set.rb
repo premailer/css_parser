@@ -227,9 +227,10 @@ module CssParser
       attr_writer :declarations
 
       def normalize_property(property)
-        return property if property.is_a?(String) && property.match?(NORMALIZED_PROPERTY_RX)
+        property = property.to_s
+        return property if property.match?(NORMALIZED_PROPERTY_RX)
 
-        property = property.to_s.downcase
+        property = property.downcase
         property.strip!
         property
       end
