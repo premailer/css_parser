@@ -85,9 +85,10 @@ module CssParser
       end
     end
 
-    merged = properties.each_with_object(RuleSet.new(nil, nil)) do |(property, details), rule_set|
-      value = details[:value].strip
-      rule_set[property.strip] = details[:is_important] ? "#{value.gsub(/;\Z/, '')}!important" : value
+    merged = RuleSet.new(nil, nil)
+    properties.each do |property, details|
+      value = details[:value]
+      merged[property] = details[:is_important] ? "#{value.gsub(/;\Z/, '')}!important" : value
     end
 
     merged.create_shorthand!

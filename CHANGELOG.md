@@ -3,6 +3,7 @@
 ### Unreleased
 * Speed up `RuleSet::Declarations#to_s` ~20x: its clean-up regexp matched the empty string at every character (`[\n\r\f\t]*`), making `gsub!` replace at every position; the unreachable `\s+$` branch is dropped, output unchanged
 * Allocate less in `RuleSet`: skip the downcased copy of already normalized property names, and build dimension shorthands without enumerators
+* Allocate less than half the objects when parsing and serializing declarations: values are copied only when they need cleaning, and hashes are iterated without building `[key, value]` pairs
 
 ### Version 3.3.0
 * Fix Arbitrary local-file read via attacker-controlled `@import`
