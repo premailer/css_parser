@@ -280,7 +280,7 @@ module CssParser
         end
       end
 
-      @selectors = selectors ? parse_selectors!(selectors) : []
+      @selectors = []
       @specificity = specificity
 
       unless offset.nil? == filename.nil?
@@ -290,6 +290,7 @@ module CssParser
       @offset = offset
       @filename = filename
 
+      parse_selectors!(selectors) if selectors
       parse_declarations!(block)
     end
 

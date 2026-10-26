@@ -14,7 +14,7 @@ module AllocationCounting
 
     yield
     GC.disable
-    Array.new(2) do
+    Array.new(3) do
       before = GC.stat(:total_allocated_objects)
       yield
       GC.stat(:total_allocated_objects) - before
