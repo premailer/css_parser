@@ -26,10 +26,12 @@ class RuleSetDeclarationsAllocationsTest < Minitest::Test
   end
 
   def test_unfrozen_values_are_neither_frozen_nor_mutated
-    value = +' 1px !important; '
+    clean = +'1px'
+    padded = +' 1px !important; '
 
-    RuleSet::Declarations::Value.new(value)
+    RuleSet::Declarations::Value.new(clean)
+    RuleSet::Declarations::Value.new(padded)
 
-    assert_equal [' 1px !important; ', false], [value, value.frozen?]
+    assert_equal [['1px', false], [' 1px !important; ', false]], [[clean, clean.frozen?], [padded, padded.frozen?]]
   end
 end
