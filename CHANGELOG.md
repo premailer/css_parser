@@ -3,6 +3,8 @@
 ### Unreleased
 * Speed up `RuleSet::Declarations#to_s` ~20x: its clean-up regexp matched the empty string at every character (`[\n\r\f\t]*`), making `gsub!` replace at every position; the unreachable `\s+$` branch is dropped, output unchanged
 * Allocate less in `RuleSet`: skip the downcased copy of already normalized property names, and build dimension shorthands without enumerators
+* Allocate less when expanding and creating dimension shorthands, and skip the colour regexp on values without a comma
+* Return already sanitized media types as-is from `sanitize_media_query`, and allocate less when splitting selectors and counting ids
 
 ### Version 3.3.0
 * Fix Arbitrary local-file read via attacker-controlled `@import`
