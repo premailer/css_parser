@@ -52,13 +52,16 @@ module CssParser
         end
 
         def value=(value)
+          # sub and strip always return a copy, and the caller's string must not be mutated:
+          # only copy when there is something to remove, so a clean value allocates nothing
           value = value.to_s
-          value = value.sub(TRAILING_SEMICOLON_RX, '') if value.include?(SEMICOLON)
-          self.important = value.include?('!') && value.match?(CssParser::IMPORTANT_IN_PROPERTY_RX)
+          value = value.sub(TRAILING_SEMICOLON_RX, '') if value.match?(TRAILING_SEMICOLON_RX)
+          self.important = value.match?(CssParser::IMPORTANT_IN_PROPERTY_RX)
           value = value.sub(CssParser::IMPORTANT_IN_PROPERTY_RX, '') if important
           value = value.strip if value.match?(SURROUNDING_WHITESPACE_RX)
           raise ArgumentError, 'value is empty' if value.empty?
 
+          # value may still be the caller's string: -value freezes a copy instead of it
           @value = -value
         end
 
@@ -208,7 +211,7 @@ module CssParser
         replacement_values.insert(property_index, *replacements.values)
 
         self.declarations = {}
-        replacement_keys.each_index { |index| declarations[replacement_keys[index]] = replacement_values[index] }
+        replacement_keys.each_with_index { |key, index| declarations[key] = replacement_values[index] }
       end
 
       def to_s(options = {})
@@ -680,7 +683,8 @@ module CssParser
         value = decs[colon + 1, decs.length]
         property.strip!
         value.strip!
-        next if property.empty? || value.empty? || value.casecmp(IMPORTANT) == 0
+        # casecmp? case-folds both strings, allocating two of them per declaration
+        next if property.empty? || value.empty? || value.casecmp(IMPORTANT).zero?
 
         add_declaration!(property, value.freeze)
         continuation = nil
