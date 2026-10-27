@@ -35,6 +35,9 @@ module CssParser
   #++
   IMPORTANT_IN_PROPERTY_RX = /\s*!important\b\s*/i.freeze
 
+  # What sanitize_media_query would change: blank, padded, or not single-space separated
+  UNSANITIZED_MEDIA_QUERY_RX = /\A\z|\A[\s\0]|[\s\0]\z|\s\s|[^\S ]/.freeze
+
   RE_INSIDE_OUTSIDE = regex_possible_values 'inside', 'outside'
   RE_SCROLL_FIXED = regex_possible_values 'scroll', 'fixed'
   RE_REPEAT = regex_possible_values 'repeat(\-x|\-y)*|no\-repeat'
