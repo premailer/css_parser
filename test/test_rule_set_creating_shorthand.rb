@@ -5,6 +5,7 @@ require_relative 'test_helper'
 # Test cases for reading and generating CSS shorthand properties
 class RuleSetCreatingShorthandTests < Minitest::Test
   include CssParser
+  include AllocationCounting
 
   def setup
     @cp = CssParser::Parser.new
@@ -218,6 +219,13 @@ class RuleSetCreatingShorthandTests < Minitest::Test
 
     assert_equal('gray;', combined['background-color'])
     assert_equal('', combined['background'])
+  end
+
+  def test_creating_dimensions_shorthand_allocates_less_than_thirty_objects
+    block = 'margin-top: 1px; margin-right: 2px; margin-bottom: 1px; margin-left: 2px; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0'
+    parsing = allocations { RuleSet.new(block: block) }
+
+    assert_operator allocations { RuleSet.new(block: block).create_shorthand! } - parsing, :<, 30
   end
 
 protected

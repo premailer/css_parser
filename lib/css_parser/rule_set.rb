@@ -403,14 +403,14 @@ module CssParser
       DIMENSIONS.each do |property, (top, right, bottom, left)|
         next unless (declaration = declarations[property])
 
-        value = declaration.value.dup
+        value = declaration.value
 
         # RGB and HSL values in borders are the only units that can have spaces (within params).
         # We cheat a bit here by stripping spaces after commas in RGB and HSL values so that we
         # can split easily on spaces.
         #
         # TODO: rgba, hsl, hsla
-        value.gsub!(RE_COLOUR) { |c| c.gsub(/(\s*,\s*)/, ',') }
+        value = value.gsub(RE_COLOUR) { |c| c.gsub(/(\s*,\s*)/, ',') } if value.include?(',')
 
         matches = split_value_preserving_function_whitespace(value)
 
@@ -428,7 +428,7 @@ module CssParser
           raise ArgumentError, "Cannot parse #{value}"
         end
 
-        replacement = [top, right, bottom, left].zip(values).to_h
+        replacement = {top => values[0], right => values[1], bottom => values[2], left => values[3]}
 
         declarations.replace_declaration!(property, replacement, preserve_importance: true)
       end
@@ -522,17 +522,13 @@ module CssParser
 
     # Combine several properties into a shorthand one
     def create_shorthand_properties!(properties, shorthand_property) # :nodoc:
-      values = []
-      properties_to_delete = []
-      properties.each do |property|
-        next unless (declaration = declarations[property])
-        next if declaration.important
-
-        values << declaration.value
-        properties_to_delete << property
+      properties_to_delete = properties.select do |property|
+        (declaration = declarations[property]) && !declaration.important
       end
 
-      return if values.length <= 1
+      return if properties_to_delete.length <= 1
+
+      values = properties_to_delete.map { |property| declarations[property].value }
 
       properties_to_delete.each do |property|
         declarations.delete(property)
@@ -588,15 +584,11 @@ module CssParser
       return if declarations.size < NUMBER_OF_DIMENSIONS
 
       DIMENSIONS.each do |property, dimensions|
-        values = {}
-        DIMENSION_DIRECTIONS.each_with_index do |side, index|
-          next unless (declaration = declarations[dimensions[index]])
-
-          values[side] = declaration.value
-        end
-
         # All four dimensions must be present
-        next if values.size != dimensions.size
+        next unless dimensions.all? { |dimension| declarations.key?(dimension) }
+
+        top, right, bottom, left = dimensions.map { |dimension| declarations[dimension].value }
+        values = {top: top, right: right, bottom: bottom, left: left}
 
         new_value = values.values_at(*compute_dimensions_shorthand(values)).join(' ').strip
         declarations[property] = new_value unless new_value.empty?
@@ -646,7 +638,7 @@ module CssParser
 
     def compute_dimensions_shorthand(values)
       # All four sides are equal, returning single value
-      return [:top] if values.values.uniq.count == 1
+      return [:top] if values[:top] == values[:right] && values[:right] == values[:bottom] && values[:bottom] == values[:left]
 
       # `/* top | right | bottom | left */`
       return DIMENSION_DIRECTIONS if values[:left] != values[:right]
@@ -693,7 +685,7 @@ module CssParser
     # TODO: way too simplistic
     #++
     def parse_selectors!(selectors) # :nodoc:
-      @selectors = selectors.split(',').map do |s|
+      @selectors = selectors.split(',').map! do |s|
         s.gsub!(/\s+/, ' ')
         s.strip!
         s

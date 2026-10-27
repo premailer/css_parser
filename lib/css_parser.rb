@@ -107,7 +107,7 @@ module CssParser
   #++
   def self.calculate_specificity(selector)
     a = 0
-    b = selector.scan('#').length
+    b = selector.count('#')
     c = selector.scan(NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX_NC).length
     d = selector.scan(ELEMENTS_AND_PSEUDO_ELEMENTS_RX_NC).length
 
@@ -147,6 +147,8 @@ module CssParser
   end
 
   def self.sanitize_media_query(raw)
+    return raw if raw.is_a?(Symbol) && !raw.match?(UNSANITIZED_MEDIA_QUERY_RX)
+
     mq = raw.to_s.gsub(/\s+/, ' ')
     mq.strip!
     mq = 'all' if mq.empty?

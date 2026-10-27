@@ -5,6 +5,7 @@ require_relative 'test_helper'
 # Test cases for the handling of media types
 class CssParserMediaTypesTests < Minitest::Test
   include CssParser
+  include AllocationCounting
 
   def setup
     @cp = Parser.new
@@ -154,5 +155,9 @@ class CssParserMediaTypesTests < Minitest::Test
   def test_to_s_includes_media_queries
     @cp.add_rule!(selectors: 'body', block: 'color: black;', media_types: 'aural and (device-aspect-ratio: 16/9)')
     assert_equal "@media aural and (device-aspect-ratio: 16/9) {\n  body {\n    color: black;\n  }\n}\n", @cp.to_s
+  end
+
+  def test_sanitizing_an_already_sanitized_media_type_does_not_allocate
+    assert_equal(0, allocations { CssParser.sanitize_media_query(:all) })
   end
 end
