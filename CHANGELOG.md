@@ -5,6 +5,7 @@
 * Allocate less in `RuleSet`: skip the downcased copy of already normalized property names, and build dimension shorthands without enumerators
 * Allocate less when expanding and creating dimension shorthands, and skip the colour regexp on values without a comma
 * Return already sanitized media types as-is from `sanitize_media_query`, and allocate less when splitting selectors and counting ids
+* Allocate less than half the objects when parsing and serializing declarations: values are copied only when they need cleaning, and hashes are iterated without building `[key, value]` pairs
 
 ### Version 3.3.0
 * Fix Arbitrary local-file read via attacker-controlled `@import`

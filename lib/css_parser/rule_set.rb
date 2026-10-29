@@ -19,6 +19,9 @@ module CssParser
     NUMBER_OF_DIMENSIONS = 4
 
     NORMALIZED_PROPERTY_RX = /\A[-a-z0-9_]+\z/.freeze
+    BLANK_VALUE_RX = /\A[\s\0]*\z/.freeze
+    SURROUNDING_WHITESPACE_RX = /\A[\s\0]|[\s\0]\z/.freeze
+    TRAILING_SEMICOLON_RX = /\s*;\s*\Z/.freeze
 
     DIMENSIONS = [
       ['margin', %w[margin-top margin-right margin-bottom margin-left]],
@@ -37,6 +40,8 @@ module CssParser
     RPAREN = ')'.freeze
     IMPORTANT = '!important'.freeze
     class Declarations
+      EMPTY_DECLARATIONS = {}.freeze
+
       class Value
         attr_reader :value
         attr_accessor :important
@@ -47,12 +52,17 @@ module CssParser
         end
 
         def value=(value)
-          value = value.to_s.sub(/\s*;\s*\Z/, '')
-          self.important = !value.slice!(CssParser::IMPORTANT_IN_PROPERTY_RX).nil?
-          value.strip!
+          # sub and strip always return a copy, and the caller's string must not be mutated:
+          # only copy when there is something to remove, so a clean value allocates nothing
+          value = value.to_s
+          value = value.sub(TRAILING_SEMICOLON_RX, '') if value.match?(TRAILING_SEMICOLON_RX)
+          self.important = value.match?(CssParser::IMPORTANT_IN_PROPERTY_RX)
+          value = value.sub(CssParser::IMPORTANT_IN_PROPERTY_RX, '') if important
+          value = value.strip if value.match?(SURROUNDING_WHITESPACE_RX)
           raise ArgumentError, 'value is empty' if value.empty?
 
-          @value = value.freeze
+          # value may still be the caller's string: -value freezes a copy instead of it
+          @value = -value
         end
 
         def to_s
@@ -70,7 +80,7 @@ module CssParser
 
       def_delegators :declarations, :each, :each_value
 
-      def initialize(declarations = {})
+      def initialize(declarations = EMPTY_DECLARATIONS)
         self.declarations = {}
         declarations.each { |property, value| add_declaration!(property, value) }
       end
@@ -100,7 +110,7 @@ module CssParser
 
         if value.is_a?(Value) && (!currently_important || value.important)
           declarations[property] = value
-        elsif value.to_s.strip.empty?
+        elsif value.to_s.match?(BLANK_VALUE_RX)
           delete property
         else
           value = Value.new(value)
@@ -164,18 +174,19 @@ module CssParser
 
         # We should preserve subsequent declarations of the same properties
         # and prior important ones if replacement one is not important
-        replacements = replacement_declarations.each.with_object({}) do |(key, replacement), result|
+        replacements = {}
+        replacement_declarations.declarations.each do |key, replacement|
           existing = declarations[key]
 
           # No existing -> set
           unless existing
-            result[key] = replacement
+            replacements[key] = replacement
             next
           end
 
           # Replacement more important than existing -> replace
           if replacement.important && !existing.important
-            result[key] = replacement
+            replacements[key] = replacement
             replaced_index = replacement_keys.index(key)
             replacement_keys.delete_at(replaced_index)
             replacement_values.delete_at(replaced_index)
@@ -188,7 +199,7 @@ module CssParser
 
           # Existing and replacement importance are the same,
           # value which is declared later wins
-          result[key] = replacement if property_index > replacement_keys.index(key)
+          replacements[key] = replacement if property_index > replacement_keys.index(key)
         end
 
         return if replacements.empty?
@@ -199,13 +210,15 @@ module CssParser
         replacement_values.delete_at(property_index)
         replacement_values.insert(property_index, *replacements.values)
 
-        self.declarations = replacement_keys.zip(replacement_values).to_h
+        self.declarations = {}
+        replacement_keys.each_with_index { |key, index| declarations[key] = replacement_values[index] }
       end
 
       def to_s(options = {})
-        str = declarations.reduce(+'') do |memo, (prop, value)|
+        str = +''
+        declarations.each do |prop, value|
           importance = options[:force_important] || value.important ? ' !important' : ''
-          memo << "#{prop}: #{value.value}#{importance}; "
+          str << prop << ': ' << value.value << importance << '; '
         end
         str.gsub!(/^[\s^({)]+|[\n\r\f\t]+/, '')
         str.strip!
@@ -667,12 +680,13 @@ module CssParser
         next unless (colon = decs.index(COLON))
 
         property = decs[0, colon]
-        value = decs[(colon + 1)..]
+        value = decs[colon + 1, decs.length]
         property.strip!
         value.strip!
-        next if property.empty? || value.empty? || value.casecmp?(IMPORTANT)
+        # casecmp? case-folds both strings, allocating two of them per declaration
+        next if property.empty? || value.empty? || value.casecmp(IMPORTANT).zero?
 
-        add_declaration!(property, value)
+        add_declaration!(property, value.freeze)
         continuation = nil
       end
     end
