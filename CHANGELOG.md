@@ -1,6 +1,8 @@
 ## Ruby CSS Parser CHANGELOG
 
 ### Unreleased
+
+### Version 3.4.0
 * Speed up `RuleSet::Declarations#to_s` ~20x: its clean-up regexp matched the empty string at every character (`[\n\r\f\t]*`), making `gsub!` replace at every position; the unreachable `\s+$` branch is dropped, output unchanged
 * Allocate less in `RuleSet`: skip the downcased copy of already normalized property names, and build dimension shorthands without enumerators
 * Allocate less when expanding and creating dimension shorthands, and skip the colour regexp on values without a comma
